@@ -1,0 +1,115 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/**
+ * Design tokens & styles globaux pour LBS Call Center.
+ * Centralise les variables CSS utilisées par Tailwind + shadcn/ui.
+ */
+
+:root {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+
+  /* Tokens de la marque LBS */
+  --lbs-blue: #244976;
+  --lbs-blue-2: #21416c;
+  --lbs-red: #800000;
+
+  /* Neutres premium */
+  --lbs-surface: #ffffff;
+  --lbs-muted: #f5f7fb;
+
+  /* Couleurs vivantes pour les sections */
+  --section-warm: #fdf8f4;
+  --section-cool: #f0f4fa;
+  --section-accent: #f8f0f6;
+  --section-deep: #0c1929;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+
+  /* Couleurs de la marque LBS enregistrées dans Tailwind v4 */
+  --color-lbs-blue: #244976;
+  --color-lbs-blue-2: #21416C;
+  --color-lbs-red: #800000;
+}
+
+.dark {
+  --background: #07070a;
+  --foreground: #f4f4f5;
+  --lbs-surface: #0b0b10;
+  --lbs-muted: #0f1116;
+  --section-warm: #110d0a;
+  --section-cool: #090d14;
+  --section-accent: #100c12;
+  --section-deep: #060a10;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--lbs-blue) 26%, white);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(36, 73, 118, 0.2);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(36, 73, 118, 0.35);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes lbs-soft-pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(36, 73, 118, 0.12);
+  }
+  50% {
+    opacity: 0.94;
+    box-shadow: 0 0 0 10px rgba(36, 73, 118, 0);
+  }
+}
+
+@keyframes lbs-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes lbs-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes lbs-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes lbs-mesh-move {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lbs-soft-pulse, .lbs-shimmer, .lbs-float { animation: none; }
+}

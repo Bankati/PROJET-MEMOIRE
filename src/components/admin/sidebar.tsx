@@ -1,0 +1,179 @@
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import {
+  BarChart3,
+  Bell,
+  Bot,
+  ChevronDown,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Contact,
+  FileDown,
+  FolderOpen,
+  LayoutDashboard,
+  Megaphone,
+  Phone,
+  UserCircle2,
+  Users,
+} from "lucide-react";
+
+import { useAdminSidebar } from "@/components/admin/layout-shell";
+
+type NavItem = Readonly<{
+  id: string;
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+}>;
+
+const topNavItems: readonly NavItem[] = [
+  { id: "dashboard", label: "Dashboard", href: "/dashboard/admin", icon: <LayoutDashboard className="size-[18px] shrink-0" /> },
+];
+
+const gestionItems: readonly NavItem[] = [
+  { id: "campaigns", label: "Campagnes", href: "/dashboard/admin/campaigns", icon: <Megaphone className="size-[18px] shrink-0" /> },
+  { id: "contacts", label: "Contacts", href: "/dashboard/admin/contacts", icon: <Contact className="size-[18px] shrink-0" /> },
+  { id: "agents", label: "Agents", href: "/dashboard/admin/agents", icon: <Users className="size-[18px] shrink-0" /> },
+];
+
+const bottomNavItems: readonly NavItem[] = [
+  { id: "rappels", label: "Rappels", href: "/dashboard/admin/rappels", icon: <Bell className="size-[18px] shrink-0" /> },
+  { id: "calls", label: "Appels", href: "/dashboard/admin/calls", icon: <Phone className="size-[18px] shrink-0" /> },
+  { id: "assistant", label: "Assistant IA", href: "/dashboard/admin/assistant", icon: <Bot className="size-[18px] shrink-0" /> },
+  { id: "performance", label: "Performances", href: "/dashboard/admin/performance", icon: <BarChart3 className="size-[18px] shrink-0" /> },
+  { id: "export", label: "Export", href: "/dashboard/admin/export", icon: <FileDown className="size-[18px] shrink-0" /> },
+  { id: "profile", label: "Mon profil", href: "/dashboard/admin/profile", icon: <UserCircle2 className="size-[18px] shrink-0" /> },
+];
+
+const isActiveRoute = ({ pathname, href }: Readonly<{ pathname: string; href: string }>): boolean => {
+  if (href === "/dashboard/admin") return pathname === "/dashboard/admin";
+  return pathname.startsWith(href);
+};
+
+const isGestionActive = (pathname: string): boolean =>
+  gestionItems.some((item) => pathname.startsWith(item.href));
+
+export const AdminSidebar = (): React.JSX.Element => {
+  const pathname: string = usePathname();
+  const { isCollapsed, toggle } = useAdminSidebar();
+  const [gestionOpen, setGestionOpen] = useState<boolean>(() => isGestionActive(pathname));
+
+  const renderNavItem = (item: NavItem) => {
+    const isActive = isActiveRoute({ pathname, href: item.href });
+    return (
+      <Link
+        key={item.id}
+        href={item.href}
+        title={isCollapsed ? item.label : undefined}
+        className={`group relative flex items-center rounded-xl transition-all duration-200 ${
+          isCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-4 py-2.5"
+        } text-sm font-medium ${
+          isActive ? "bg-white/20 text-white shadow-sm" : "text-white/70 hover:bg-white/10 hover:text-white"
+        }`}
+      >
+        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" /> : null}
+        {item.icon}
+        {isCollapsed ? null : <span className="truncate">{item.label}</span>}
+        {isCollapsed ? (
+          <span className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-zinc-800">
+            {item.label}
+          </span>
+        ) : null}
+      </Link>
+    );
+  };
+
+  return (
+    <aside
+      className={`flex h-full shrink-0 flex-col bg-gradient-to-b from-[#244976] via-[#21416C] to-[#1a3354] transition-all duration-300 ease-in-out dark:from-[#152c4c] dark:via-[#112240] dark:to-[#0d1a33] ${
+        isCollapsed ? "w-[72px]" : "w-[240px]"
+      }`}
+    >
+      <div className={`flex items-center py-6 transition-all duration-300 ${isCollapsed ? "justify-center px-2" : "gap-2.5 px-6"}`}>
+        <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/20 text-sm font-bold text-white shadow-inner">
+          L
+        </div>
+        {isCollapsed ? null : (
+          <div className="min-w-0 overflow-hidden">
+            <span className="block truncate text-base font-semibold tracking-wide text-white">LBS Center</span>
+            <span className="block truncate text-[10px] text-white/50">Espace administrateur</span>
+          </div>
+        )}
+      </div>
+      <div className="mx-4 mb-3 h-px bg-white/15" />
+      <nav className={`flex-1 space-y-0.5 overflow-y-auto ${isCollapsed ? "px-2" : "px-3"}`}>
+        {topNavItems.map(renderNavItem)}
+
+        {/* Collapsible Gestion Campagne group */}
+        {isCollapsed ? (
+          <Link
+            href="/dashboard/admin/campaigns"
+            title="Gestion Campagne"
+            className={`group relative flex items-center justify-center rounded-xl px-0 py-2.5 text-sm font-medium transition-all duration-200 ${
+              isGestionActive(pathname) ? "bg-white/20 text-white shadow-sm" : "text-white/70 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            {isGestionActive(pathname) ? <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" /> : null}
+            <FolderOpen className="size-[18px] shrink-0" />
+            <span className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-zinc-800">
+              Gestion Campagne
+            </span>
+          </Link>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setGestionOpen((v) => !v)}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+                isGestionActive(pathname) ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <FolderOpen className="size-[18px] shrink-0" />
+              <span className="flex-1 truncate text-left">Gestion Campagne</span>
+              {gestionOpen ? <ChevronDown className="size-4 shrink-0 opacity-70" /> : <ChevronRight className="size-4 shrink-0 opacity-70" />}
+            </button>
+            {gestionOpen ? (
+              <div className="ml-3 space-y-0.5 border-l border-white/20 pl-3">
+                {gestionItems.map(renderNavItem)}
+              </div>
+            ) : null}
+          </>
+        )}
+
+        {bottomNavItems.map(renderNavItem)}
+      </nav>
+      <div className="mx-4 mb-3 h-px bg-white/15" />
+      <div className={`pb-4 ${isCollapsed ? "px-2" : "px-4"}`}>
+        <button
+          type="button"
+          onClick={toggle}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-white/70 transition-all duration-200 hover:bg-white/20 hover:text-white"
+        >
+          {isCollapsed ? (
+            <ChevronsRight className="size-4" />
+          ) : (
+            <>
+              <ChevronsLeft className="size-4" />
+              <span className="text-xs font-medium">Réduire</span>
+            </>
+          )}
+        </button>
+      </div>
+      {isCollapsed ? null : (
+        <div className="px-4 pb-6">
+          <div className="rounded-xl bg-white/10 px-4 py-3 backdrop-blur-sm">
+            <p className="text-xs font-medium text-white/70">Plateforme LBS</p>
+            <p className="mt-0.5 text-[11px] text-white/40">Call Center v1.0</p>
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full w-3/4 rounded-full bg-white/40" />
+            </div>
+            <p className="mt-1 text-[10px] text-white/30">Utilisation système</p>
+          </div>
+        </div>
+      )}
+    </aside>
+  );
+};
