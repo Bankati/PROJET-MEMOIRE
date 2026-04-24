@@ -25,12 +25,19 @@ export const ForgotPasswordForm = (): React.JSX.Element => {
     setIsSubmitting(true);
     setFeedback("");
     setOtpCode("");
-    const response: Response = await fetch("/api/auth/forgot-password", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const payload: ForgotResponse = await response.json();
+    let payload: ForgotResponse;
+    try {
+      const response: Response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      payload = await response.json();
+    } catch {
+      setFeedback("Une erreur réseau est survenue. Veuillez réessayer.");
+      setIsSubmitting(false);
+      return;
+    }
     setFeedback(payload.message);
     setOtpCode(payload.otpCode ?? "");
     setIsSubmitting(false);

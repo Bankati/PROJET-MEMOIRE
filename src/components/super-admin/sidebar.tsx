@@ -9,7 +9,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   LayoutDashboard,
-  MessageSquareText,
+  Megaphone,
   Table2,
   UserCircle2,
   UserCog,
@@ -28,7 +28,7 @@ const navItems: readonly NavItem[] = [
   { id: "dashboard", label: "Dashboard", href: "/dashboard/super-admin", icon: <LayoutDashboard className="size-[18px] shrink-0" /> },
   { id: "admins", label: "Administrateurs", href: "/dashboard/super-admin/admins", icon: <UserCog className="size-[18px] shrink-0" /> },
   { id: "campaigns", label: "Campagnes", href: "/dashboard/super-admin/campaigns", icon: <Table2 className="size-[18px] shrink-0" /> },
-  { id: "messaging", label: "Messagerie", href: "/dashboard/super-admin/messaging", icon: <MessageSquareText className="size-[18px] shrink-0" /> },
+  { id: "messaging", label: "Messagerie", href: "/dashboard/super-admin/messaging", icon: <Megaphone className="size-[18px] shrink-0" /> },
   { id: "profile", label: "Mon profil", href: "/dashboard/super-admin/profile", icon: <UserCircle2 className="size-[18px] shrink-0" /> },
 ];
 

@@ -1,0 +1,7 @@
+{
+  "subject": "bourses",
+  "keywords": ["bourse", "aide", "financement", "subvention", "allocation", "soutien financier", "réduction"],
+  "system_instructions": "Tu réponds à une question sur les bourses et aides financières. Donne les types de bourses disponibles, les critères d'éligibilité et la procédure de demande si présents dans le contexte. Si aucune information sur les bourses n'est dans le contexte, dis-le simplement. Aucun exemple fictif, aucune image, aucune illustration.",
+  "response_format": "Types de bourses, puis critères, puis procédure si disponibles.",
+  "forbidden": ["images", "illustrations", "bourses inventées", "montants non confirmés dans le contexte"]
+}

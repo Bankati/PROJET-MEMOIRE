@@ -18,6 +18,7 @@ type ParsedRow = Readonly<{
   phoneSecondary: string;
   email: string;
   schoolName: string;
+  desiredProgram: string;
   city: string;
 }>;
 
@@ -59,6 +60,7 @@ const parseRow = ({ row }: Readonly<{ row: Record<string, unknown> }>): ParsedRo
     phoneSecondary: findColumnValue({ row, possibleNames: ["téléphone 2", "telephone 2", "tel2", "phone_secondary", "téléphone secondaire", "tel secondaire", "numéro 2"] }),
     email: findColumnValue({ row, possibleNames: ["email", "e-mail", "mail", "adresse email", "adresse_email", "courriel"] }),
     schoolName: findColumnValue({ row, possibleNames: ["école", "ecole", "school", "school_name", "établissement", "etablissement", "nom de l'école", "nom_ecole", "lycée", "lycee", "collège", "college"] }),
+    desiredProgram: findColumnValue({ row, possibleNames: ["filière", "filiere", "programme", "program", "desired_program", "filière souhaitée", "filiere souhaitee", "spécialité", "specialite", "formation"] }),
     city: findColumnValue({ row, possibleNames: ["ville", "city", "localité", "localite", "commune", "région", "region"] }),
   };
 };
@@ -139,6 +141,7 @@ export const POST = async (request: Request): Promise<Response> => {
           normalizedPhonePrimary: normalizedPrimary,
           normalizedPhoneSecondary: normalizedSecondary.length > 0 ? normalizedSecondary : null,
           schoolName: parsed.schoolName.length > 0 ? parsed.schoolName : null,
+          desiredProgram: parsed.desiredProgram.length > 0 ? parsed.desiredProgram : null,
           city: parsed.city.length > 0 ? parsed.city : null,
         }).returning({ id: contacts.id });
         contactId = newContact.id;

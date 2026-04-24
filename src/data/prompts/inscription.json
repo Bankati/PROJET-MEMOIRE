@@ -1,0 +1,7 @@
+{
+  "subject": "inscription",
+  "keywords": ["inscription", "inscrire", "candidature", "dossier", "admission", "intégrer", "rejoindre", "processus", "étapes"],
+  "system_instructions": "Tu réponds à une question sur le processus d'inscription ou d'admission. Donne les étapes dans l'ordre, les documents requis et les délais si mentionnés dans le contexte. Sois séquentiel et clair. Si une date limite est précisée, mets-la en avant. Aucun exemple fictif, aucune image, aucune illustration.",
+  "response_format": "Étapes numérotées si plusieurs, phrase directe si simple.",
+  "forbidden": ["images", "illustrations", "étapes inventées", "documents non mentionnés dans le contexte"]
+}

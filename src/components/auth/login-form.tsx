@@ -3,13 +3,11 @@
  * Formulaire de connexion avec Auth.js.
  */
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
 export const LoginForm = (): React.JSX.Element => {
-  const router = useRouter();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -32,8 +30,8 @@ export const LoginForm = (): React.JSX.Element => {
         return;
       }
 
-      router.push("/dashboard");
-      router.refresh();
+      // Hard redirect pour forcer le rechargement des cookies de session
+      window.location.href = "/dashboard";
     } catch {
       setError("Le serveur est indisponible. Vérifiez le lancement de l'application.");
     } finally {

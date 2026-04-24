@@ -38,7 +38,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { featureCoverImages } from "@/lib/feature-covers";
-import { remoteImages } from "@/lib/remote-images";
 
 export const metadata: Metadata = {
   title: "Accueil",
@@ -594,7 +593,7 @@ export default function HomePage() {
                   title="Standardisez votre discours"
                   description="Scripts de campagne et fiches prospect pour une expérience homogène, quelle que soit l'équipe."
                   footer="Idéal pour admissions, bourses, relances et portes ouvertes."
-                  image={remoteImages.valueProps.standardize}
+                  image="/communication.jpg"
                   imageAlt="Présentation et prise de parole"
                 />
               </Reveal>
@@ -603,7 +602,7 @@ export default function HomePage() {
                   title="Réduisez les frictions opérationnelles"
                   description="Import, attribution, suivi et relances pensés pour gagner du temps sans perdre la traçabilité."
                   footer="Moins d'Excel, moins d'erreurs, plus de continuité."
-                  image={remoteImages.valueProps.friction}
+                  image="/operationnel.jpg"
                   imageAlt="Travail sur ordinateur portable"
                 />
               </Reveal>
@@ -612,7 +611,7 @@ export default function HomePage() {
                   title="Pilotez avec des KPI utiles"
                   description="Tableaux de bord par rôle pour voir ce qui fait mousser la conversion."
                   footer="Volume, qualité, conversion et campagnes."
-                  image={remoteImages.valueProps.kpiGovernance}
+                  image="/kpi-back.png"
                   imageAlt="Tableau de bord analytique"
                 />
               </Reveal>

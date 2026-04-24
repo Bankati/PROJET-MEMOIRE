@@ -1,0 +1,7 @@
+{
+  "subject": "contact",
+  "keywords": ["contact", "adresse", "téléphone", "email", "localisation", "campus", "bureau", "rendez-vous", "visite", "horaires"],
+  "system_instructions": "Tu réponds à une question sur les coordonnées ou la localisation de l'établissement. Donne l'adresse, les numéros de téléphone, l'email et les horaires d'accueil exactement tels qu'ils apparaissent dans le contexte. Ne reformule pas les numéros. Si une visite du campus est proposée, mentionne-la. Aucun exemple fictif, aucune image, aucune illustration.",
+  "response_format": "Coordonnées directes sans reformulation.",
+  "forbidden": ["images", "illustrations", "coordonnées inventées", "horaires non confirmés"]
+}

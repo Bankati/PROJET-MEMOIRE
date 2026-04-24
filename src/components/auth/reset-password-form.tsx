@@ -7,7 +7,7 @@
  */
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useCallback, useEffect, useRef } from "react";
-import { CheckCircle2, KeyRound, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { CheckCircle2, KeyRound, Loader2, Lock, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -32,7 +32,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
   const searchParams = useSearchParams();
   const emailFromQuery: string = searchParams.get("email") ?? "";
   const [step, setStep] = useState<ResetStep>("otp");
-  const [email, setEmail] = useState<string>(emailFromQuery);
+  const [email] = useState<string>(emailFromQuery);
   const [otpValues, setOtpValues] = useState<string[]>(Array.from({ length: OTP_LENGTH }, () => ""));
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
@@ -324,25 +324,6 @@ export const ResetPasswordForm = (): React.JSX.Element => {
       ? `Entrez le code envoyé à ${emailFromQuery}`
       : "Entrez le code envoyé à votre adresse e-mail.",
     <div className="space-y-4">
-      {emailFromQuery.length === 0 ? (
-        <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Adresse e-mail
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setFeedback(""); }}
-              placeholder="votre@email.com"
-              className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 pl-10 pr-4 text-sm text-zinc-900 outline-none transition focus:border-lbs-blue focus:bg-white focus:ring-2 focus:ring-lbs-blue/20 dark:border-white/15 dark:bg-white/5 dark:text-white dark:focus:bg-white/10"
-              required
-            />
-          </div>
-        </div>
-      ) : null}
       <div className="space-y-2">
         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
           Code de vérification

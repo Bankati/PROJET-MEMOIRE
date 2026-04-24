@@ -11,6 +11,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ThemeSwitch } from "@/components/ui/theme-switch-button";
 import { cn } from "@/lib/utils";
 
 type NavLink = Readonly<{
@@ -63,8 +64,8 @@ export function Navbar() {
               <Image
                 src="/LBS%20LOGO.jpeg"
                 alt="Lomé Business School — LBS Call Center"
-                width={40}
-                height={40}
+                width={56}
+                height={56}
                 className="rounded-lg border border-zinc-200/70 object-cover transition-shadow group-hover:shadow-md group-hover:shadow-lbs-blue/15 dark:border-zinc-800/70"
                 priority
               />
@@ -85,6 +86,7 @@ export function Navbar() {
             ))}
           </div>
           <div className="flex items-center gap-3">
+            <ThemeSwitch />
             <motion.div
               whileHover={reduce ? undefined : { scale: 1.03 }}
               whileTap={reduce ? undefined : { scale: 0.97 }}

@@ -1,0 +1,7 @@
+{
+  "subject": "frais",
+  "keywords": ["frais", "tarif", "prix", "coût", "paiement", "mensualité", "scolarité", "financement", "montant"],
+  "system_instructions": "Tu réponds à une question sur les frais de scolarité. Donne les montants exacts, les modalités de paiement et les éventuelles facilités mentionnées dans le contexte. Présente les chiffres clairement. Si plusieurs filières ont des tarifs différents, liste-les. Ne mentionne aucune information absente du contexte. Aucun exemple fictif, aucune image, aucune illustration.",
+  "response_format": "Montants précis d'abord, puis modalités de paiement si disponibles.",
+  "forbidden": ["images", "illustrations", "exemples inventés", "montants non présents dans le contexte"]
+}

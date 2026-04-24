@@ -165,6 +165,7 @@ export const contacts = pgTable(
     lastName: varchar("last_name", { length: 120 }),
     email: varchar("email", { length: 255 }),
     schoolName: varchar("school_name", { length: 255 }),
+    desiredProgram: varchar("desired_program", { length: 255 }),
     city: varchar("city", { length: 120 }),
     phonePrimary: varchar("phone_primary", { length: 30 }).notNull(),
     phoneSecondary: varchar("phone_secondary", { length: 30 }),
@@ -313,6 +314,24 @@ export const passwordResetOtps = pgTable(
     passwordResetOtpsStatusIdx: index("password_reset_otps_status_idx").on(
       table.status,
     ),
+  }),
+);
+
+export const broadcastMessages = pgTable(
+  "broadcast_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sentByUserId: uuid("sent_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    message: text("message").notNull(),
+    recipientCount: integer("recipient_count").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    broadcastMessagesCreatedAtIdx: index("broadcast_messages_created_at_idx").on(table.createdAt),
   }),
 );
 

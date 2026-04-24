@@ -29,10 +29,13 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
-  // Rediriger vers dashboard si connecté et sur une route publique
+  // Rediriger vers le bon dashboard selon le rôle quand connecté sur route publique ou "/"
   if (isLoggedIn && (isPublicRoute || pathname === "/")) {
     const role = session.user.role;
-    if (role === "super_admin" || role === "admin") {
+    if (role === "super_admin") {
+      return NextResponse.redirect(new URL("/dashboard/super-admin", nextUrl));
+    }
+    if (role === "admin") {
       return NextResponse.redirect(new URL("/dashboard/admin", nextUrl));
     }
     return NextResponse.redirect(new URL("/dashboard/agent", nextUrl));
@@ -41,15 +44,22 @@ export default auth((req) => {
   // Vérification des rôles pour les routes dashboard
   if (isLoggedIn && pathname.startsWith("/dashboard")) {
     const role = session.user.role;
-    
-    // Routes admin uniquement
+
+    // Routes admin : bloquées pour les agents
     if (pathname.startsWith("/dashboard/admin") && role === "agent") {
       return NextResponse.redirect(new URL("/dashboard/agent", nextUrl));
     }
-    
-    // Routes agent uniquement
+
+    // Routes super-admin : bloquées pour admin et agent
+    if (pathname.startsWith("/dashboard/super-admin") && role !== "super_admin") {
+      const fallback = role === "admin" ? "/dashboard/admin" : "/dashboard/agent";
+      return NextResponse.redirect(new URL(fallback, nextUrl));
+    }
+
+    // Routes agent : bloquées pour admin et super_admin
     if (pathname.startsWith("/dashboard/agent") && (role === "admin" || role === "super_admin")) {
-      return NextResponse.redirect(new URL("/dashboard/admin", nextUrl));
+      const fallback = role === "super_admin" ? "/dashboard/super-admin" : "/dashboard/admin";
+      return NextResponse.redirect(new URL(fallback, nextUrl));
     }
   }
 

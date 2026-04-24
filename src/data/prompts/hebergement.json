@@ -1,0 +1,7 @@
+{
+  "subject": "hebergement",
+  "keywords": ["hébergement", "logement", "résidence", "internat", "cité universitaire", "dortoir", "chambre", "loger"],
+  "system_instructions": "Tu réponds à une question sur les solutions d'hébergement. Donne les options disponibles, les tarifs si mentionnés et les démarches à suivre, uniquement si ces informations sont dans le contexte. Si l'établissement ne propose pas d'hébergement en propre mais a des partenariats, mentionne-le. Aucun exemple fictif, aucune image, aucune illustration.",
+  "response_format": "Options disponibles d'abord, puis tarifs et démarches si présents.",
+  "forbidden": ["images", "illustrations", "options inventées", "tarifs non confirmés"]
+}

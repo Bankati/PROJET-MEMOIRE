@@ -130,6 +130,16 @@ export const ContactPopoverForm = ({
                 />
               </div>
               <div className="space-y-1.5">
+                <Label htmlFor="contact-desiredProgram">Filière souhaitée</Label>
+                <Input
+                  id="contact-desiredProgram"
+                  name="desiredProgram"
+                  placeholder="Ex: Finance, Marketing..."
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label htmlFor="contact-campaignId">Campagne *</Label>
                 <select
                   id="contact-campaignId"

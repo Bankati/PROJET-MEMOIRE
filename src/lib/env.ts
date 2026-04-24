@@ -29,6 +29,7 @@ const envSchema = z.object({
   TWILIO_ACCOUNT_SID: z.string().min(1).optional(),
   TWILIO_AUTH_TOKEN: z.string().min(1).optional(),
   OPENAI_API_KEY: z.string().min(1).optional(),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
 });
 
 export const env = envSchema.parse({
@@ -45,5 +46,6 @@ export const env = envSchema.parse({
   TWILIO_ACCOUNT_SID: parseOptionalEnvString({ value: process.env.TWILIO_ACCOUNT_SID }),
   TWILIO_AUTH_TOKEN: parseOptionalEnvString({ value: process.env.TWILIO_AUTH_TOKEN }),
   OPENAI_API_KEY: parseOptionalEnvString({ value: process.env.OPENAI_API_KEY }),
+  ANTHROPIC_API_KEY: parseOptionalEnvString({ value: process.env.ANTHROPIC_API_KEY }),
 });
 

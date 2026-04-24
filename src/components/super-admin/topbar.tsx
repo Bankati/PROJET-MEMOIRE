@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Clock, Menu, MessageSquareText } from "lucide-react";
+import { Clock, Megaphone, Menu } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ThemeSwitch } from "@/components/ui/theme-switch-button";
@@ -14,6 +14,7 @@ import { useSidebar } from "@/components/super-admin/layout-shell";
 
 type TopbarProps = Readonly<{
   fullName: string;
+  avatarUrl: string | null;
 }>;
 
 const extractInitials = ({ fullName }: Readonly<{ fullName: string }>): string => {
@@ -45,7 +46,7 @@ const buildGreeting = (): string => {
   return "Bonsoir";
 };
 
-export const SuperAdminTopbar = ({ fullName }: TopbarProps): React.JSX.Element => {
+export const SuperAdminTopbar = ({ fullName, avatarUrl }: TopbarProps): React.JSX.Element => {
   const pathname: string = usePathname();
   const { toggle } = useSidebar();
   const initials: string = extractInitials({ fullName });
@@ -87,7 +88,7 @@ export const SuperAdminTopbar = ({ fullName }: TopbarProps): React.JSX.Element =
           className="relative grid size-9 place-items-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 dark:border-white/15 dark:text-zinc-300 dark:hover:bg-white/10"
           aria-label="Messagerie"
         >
-          <MessageSquareText className="size-4" />
+          <Megaphone className="size-4" />
           <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-lbs-blue" />
         </Link>
         <ThemeSwitch />
@@ -95,9 +96,14 @@ export const SuperAdminTopbar = ({ fullName }: TopbarProps): React.JSX.Element =
           href="/dashboard/super-admin/profile"
           className="flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5 transition hover:bg-zinc-100 dark:border-white/15 dark:bg-white/10 dark:hover:bg-white/15"
         >
-          <div className="grid size-8 place-items-center rounded-full bg-gradient-to-br from-[#244976] to-[#21416C] text-xs font-semibold text-white">
-            {initials}
-          </div>
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt={fullName} className="size-8 rounded-full object-cover" />
+          ) : (
+            <div className="grid size-8 place-items-center rounded-full bg-gradient-to-br from-[#244976] to-[#21416C] text-xs font-semibold text-white">
+              {initials}
+            </div>
+          )}
           <div className="hidden text-left sm:block">
             <p className="text-sm font-medium text-zinc-800 dark:text-white">{fullName}</p>
             <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Super-Admin</p>

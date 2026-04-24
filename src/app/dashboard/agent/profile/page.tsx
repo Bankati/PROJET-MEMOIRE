@@ -5,7 +5,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
-  Camera,
   Key,
   Mail,
   Save,
@@ -19,14 +18,13 @@ import { requireRole } from "@/lib/auth/server-auth";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { db } from "@/lib/db";
 import { users } from "@/db/schema";
+import { AvatarUpload } from "@/components/shared/avatar-upload";
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
 
 const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): string => {
   const raw: string | string[] | undefined = sp[key];
-  if (typeof raw === "string") {
-    return raw;
-  }
+  if (typeof raw === "string") return raw;
   return Array.isArray(raw) ? (raw[0] ?? "") : "";
 };
 
@@ -38,10 +36,7 @@ async function updateProfile(formData: FormData): Promise<void> {
     redirect("/dashboard/agent/profile?notice=missing_fields");
     return;
   }
-  await db.update(users).set({
-    fullName: fullName.trim(),
-    updatedAt: new Date(),
-  }).where(eq(users.id, user.id));
+  await db.update(users).set({ fullName: fullName.trim(), updatedAt: new Date() }).where(eq(users.id, user.id));
   redirect("/dashboard/agent/profile?notice=profile_updated");
 }
 
@@ -64,26 +59,19 @@ async function changePassword(formData: FormData): Promise<void> {
     redirect("/dashboard/agent/profile?notice=wrong_password");
     return;
   }
-  await db.update(users).set({
-    passwordHash: hashPassword({ password: newPassword }),
-    updatedAt: new Date(),
-  }).where(eq(users.id, user.id));
+  await db.update(users).set({ passwordHash: hashPassword({ password: newPassword }), updatedAt: new Date() }).where(eq(users.id, user.id));
   redirect("/dashboard/agent/profile?notice=password_updated");
 }
 
 export default async function AgentProfilePage({
   searchParams,
-}: Readonly<{
-  searchParams?: Promise<SearchParams>;
-}>): Promise<React.JSX.Element> {
+}: Readonly<{ searchParams?: Promise<SearchParams> }>): Promise<React.JSX.Element> {
   const user = await requireRole({ allowedRoles: ["agent"] });
   const sp: SearchParams = (await searchParams) ?? {};
   const notice: string = readParam({ sp, key: "notice" });
   const currentUser = await db
     .select({ fullName: users.fullName, email: users.email, avatarUrl: users.avatarUrl, createdAt: users.createdAt })
-    .from(users)
-    .where(eq(users.id, user.id))
-    .limit(1);
+    .from(users).where(eq(users.id, user.id)).limit(1);
   const profile = currentUser[0];
   const initials: string = profile.fullName.trim().split(" ").filter((w) => w.length > 0).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "A";
   const noticeMessages: Readonly<Record<string, { text: string; type: "success" | "error" }>> = {
@@ -95,6 +83,7 @@ export default async function AgentProfilePage({
     wrong_password: { text: "Le mot de passe actuel est incorrect.", type: "error" },
   };
   const currentNotice = notice.length > 0 ? noticeMessages[notice] : undefined;
+
   return (
     <div className="space-y-6">
       <div>
@@ -111,16 +100,18 @@ export default async function AgentProfilePage({
           <Link href="/dashboard/agent/profile" className="ml-auto"><X className="size-4" /></Link>
         </div>
       ) : null}
+
       <div className="grid gap-6 lg:grid-cols-3">
+        {/* Carte identité */}
         <div className="lg:col-span-1">
           <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-center shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
-            <div className="relative mx-auto mb-4 size-24">
-              <div className="grid size-24 place-items-center rounded-full bg-gradient-to-br from-[#244976] to-[#21416C] text-2xl font-bold text-white">
-                {initials}
-              </div>
-              <button type="button" className="absolute bottom-0 right-0 grid size-8 place-items-center rounded-full border-2 border-white bg-zinc-100 text-zinc-600 transition hover:bg-zinc-200 dark:border-[#1a2332] dark:bg-zinc-700 dark:text-zinc-300">
-                <Camera className="size-3.5" />
-              </button>
+            <div className="mb-4">
+              <AvatarUpload
+                currentAvatarUrl={profile.avatarUrl ?? null}
+                initials={initials}
+                size="md"
+                shape="circle"
+              />
             </div>
             <h3 className="text-lg font-semibold text-zinc-800 dark:text-white">{profile.fullName}</h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">{profile.email}</p>
@@ -131,6 +122,8 @@ export default async function AgentProfilePage({
             <p className="mt-4 text-xs text-zinc-400">Membre depuis le {profile.createdAt.toLocaleDateString("fr-FR")}</p>
           </div>
         </div>
+
+        {/* Formulaires */}
         <div className="space-y-6 lg:col-span-2">
           <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
@@ -156,6 +149,7 @@ export default async function AgentProfilePage({
               </button>
             </form>
           </div>
+
           <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
               <Key className="size-4 text-amber-400" />
