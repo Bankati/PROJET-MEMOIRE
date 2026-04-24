@@ -31,7 +31,7 @@ const pageTitleMap: Readonly<Record<string, string>> = {
   "/dashboard/admin/campaigns": "Campagnes",
   "/dashboard/admin/contacts": "Contacts",
   "/dashboard/admin/agents": "Agents",
-  "/dashboard/admin/calls": "Appels",
+  "/dashboard/admin/calls": "Mes contacts",
   "/dashboard/admin/assistant": "Assistant IA",
   "/dashboard/admin/performance": "Performances",
   "/dashboard/admin/export": "Export",
@@ -39,7 +39,12 @@ const pageTitleMap: Readonly<Record<string, string>> = {
 };
 
 const buildPageTitle = ({ pathname }: Readonly<{ pathname: string }>): string => {
-  return pageTitleMap[pathname] ?? "Administration";
+  if (pageTitleMap[pathname]) return pageTitleMap[pathname];
+  if (pathname.startsWith("/dashboard/admin/calls/")) return "Mes contacts";
+  if (pathname.startsWith("/dashboard/admin/campaigns/")) return "Campagnes";
+  if (pathname.startsWith("/dashboard/admin/contacts/")) return "Contacts";
+  if (pathname.startsWith("/dashboard/admin/agents/")) return "Agents";
+  return "Administration";
 };
 
 const buildGreeting = (): string => {

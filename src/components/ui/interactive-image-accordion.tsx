@@ -57,7 +57,7 @@ const accordionItems: readonly AccordionItemData[] = [
     id: 5,
     title: "Intégrations",
     imageUrl: "/whatsapp.jpg",
-    imageAlt: "Intégrations Twilio et WhatsApp pour le suivi",
+    imageAlt: "Intégrations WhatsApp pour le suivi",
   },
 ] as const;
 

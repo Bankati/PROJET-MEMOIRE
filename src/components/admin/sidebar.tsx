@@ -15,7 +15,6 @@ import {
   FolderOpen,
   LayoutDashboard,
   Megaphone,
-  Phone,
   UserCircle2,
   Users,
 } from "lucide-react";
@@ -41,7 +40,7 @@ const gestionItems: readonly NavItem[] = [
 
 const bottomNavItems: readonly NavItem[] = [
   { id: "rappels", label: "Rappels", href: "/dashboard/admin/rappels", icon: <Bell className="size-[18px] shrink-0" /> },
-  { id: "calls", label: "Appels", href: "/dashboard/admin/calls", icon: <Phone className="size-[18px] shrink-0" /> },
+  { id: "calls", label: "Mes contacts", href: "/dashboard/admin/calls", icon: <Contact className="size-[18px] shrink-0" /> },
   { id: "assistant", label: "Assistant IA", href: "/dashboard/admin/assistant", icon: <Bot className="size-[18px] shrink-0" /> },
   { id: "performance", label: "Performances", href: "/dashboard/admin/performance", icon: <BarChart3 className="size-[18px] shrink-0" /> },
   { id: "export", label: "Export", href: "/dashboard/admin/export", icon: <FileDown className="size-[18px] shrink-0" /> },

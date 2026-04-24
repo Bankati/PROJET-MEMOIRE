@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: "%s • LBS Call Center",
   },
   description:
-    "Plateforme SaaS de gestion de centre d’appels pour universités et écoles: campagnes, attribution de contacts, interface agent avec IA (RAG), KPI par rôle, exports, et intégrations (Twilio/WhatsApp).",
+    "Plateforme SaaS de gestion de centre d’appels pour universités et écoles: campagnes, attribution de contacts, interface agent avec IA (RAG), KPI par rôle, exports, et messagerie WhatsApp.",
   applicationName: "LBS Call Center",
   metadataBase: new URL("http://localhost:3000"),
   /** Évite la route implicite `/favicon.ico` manquante (erreurs ENOENT au build). */

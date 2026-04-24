@@ -2,7 +2,6 @@
 /**
  * Composeur d'appel pour l'agent.
  * Affiche les numéros disponibles et permet de sélectionner lequel appeler.
- * L'intégration Twilio sera ajoutée ultérieurement.
  */
 import { useState } from "react";
 import {
@@ -43,7 +42,6 @@ export const PhoneDialer = ({
   };
 
   const handleStartCall = (): void => {
-    // Twilio integration will be added later
     setCallStatus("calling");
     // Simulate connection after 2 seconds
     setTimeout(() => {

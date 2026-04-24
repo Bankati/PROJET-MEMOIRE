@@ -123,7 +123,7 @@ export const DashboardShell = ({
                   Pilotage opérationnel
                 </CardTitle>
                 <CardDescription className="text-zinc-600 dark:text-zinc-300">
-                  Cette vue correspond à l&apos;étape 1. Les blocs RAG et Twilio seront branchés dans l&apos;étape dédiée.
+                  Vue d&apos;ensemble opérationnelle de la plateforme.
                 </CardDescription>
               </CardHeader>
               <CardContent>{children}</CardContent>

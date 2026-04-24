@@ -1,6 +1,6 @@
 /**
  * Schéma Drizzle principal pour LBS Call Center.
- * Ce fichier définit les tables de base du produit hors RAG et hors Twilio.
+ * Ce fichier définit les tables de base du produit.
  */
 import { relations } from "drizzle-orm";
 import {

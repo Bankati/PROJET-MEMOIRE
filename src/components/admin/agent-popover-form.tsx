@@ -67,7 +67,7 @@ export const AgentPopoverForm = ({
                   id="agent-fullName"
                   name="fullName"
                   required
-                  placeholder="Prénom Nom"
+                  placeholder="Prénom  &  Nom"
                   autoFocus
                 />
               </div>

@@ -93,12 +93,12 @@ const features: readonly Feature[] = [
     imageAlt: "Indicateurs et tableaux de bord par rôle",
   },
   {
-    title: "Twilio + WhatsApp (à venir)",
+    title: "WhatsApp (à venir)",
     description:
-      "Intégrations prévues: appels Twilio, message WhatsApp après appel positif, tracking.",
+      "Envoi de messages WhatsApp après appel positif, suivi et tracking des échanges.",
     icon: PhoneCall,
     image: featureCoverImages.whatsapp,
-    imageAlt: "Canaux téléphonie et messagerie (Twilio, WhatsApp)",
+    imageAlt: "Canaux messagerie WhatsApp pour le suivi",
   },
   {
     title: "Exports & carte des écoles",
