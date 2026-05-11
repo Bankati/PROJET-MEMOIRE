@@ -183,7 +183,6 @@ export default async function AdminContactDetailPage({ params }: PageProps): Pro
             phonePrimary={contact.phonePrimary}
             phoneSecondary={contact.phoneSecondary}
             contactName={contactName}
-            onPhoneSelect={() => {}}
           />
         </div>
       </div>

@@ -1,6 +1,9 @@
 -- ============================================================
 -- RAG — pgvector setup pour LBS Call Center
+-- Embeddings : Cohere embed-multilingual-v3.0 (1024 dimensions)
 -- À exécuter UNE SEULE FOIS dans l'éditeur SQL de Supabase.
+-- Si la table existait déjà, exécuter d'abord :
+--   DROP TABLE IF EXISTS document_chunks CASCADE;
 -- ============================================================
 
 -- 1. Activer l'extension pgvector
@@ -12,7 +15,7 @@ CREATE TABLE IF NOT EXISTS document_chunks (
   document_name TEXT        NOT NULL,
   content       TEXT        NOT NULL,
   metadata      JSONB       NOT NULL DEFAULT '{}',
-  embedding     VECTOR(1536),
+  embedding     VECTOR(1024),
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -24,7 +27,7 @@ CREATE INDEX IF NOT EXISTS document_chunks_embedding_idx
 
 -- 4. Fonction de recherche de similarité
 CREATE OR REPLACE FUNCTION match_document_chunks(
-  query_embedding VECTOR(1536),
+  query_embedding VECTOR(1024),
   match_threshold FLOAT  DEFAULT 0.5,
   match_count     INT    DEFAULT 5
 )
@@ -64,7 +67,7 @@ LANGUAGE sql
 AS $$
   SELECT
     document_name,
-    COUNT(*)       AS chunk_count,
+    COUNT(*)        AS chunk_count,
     MIN(created_at) AS created_at
   FROM document_chunks
   GROUP BY document_name

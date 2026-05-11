@@ -1,14 +1,25 @@
 /**
- * Page contacts admin — tableau simplifié avec filtre par établissement.
- * Chaque ligne a un bouton redirigeant vers la page d'appel.
+ * Page contacts admin — tableau avec sélection multiple et attribution aux agents.
+ * Permet l'ajout manuel ou l'import Excel/CSV de contacts.
  */
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import { Phone } from "lucide-react";
+import { X } from "lucide-react";
 
 import { requireRole } from "@/lib/auth/server-auth";
 import { db } from "@/lib/db";
-import { campaigns, campaignContacts, contacts } from "@/db/schema";
+import {
+  campaigns,
+  campaignContacts,
+  contacts,
+  users,
+  agentContactAssignments,
+} from "@/db/schema";
+import { ContactDialogForm } from "@/components/admin/contact-dialog-form";
+import { ImportExcelDialog } from "@/components/admin/import-excel-dialog";
+import { BulkAssignContacts } from "@/components/admin/bulk-assign-contacts";
+import { ContactFilters } from "@/components/admin/contact-filters";
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
 
@@ -17,6 +28,97 @@ const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): st
   if (typeof raw === "string") return raw;
   return Array.isArray(raw) ? (raw[0] ?? "") : "";
 };
+
+async function addContact(formData: FormData): Promise<void> {
+  "use server";
+  const user = await requireRole({ allowedRoles: ["admin"] });
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
+  const phonePrimary = String(formData.get("phonePrimary") ?? "").trim();
+  const phoneSecondary = String(formData.get("phoneSecondary") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const schoolName = String(formData.get("schoolName") ?? "").trim();
+  const desiredProgram = String(formData.get("desiredProgram") ?? "").trim();
+  const city = String(formData.get("city") ?? "").trim();
+  const campaignId = String(formData.get("campaignId") ?? "").trim();
+
+  if ((firstName.length === 0 && lastName.length === 0) || phonePrimary.length === 0 || campaignId.length === 0) {
+    redirect("/dashboard/admin/contacts?notice=missing_fields");
+  }
+
+  const normalizePhone = (phone: string): string => phone.replace(/\s+/g, "").replace(/^00/, "+");
+  const normalizedPrimary = normalizePhone(phonePrimary);
+  const normalizedSecondary = phoneSecondary.length > 0 ? normalizePhone(phoneSecondary) : "";
+  const displayName = firstName.length > 0 ? firstName : lastName;
+
+  try {
+    const existing = await db
+      .select({ id: contacts.id })
+      .from(contacts)
+      .where(eq(contacts.normalizedPhonePrimary, normalizedPrimary))
+      .limit(1);
+
+    let contactId: string;
+    if (existing.length > 0) {
+      contactId = existing[0].id;
+    } else {
+      const [newContact] = await db.insert(contacts).values({
+        firstName: firstName.length > 0 ? firstName : displayName,
+        lastName: lastName.length > 0 ? lastName : null,
+        email: email.length > 0 ? email : null,
+        phonePrimary,
+        phoneSecondary: phoneSecondary.length > 0 ? phoneSecondary : null,
+        normalizedPhonePrimary: normalizedPrimary,
+        normalizedPhoneSecondary: normalizedSecondary.length > 0 ? normalizedSecondary : null,
+        schoolName: schoolName.length > 0 ? schoolName : null,
+        desiredProgram: desiredProgram.length > 0 ? desiredProgram : null,
+        city: city.length > 0 ? city : null,
+      }).returning({ id: contacts.id });
+      contactId = newContact.id;
+    }
+
+    await db.insert(campaignContacts).values({
+      campaignId,
+      contactId,
+      source: "manual_form",
+      importedByAdminId: user.id,
+    }).onConflictDoNothing();
+
+    redirect("/dashboard/admin/contacts?notice=created");
+  } catch {
+    redirect("/dashboard/admin/contacts?notice=error");
+  }
+}
+
+async function bulkAssignAction(formData: FormData): Promise<void> {
+  "use server";
+  const user = await requireRole({ allowedRoles: ["admin"] });
+  const contactIds = String(formData.get("contactIds") ?? "").trim();
+  const agentId = String(formData.get("agentId") ?? "").trim();
+
+  if (contactIds.length === 0 || agentId.length === 0) {
+    redirect("/dashboard/admin/contacts?notice=missing_fields");
+  }
+
+  const ids = contactIds.split(",").filter(Boolean);
+  if (ids.length === 0) {
+    redirect("/dashboard/admin/contacts?notice=missing_fields");
+  }
+
+  try {
+    await db.insert(agentContactAssignments).values(
+      ids.map((ccId) => ({
+        campaignContactId: ccId,
+        agentId,
+        assignedByAdminId: user.id,
+      }))
+    ).onConflictDoNothing();
+
+    redirect("/dashboard/admin/contacts?notice=assigned");
+  } catch {
+    redirect("/dashboard/admin/contacts?notice=error");
+  }
+}
 
 export default async function AdminContactsPage({
   searchParams,
@@ -33,7 +135,12 @@ export default async function AdminContactsPage({
     .orderBy(desc(campaigns.createdAt));
   const myCampaignIds = myCampaigns.map((c) => c.id);
 
-  // Distinct schools
+  const myAgents = await db
+    .select({ id: users.id, fullName: users.fullName })
+    .from(users)
+    .where(and(eq(users.managedByAdminId, user.id), eq(users.role, "agent"), eq(users.status, "active")))
+    .orderBy(users.fullName);
+
   const schoolOptions = myCampaignIds.length > 0
     ? await db
         .selectDistinct({ schoolName: contacts.schoolName })
@@ -57,135 +164,83 @@ export default async function AdminContactsPage({
     ? await db
         .select({
           ccId: campaignContacts.id,
-          campaignTitle: campaigns.title,
           firstName: contacts.firstName,
           lastName: contacts.lastName,
           phonePrimary: contacts.phonePrimary,
+          phoneSecondary: contacts.phoneSecondary,
           email: contacts.email,
           schoolName: contacts.schoolName,
-          city: contacts.city,
+          isAssigned: sql<boolean>`${agentContactAssignments.id} is not null`,
+          assignedTo: users.fullName,
         })
         .from(campaignContacts)
         .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
-        .innerJoin(campaigns, eq(campaignContacts.campaignId, campaigns.id))
+        .leftJoin(agentContactAssignments, eq(agentContactAssignments.campaignContactId, campaignContacts.id))
+        .leftJoin(users, eq(users.id, agentContactAssignments.agentId))
         .where(contactConditions.length > 0 ? and(...contactConditions) : undefined)
         .orderBy(desc(campaignContacts.createdAt))
         .limit(200)
     : [];
 
+  const notice = readParam({ sp, key: "notice" });
+  const noticeMessages: Readonly<Record<string, { text: string; type: "success" | "error" }>> = {
+    created: { text: "Contact ajouté avec succès.", type: "success" },
+    assigned: { text: "Contact(s) attribué(s) avec succès.", type: "success" },
+    missing_fields: { text: "Veuillez remplir tous les champs obligatoires.", type: "error" },
+    error: { text: "Une erreur est survenue.", type: "error" },
+  };
+  const currentNotice = notice.length > 0 ? noticeMessages[notice] : undefined;
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Contacts</h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">Consultez et appelez vos prospects</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Contacts</h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">Consultez et attribuez vos prospects</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <ContactDialogForm campaigns={myCampaigns} addAction={addContact} />
+          <ImportExcelDialog campaigns={myCampaigns} />
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Campaign filter */}
-        {myCampaigns.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Campagne :</span>
-            <Link
-              href={schoolFilter.length > 0 ? `/dashboard/admin/contacts?school=${encodeURIComponent(schoolFilter)}` : "/dashboard/admin/contacts"}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${campaignFilter.length === 0 ? "border-lbs-blue bg-lbs-blue/10 text-lbs-blue dark:border-blue-400 dark:bg-blue-500/15 dark:text-blue-300" : "border-zinc-200 text-zinc-600 hover:border-lbs-blue hover:text-lbs-blue dark:border-white/15 dark:text-zinc-300"}`}
-            >
-              Toutes
-            </Link>
-            {myCampaigns.map((c) => (
-              <Link
-                key={c.id}
-                href={`/dashboard/admin/contacts?campaign=${c.id}${schoolFilter.length > 0 ? `&school=${encodeURIComponent(schoolFilter)}` : ""}`}
-                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${campaignFilter === c.id ? "border-lbs-blue bg-lbs-blue/10 text-lbs-blue dark:border-blue-400 dark:bg-blue-500/15 dark:text-blue-300" : "border-zinc-200 text-zinc-600 hover:border-lbs-blue hover:text-lbs-blue dark:border-white/15 dark:text-zinc-300"}`}
-              >
-                {c.title}
-              </Link>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      {/* School filter */}
-      {schoolOptions.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Établissement :</span>
-          <Link
-            href={campaignFilter.length > 0 ? `/dashboard/admin/contacts?campaign=${campaignFilter}` : "/dashboard/admin/contacts"}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${schoolFilter.length === 0 ? "border-lbs-blue bg-lbs-blue/10 text-lbs-blue dark:border-blue-400 dark:bg-blue-500/15 dark:text-blue-300" : "border-zinc-200 text-zinc-600 hover:border-lbs-blue hover:text-lbs-blue dark:border-white/15 dark:text-zinc-300"}`}
-          >
-            Tous
-          </Link>
-          {schoolOptions.map((s) => s.schoolName ? (
-            <Link
-              key={s.schoolName}
-              href={`/dashboard/admin/contacts?school=${encodeURIComponent(s.schoolName)}${campaignFilter.length > 0 ? `&campaign=${campaignFilter}` : ""}`}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${schoolFilter === s.schoolName ? "border-lbs-blue bg-lbs-blue/10 text-lbs-blue dark:border-blue-400 dark:bg-blue-500/15 dark:text-blue-300" : "border-zinc-200 text-zinc-600 hover:border-lbs-blue hover:text-lbs-blue dark:border-white/15 dark:text-zinc-300"}`}
-            >
-              {s.schoolName}
-            </Link>
-          ) : null)}
+      {currentNotice ? (
+        <div className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm ${
+          currentNotice.type === "success"
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+            : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+        }`}>
+          {currentNotice.text}
+          <Link href="/dashboard/admin/contacts" className="ml-auto"><X className="size-4" /></Link>
         </div>
       ) : null}
 
-      {/* Contacts table */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-white/10">
-                <th className="px-5 py-3">Contact</th>
-                <th className="px-5 py-3">Téléphone</th>
-                <th className="px-5 py-3">Établissement</th>
-                <th className="px-5 py-3">Ville</th>
-                <th className="px-5 py-3">Campagne</th>
-                <th className="px-5 py-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {contactsList.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-zinc-400">
-                    Aucun contact trouvé.
-                  </td>
-                </tr>
-              ) : (
-                contactsList.map((c) => (
-                  <tr key={c.ccId} className="border-b border-zinc-100 transition hover:bg-zinc-50/50 dark:border-white/5 dark:hover:bg-white/5">
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-semibold text-white">
-                          {c.firstName.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-zinc-800 dark:text-white">{c.firstName} {c.lastName ?? ""}</p>
-                          {c.email ? <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">{c.email}</p> : null}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-zinc-700 dark:text-zinc-200">{c.phonePrimary}</td>
-                    <td className="px-5 py-3 text-zinc-700 dark:text-zinc-200">{c.schoolName ?? "—"}</td>
-                    <td className="px-5 py-3 text-zinc-700 dark:text-zinc-200">{c.city ?? "—"}</td>
-                    <td className="px-5 py-3">
-                      <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
-                        {c.campaignTitle}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <Link
-                        href={`/dashboard/admin/contacts/${c.ccId}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-lbs-blue/30 bg-lbs-blue/5 px-3 py-1.5 text-xs font-medium text-lbs-blue transition hover:bg-lbs-blue hover:text-white dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/30"
-                      >
-                        <Phone className="size-3.5" />
-                        Appeler
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Filters */}
+      <ContactFilters
+        campaigns={myCampaigns}
+        schoolOptions={schoolOptions.flatMap((s) => s.schoolName ? [s.schoolName] : [])}
+        currentCampaign={campaignFilter}
+        currentSchool={schoolFilter}
+      />
+
+      {/* Contacts table with bulk assignment */}
+      <BulkAssignContacts
+        contacts={contactsList.map((c) => ({
+          ccId: c.ccId,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          phonePrimary: c.phonePrimary,
+          phoneSecondary: c.phoneSecondary,
+          email: c.email,
+          schoolName: c.schoolName,
+          isAssigned: Boolean(c.isAssigned),
+          assignedTo: c.assignedTo ?? null,
+        }))}
+        agents={myAgents}
+        adminId={user.id}
+        adminName={user.fullName}
+        bulkAssignAction={bulkAssignAction}
+      />
     </div>
   );
 }

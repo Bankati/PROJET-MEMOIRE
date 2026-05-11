@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Bot, Send, Sparkles, Loader2, GraduationCap, CreditCard, FileText, BookOpen, Home, TrendingUp, Phone } from "lucide-react";
+import { Bot, Send, Sparkles, GraduationCap, CreditCard, FileText, BookOpen, Home, TrendingUp, Phone } from "lucide-react";
+import LoaderOne from "@/components/ui/loader-one";
 
 type Message = Readonly<{
   id: string;
@@ -142,9 +143,8 @@ export const AssistantChat = (): React.JSX.Element => {
               <div className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#244976] to-[#21416C]">
                 <Bot className="size-4 text-white" />
               </div>
-              <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3 dark:bg-white/10">
-                <Loader2 className="size-4 animate-spin text-zinc-400" />
-                <span className="text-sm text-zinc-400">Recherche en cours...</span>
+              <div className="rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3.5 dark:bg-white/10">
+                <LoaderOne />
               </div>
             </div>
           ) : null}

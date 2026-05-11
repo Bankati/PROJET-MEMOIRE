@@ -18,10 +18,6 @@ export const metadata: Metadata = {
     "Plateforme SaaS de gestion de centre d’appels pour universités et écoles: campagnes, attribution de contacts, interface agent avec IA (RAG), KPI par rôle, exports, et messagerie WhatsApp.",
   applicationName: "LBS Call Center",
   metadataBase: new URL("http://localhost:3000"),
-  /** Évite la route implicite `/favicon.ico` manquante (erreurs ENOENT au build). */
-  icons: {
-    icon: [{ url: "/LBS%20LOGO.jpeg", type: "image/jpeg" }],
-  },
 };
 
 export default function RootLayout({

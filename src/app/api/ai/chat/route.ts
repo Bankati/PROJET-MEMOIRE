@@ -1,5 +1,5 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createCohere } from "@ai-sdk/cohere";
 import { streamText, embed } from "ai";
 import { NextResponse } from "next/server";
 
@@ -16,11 +16,11 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 
+  if (!env.COHERE_API_KEY) {
+    return NextResponse.json({ error: "COHERE_API_KEY manquant." }, { status: 503 });
+  }
   if (!env.OPENAI_API_KEY) {
     return NextResponse.json({ error: "OPENAI_API_KEY manquant." }, { status: 503 });
-  }
-  if (!env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: "ANTHROPIC_API_KEY manquant." }, { status: 503 });
   }
 
   const body = await request.json() as { query?: string };
@@ -30,11 +30,11 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json({ error: "La question est vide." }, { status: 400 });
   }
 
+  const cohere = createCohere({ apiKey: env.COHERE_API_KEY });
   const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY });
-  const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
   const { embedding } = await embed({
-    model: openai.embedding("text-embedding-3-small"),
+    model: cohere.embedding("embed-multilingual-v3.0"),
     value: query,
   });
 
@@ -53,7 +53,7 @@ export const POST = async (request: Request): Promise<Response> => {
   });
 
   const result = streamText({
-    model: anthropic("claude-haiku-4-5-20251001"),
+    model: openai("gpt-4o-mini"),
     system: systemPrompt,
     messages: [{ role: "user", content: query }],
     maxOutputTokens: 400,

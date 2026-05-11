@@ -2,6 +2,7 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pdf-parse"],
   /**
    * LBS Call Center - Next.js config (Next.js 15).
    * Goal: sane defaults for performance, security headers, and image handling.

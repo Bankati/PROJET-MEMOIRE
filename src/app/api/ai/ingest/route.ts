@@ -1,11 +1,13 @@
-import { createOpenAI } from "@ai-sdk/openai";
-import { embedMany } from "ai";
+import { createCohere } from "@ai-sdk/cohere";
+import { embed } from "ai";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { storeChunks } from "@/lib/ai/vector-store";
+import { uploadRagDocument } from "@/lib/supabase";
 
+export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const chunkText = ({ text, chunkSize = 600, overlap = 80 }: Readonly<{ text: string; chunkSize?: number; overlap?: number }>): string[] => {
@@ -49,8 +51,8 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json({ ok: false, error: "Non autorisé." }, { status: 401 });
   }
 
-  if (!env.OPENAI_API_KEY) {
-    return NextResponse.json({ ok: false, error: "OPENAI_API_KEY manquant." }, { status: 503 });
+  if (!env.COHERE_API_KEY) {
+    return NextResponse.json({ ok: false, error: "COHERE_API_KEY manquant." }, { status: 503 });
   }
 
   const formData = await request.formData();
@@ -65,17 +67,17 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json({ ok: false, error: "Format non supporté. Utilisez PDF, TXT ou MD." }, { status: 400 });
   }
 
+  const arrayBuffer = await file.arrayBuffer();
   let rawText = "";
 
   if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
-    const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse({ data: buffer });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { PDFParse } = await import("pdf-parse") as any;
+    const parser = new PDFParse({ data: Buffer.from(arrayBuffer) }) as { getText: () => Promise<{ text: string }> };
     const pdfData = await parser.getText();
     rawText = pdfData.text;
   } else {
-    rawText = await file.text();
+    rawText = new TextDecoder().decode(arrayBuffer);
   }
 
   rawText = rawText.replace(/\r\n/g, "\n").replace(/[ \t]+/g, " ").trim();
@@ -90,18 +92,34 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json({ ok: false, error: "Impossible d'extraire du texte du document." }, { status: 400 });
   }
 
-  const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY });
+  const cohere = createCohere({ apiKey: env.COHERE_API_KEY });
+  const embeddingModel = cohere.embedding("embed-multilingual-v3.0");
 
-  const { embeddings } = await embedMany({
-    model: openai.embedding("text-embedding-3-small"),
-    values: textChunks,
-  });
+  const embeddings: number[][] = [];
+  for (const chunk of textChunks) {
+    const { embedding } = await embed({ model: embeddingModel, value: chunk });
+    embeddings.push(embedding);
+  }
 
   const documentName = file.name.replace(/\.[^/.]+$/, "");
+
+  // Upload original file to Supabase Storage
+  const { publicUrl, storagePath } = await uploadRagDocument({
+    documentName,
+    fileBuffer: Buffer.from(arrayBuffer),
+    contentType: file.type || "application/octet-stream",
+  });
+
   const chunksToStore = textChunks.map((content, index) => ({
     document_name: documentName,
     content,
-    metadata: { chunk_index: index, total_chunks: textChunks.length, file_name: file.name },
+    metadata: {
+      chunk_index: index,
+      total_chunks: textChunks.length,
+      file_name: file.name,
+      storage_path: storagePath ?? undefined,
+      storage_url: publicUrl ?? undefined,
+    },
     embedding: embeddings[index],
   }));
 
@@ -115,6 +133,8 @@ export const POST = async (request: Request): Promise<Response> => {
     ok: true,
     document_name: documentName,
     chunks_stored: stored,
+    storage_url: publicUrl,
+    storage_path: storagePath,
     message: `${stored} segment${stored > 1 ? "s" : ""} indexé${stored > 1 ? "s" : ""} avec succès.`,
   });
 };

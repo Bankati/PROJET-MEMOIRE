@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Bot, ChevronDown, ChevronUp, Loader2, Send, Sparkles } from "lucide-react";
+import { Bot, ChevronDown, ChevronUp, Send, Sparkles } from "lucide-react";
+import LoaderOne from "@/components/ui/loader-one";
 
 type Message = Readonly<{
   id: string;
@@ -145,9 +146,8 @@ export const RagAssistant = ({ contactName, schoolName }: RagAssistantProps): Re
 
             {isStreaming && messages[messages.length - 1]?.content === "" ? (
               <div className="flex justify-start">
-                <div className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-4 py-2.5 text-sm text-zinc-600 dark:bg-white/10 dark:text-zinc-400">
-                  <Loader2 className="size-4 animate-spin" />
-                  Recherche...
+                <div className="rounded-2xl bg-zinc-100 px-4 py-3 dark:bg-white/10">
+                  <LoaderOne />
                 </div>
               </div>
             ) : null}
