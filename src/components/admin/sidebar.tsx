@@ -15,17 +15,19 @@ import {
   FolderOpen,
   LayoutDashboard,
   Megaphone,
+  MessageSquare,
   UserCircle2,
   Users,
 } from "lucide-react";
 
-import { useAdminSidebar } from "@/components/admin/layout-shell";
+import { useAdminSidebar, useNotifications } from "@/components/admin/layout-shell";
 
 type NavItem = Readonly<{
   id: string;
   label: string;
   href: string;
   icon: React.ReactNode;
+  badge?: number;
 }>;
 
 const topNavItems: readonly NavItem[] = [
@@ -38,14 +40,6 @@ const gestionItems: readonly NavItem[] = [
   { id: "agents", label: "Agents", href: "/dashboard/admin/agents", icon: <Users className="size-[18px] shrink-0" /> },
 ];
 
-const bottomNavItems: readonly NavItem[] = [
-  { id: "rappels", label: "Rappels", href: "/dashboard/admin/rappels", icon: <Bell className="size-[18px] shrink-0" /> },
-  { id: "calls", label: "Mes contacts", href: "/dashboard/admin/calls", icon: <Contact className="size-[18px] shrink-0" /> },
-  { id: "assistant", label: "Assistant IA", href: "/dashboard/admin/assistant", icon: <Bot className="size-[18px] shrink-0" /> },
-  { id: "performance", label: "Performances", href: "/dashboard/admin/performance", icon: <BarChart3 className="size-[18px] shrink-0" /> },
-  { id: "export", label: "Export", href: "/dashboard/admin/export", icon: <FileDown className="size-[18px] shrink-0" /> },
-  { id: "profile", label: "Mon profil", href: "/dashboard/admin/profile", icon: <UserCircle2 className="size-[18px] shrink-0" /> },
-];
 
 const isActiveRoute = ({ pathname, href }: Readonly<{ pathname: string; href: string }>): boolean => {
   if (href === "/dashboard/admin") return pathname === "/dashboard/admin";
@@ -58,10 +52,22 @@ const isGestionActive = (pathname: string): boolean =>
 export const AdminSidebar = (): React.JSX.Element => {
   const pathname: string = usePathname();
   const { isCollapsed, toggle } = useAdminSidebar();
+  const { unreadCount: recentMessagesCount } = useNotifications();
   const [gestionOpen, setGestionOpen] = useState<boolean>(() => isGestionActive(pathname));
+
+  const bottomNavItems: readonly NavItem[] = [
+    { id: "rappels", label: "Rappels", href: "/dashboard/admin/rappels", icon: <Bell className="size-[18px] shrink-0" /> },
+    { id: "calls", label: "Mes contacts", href: "/dashboard/admin/calls", icon: <Contact className="size-[18px] shrink-0" /> },
+    { id: "messages", label: "Messages", href: "/dashboard/admin/messages", icon: <MessageSquare className="size-[18px] shrink-0" />, badge: recentMessagesCount },
+    { id: "assistant", label: "Assistant IA", href: "/dashboard/admin/assistant", icon: <Bot className="size-[18px] shrink-0" /> },
+    { id: "performance", label: "Performances", href: "/dashboard/admin/performance", icon: <BarChart3 className="size-[18px] shrink-0" /> },
+    { id: "export", label: "Export", href: "/dashboard/admin/export", icon: <FileDown className="size-[18px] shrink-0" /> },
+    { id: "profile", label: "Mon profil", href: "/dashboard/admin/profile", icon: <UserCircle2 className="size-[18px] shrink-0" /> },
+  ];
 
   const renderNavItem = (item: NavItem) => {
     const isActive = isActiveRoute({ pathname, href: item.href });
+    const showBadge = (item.badge ?? 0) > 0;
     return (
       <Link
         key={item.id}
@@ -74,8 +80,22 @@ export const AdminSidebar = (): React.JSX.Element => {
         }`}
       >
         {isActive ? <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" /> : null}
-        {item.icon}
-        {isCollapsed ? null : <span className="truncate">{item.label}</span>}
+        <span className="relative shrink-0">
+          {item.icon}
+          {showBadge && isCollapsed ? (
+            <span className="absolute -right-1 -top-1 size-2 rounded-full bg-red-400" />
+          ) : null}
+        </span>
+        {isCollapsed ? null : (
+          <span className="flex flex-1 items-center truncate">
+            <span className="truncate">{item.label}</span>
+            {showBadge ? (
+              <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                {item.badge}
+              </span>
+            ) : null}
+          </span>
+        )}
         {isCollapsed ? (
           <span className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-zinc-800">
             {item.label}

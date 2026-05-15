@@ -25,7 +25,7 @@ type ForgotResponse = Readonly<{
 type ResetStep = "otp" | "password" | "success";
 
 const OTP_LENGTH: number = 6;
-const OTP_EXPIRY_SECONDS: number = 180;
+const OTP_EXPIRY_SECONDS: number = 600;
 
 export const ResetPasswordForm = (): React.JSX.Element => {
   const router = useRouter();
@@ -44,15 +44,13 @@ export const ResetPasswordForm = (): React.JSX.Element => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    if (step !== "otp" || countdown <= 0) {
-      if (countdown <= 0) {
-        setCanResend(true);
-      }
-      return;
-    }
+    if (step !== "otp") return;
+    setCountdown(OTP_EXPIRY_SECONDS);
+    setCanResend(false);
     const timer: ReturnType<typeof setInterval> = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
+          clearInterval(timer);
           setCanResend(true);
           return 0;
         }
@@ -60,7 +58,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [step, countdown]);
+  }, [step]);
 
   const formatCountdown = useCallback((): string => {
     const minutes: number = Math.floor(countdown / 60);

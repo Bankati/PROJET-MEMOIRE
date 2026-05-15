@@ -4,7 +4,7 @@
 import { createHash, randomInt } from "node:crypto";
 
 const OTP_LENGTH: number = 6;
-const OTP_DURATION_MINUTES: number = 3;
+const OTP_DURATION_MINUTES: number = 10;
 
 const createOtpHash = ({
   code,

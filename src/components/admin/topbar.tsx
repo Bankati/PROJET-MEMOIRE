@@ -7,15 +7,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, Clock, Menu } from "lucide-react";
+import { Clock, Menu } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ThemeSwitch } from "@/components/ui/theme-switch-button";
 import { useAdminSidebar } from "@/components/admin/layout-shell";
+import { NotificationPopover } from "@/components/admin/notification-popover";
+
+type Notification = Readonly<{
+  id: string;
+  message: string;
+  senderName: string;
+  createdAt: Date;
+}>;
 
 type TopbarProps = Readonly<{
   fullName: string;
   avatarUrl: string | null;
+  notifications?: readonly Notification[];
 }>;
 
 const extractInitials = ({ fullName }: Readonly<{ fullName: string }>): string => {
@@ -36,6 +45,7 @@ const pageTitleMap: Readonly<Record<string, string>> = {
   "/dashboard/admin/performance": "Performances",
   "/dashboard/admin/export": "Export",
   "/dashboard/admin/profile": "Mon profil",
+  "/dashboard/admin/messages": "Messages",
 };
 
 const buildPageTitle = ({ pathname }: Readonly<{ pathname: string }>): string => {
@@ -58,7 +68,7 @@ const buildGreeting = (): string => {
   return "Bonsoir";
 };
 
-export const AdminTopbar = ({ fullName, avatarUrl }: TopbarProps): React.JSX.Element => {
+export const AdminTopbar = ({ fullName, avatarUrl, notifications = [] }: TopbarProps): React.JSX.Element => {
   const pathname: string = usePathname();
   const { toggle } = useAdminSidebar();
   const initials: string = extractInitials({ fullName });
@@ -95,14 +105,7 @@ export const AdminTopbar = ({ fullName, avatarUrl }: TopbarProps): React.JSX.Ele
             {currentTime}
           </div>
         ) : null}
-        <button
-          type="button"
-          className="relative grid size-9 place-items-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 dark:border-white/15 dark:text-zinc-300 dark:hover:bg-white/10"
-          aria-label="Notifications"
-        >
-          <Bell className="size-4" />
-          <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-lbs-blue" />
-        </button>
+        <NotificationPopover notifications={notifications} />
         <ThemeSwitch />
         <Link
           href="/dashboard/admin/profile"

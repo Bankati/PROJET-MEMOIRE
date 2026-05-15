@@ -25,6 +25,8 @@ const envSchema = z.object({
   COHERE_API_KEY: z.string().min(1).optional(),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional(),
   OPENAI_API_KEY: z.string().min(1).optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_TEST_TO: z.string().email().optional(),
 });
 
 const buildEnv = () => {
@@ -37,6 +39,8 @@ const buildEnv = () => {
       COHERE_API_KEY: parseOptionalEnvString({ value: process.env.COHERE_API_KEY }),
       GOOGLE_GENERATIVE_AI_API_KEY: parseOptionalEnvString({ value: process.env.GOOGLE_GENERATIVE_AI_API_KEY }),
       OPENAI_API_KEY: parseOptionalEnvString({ value: process.env.OPENAI_API_KEY }),
+      RESEND_API_KEY: parseOptionalEnvString({ value: process.env.RESEND_API_KEY }),
+      RESEND_TEST_TO: parseOptionalEnvString({ value: process.env.RESEND_TEST_TO }),
     });
   }
   return envSchema.parse({
@@ -47,6 +51,8 @@ const buildEnv = () => {
     COHERE_API_KEY: parseOptionalEnvString({ value: process.env.COHERE_API_KEY }),
     GOOGLE_GENERATIVE_AI_API_KEY: parseOptionalEnvString({ value: process.env.GOOGLE_GENERATIVE_AI_API_KEY }),
     OPENAI_API_KEY: parseOptionalEnvString({ value: process.env.OPENAI_API_KEY }),
+    RESEND_API_KEY: parseOptionalEnvString({ value: process.env.RESEND_API_KEY }),
+    RESEND_TEST_TO: parseOptionalEnvString({ value: process.env.RESEND_TEST_TO }),
   });
 };
 
