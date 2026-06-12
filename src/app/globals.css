@@ -113,3 +113,51 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .lbs-soft-pulse, .lbs-shimmer, .lbs-float { animation: none; }
 }
+
+/* ── Interactivité globale ──────────────────────────────────────────────────
+   Couvre tous les boutons, rôles bouton et liens sur toute la plateforme.
+   Les classes Tailwind utilitaires (hover:bg-*, active:scale-*) ont une
+   spécificité plus haute et priment sur ces règles de base.
+   ────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  /* Curseur pointer sur tout élément cliquable */
+  button:not(:disabled),
+  [role="button"],
+  select:not(:disabled),
+  label[for] {
+    cursor: pointer;
+  }
+
+  /* Transitions douces et uniformes */
+  button,
+  [role="button"],
+  a[href] {
+    transition-property: background-color, color, border-color, box-shadow, opacity, filter, transform;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Survol — légère luminosité pour signaler l'interactivité.
+     Les classes Tailwind hover:brightness-* ou hover:bg-* priment ici. */
+  button:not(:disabled):hover,
+  [role="button"]:hover {
+    filter: brightness(1.08);
+  }
+
+  /* Pression au clic — sensation de "bouton physique" */
+  button:not(:disabled):active,
+  [role="button"]:active,
+  a[href]:active {
+    filter: brightness(0.88);
+    opacity: 0.82;
+    transition-duration: 70ms;
+  }
+
+  /* Désactivé — aucun feedback interactif */
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+    filter: none;
+    opacity: 0.5;
+  }
+}

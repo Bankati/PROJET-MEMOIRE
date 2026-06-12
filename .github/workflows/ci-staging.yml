@@ -1,0 +1,120 @@
+name: CI/CD — Staging
+
+on:
+  pull_request:
+    branches: [staging]
+  push:
+    branches: [staging]
+
+jobs:
+  quality:
+    name: 🔍 Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run lint
+      - run: npm run format:check
+
+  unit-tests:
+    name: 🧪 Unit Tests + Coverage
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Run unit tests with coverage
+        run: npm run test:ci
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL_STAGING }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET_STAGING }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - uses: codecov/codecov-action@v4
+
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: NPM Audit
+        run: npm audit --audit-level=moderate
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        if: github.event_name == 'pull_request'
+      - name: Secret scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+  build:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    needs: [quality, unit-tests, security]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL_STAGING }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET_STAGING }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEXT_PUBLIC_APP_URL: https://staging.lbs-callcenter.vercel.app
+
+  e2e-tests:
+    name: 🎭 E2E Tests (Staging)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E tests against staging URL
+        run: npx playwright test
+        env:
+          PLAYWRIGHT_BASE_URL: https://staging.lbs-callcenter.vercel.app
+          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL_STAGING }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET_STAGING }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-staging
+          path: playwright-report/
+          retention-days: 7

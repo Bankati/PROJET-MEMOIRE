@@ -1,49 +1,56 @@
-"use client";
+'use client'
 /**
  * Composant DatePicker basé sur @ark-ui/react.
  * Calendrier complet avec sélection jour/mois/année et vues de navigation.
  * Adapté au design system LBS avec support du mode sombre.
  */
-import { DatePicker } from "@ark-ui/react/date-picker";
-import { Portal } from "@ark-ui/react/portal";
-import { ChevronLeft, ChevronRight, Calendar, X } from "lucide-react";
+import { DatePicker } from '@ark-ui/react/date-picker'
+import { Portal } from '@ark-ui/react/portal'
+import { ChevronLeft, ChevronRight, Calendar, X } from 'lucide-react'
 
 type LbsDatePickerProps = Readonly<{
-  label?: string;
-  name?: string;
-  defaultValue?: string;
-  onValueChange?: (dateStr: string) => void;
-}>;
+  label?: string
+  name?: string
+  defaultValue?: string
+  onValueChange?: (dateStr: string) => void
+}>
 
 export const LbsDatePicker = ({
-  label = "Sélectionner une date",
+  label = 'Sélectionner une date',
   name,
   defaultValue,
   onValueChange,
 }: LbsDatePickerProps): React.JSX.Element => {
   return (
     <DatePicker.Root
+      id={name ?? label}
       onValueChange={(details) => {
-        const formatted: string = details.valueAsString[0] ?? "";
+        const formatted: string = details.valueAsString[0] ?? ''
         if (onValueChange) {
-          onValueChange(formatted);
+          onValueChange(formatted)
         }
       }}
     >
       <DatePicker.Label className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
         {label}
       </DatePicker.Label>
-      <DatePicker.Control className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm transition focus-within:border-lbs-blue focus-within:ring-2 focus-within:ring-lbs-blue/20 dark:border-white/10 dark:bg-[#1a2332]">
+      <DatePicker.Control className="focus-within:border-lbs-blue focus-within:ring-lbs-blue/20 flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm transition focus-within:ring-2 dark:border-white/10 dark:bg-[#1a2332]">
         <DatePicker.Input
           name={name}
           className="flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
           placeholder="jj/mm/aaaa"
           suppressHydrationWarning
         />
-        <DatePicker.Trigger className="rounded-lg p-1.5 text-zinc-500 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/10" suppressHydrationWarning>
+        <DatePicker.Trigger
+          className="rounded-lg p-1.5 text-zinc-500 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/10"
+          suppressHydrationWarning
+        >
           <Calendar className="size-4" />
         </DatePicker.Trigger>
-        <DatePicker.ClearTrigger className="rounded-lg p-1.5 text-rose-500 transition hover:bg-rose-50 dark:hover:bg-rose-500/10" suppressHydrationWarning>
+        <DatePicker.ClearTrigger
+          className="rounded-lg p-1.5 text-rose-500 transition hover:bg-rose-50 dark:hover:bg-rose-500/10"
+          suppressHydrationWarning
+        >
           <X className="size-3.5" />
         </DatePicker.ClearTrigger>
       </DatePicker.Control>
@@ -76,7 +83,10 @@ export const LbsDatePicker = ({
                       <DatePicker.TableHead>
                         <DatePicker.TableRow>
                           {datePicker.weekDays.map((weekDay, idx) => (
-                            <DatePicker.TableHeader key={idx} className="py-1 text-xs text-zinc-500 dark:text-zinc-400">
+                            <DatePicker.TableHeader
+                              key={idx}
+                              className="py-1 text-xs text-zinc-500 dark:text-zinc-400"
+                            >
                               {weekDay.short}
                             </DatePicker.TableHeader>
                           ))}
@@ -87,7 +97,7 @@ export const LbsDatePicker = ({
                           <DatePicker.TableRow key={weekIdx}>
                             {week.map((day, dayIdx) => (
                               <DatePicker.TableCell key={dayIdx} value={day}>
-                                <DatePicker.TableCellTrigger className="flex size-9 items-center justify-center rounded-lg text-zinc-800 transition hover:bg-lbs-blue/10 hover:text-lbs-blue focus:ring-2 focus:ring-lbs-blue/30 data-[selected]:bg-lbs-blue data-[selected]:text-white dark:text-zinc-200 dark:hover:bg-lbs-blue/20">
+                                <DatePicker.TableCellTrigger className="hover:bg-lbs-blue/10 hover:text-lbs-blue focus:ring-lbs-blue/30 data-[selected]:bg-lbs-blue dark:hover:bg-lbs-blue/20 flex size-9 items-center justify-center rounded-lg text-zinc-800 transition focus:ring-2 data-[selected]:text-white dark:text-zinc-200">
                                   {day.day}
                                 </DatePicker.TableCellTrigger>
                               </DatePicker.TableCell>
@@ -117,17 +127,19 @@ export const LbsDatePicker = ({
                     </DatePicker.ViewControl>
                     <DatePicker.Table className="w-full text-sm">
                       <DatePicker.TableBody>
-                        {datePicker.getMonthsGrid({ columns: 4, format: "short" }).map((months, rowIdx) => (
-                          <DatePicker.TableRow key={rowIdx}>
-                            {months.map((month, mIdx) => (
-                              <DatePicker.TableCell key={mIdx} value={month.value}>
-                                <DatePicker.TableCellTrigger className="rounded-lg px-2 py-1.5 text-zinc-700 transition hover:bg-lbs-blue/10 hover:text-lbs-blue dark:text-zinc-300">
-                                  {month.label}
-                                </DatePicker.TableCellTrigger>
-                              </DatePicker.TableCell>
-                            ))}
-                          </DatePicker.TableRow>
-                        ))}
+                        {datePicker
+                          .getMonthsGrid({ columns: 4, format: 'short' })
+                          .map((months, rowIdx) => (
+                            <DatePicker.TableRow key={rowIdx}>
+                              {months.map((month, mIdx) => (
+                                <DatePicker.TableCell key={mIdx} value={month.value}>
+                                  <DatePicker.TableCellTrigger className="hover:bg-lbs-blue/10 hover:text-lbs-blue rounded-lg px-2 py-1.5 text-zinc-700 transition dark:text-zinc-300">
+                                    {month.label}
+                                  </DatePicker.TableCellTrigger>
+                                </DatePicker.TableCell>
+                              ))}
+                            </DatePicker.TableRow>
+                          ))}
                       </DatePicker.TableBody>
                     </DatePicker.Table>
                   </>
@@ -155,7 +167,7 @@ export const LbsDatePicker = ({
                           <DatePicker.TableRow key={rowIdx}>
                             {years.map((year, yIdx) => (
                               <DatePicker.TableCell key={yIdx} value={year.value}>
-                                <DatePicker.TableCellTrigger className="rounded-lg px-2 py-1.5 text-zinc-700 transition hover:bg-lbs-blue/10 hover:text-lbs-blue dark:text-zinc-300">
+                                <DatePicker.TableCellTrigger className="hover:bg-lbs-blue/10 hover:text-lbs-blue rounded-lg px-2 py-1.5 text-zinc-700 transition dark:text-zinc-300">
                                   {year.label}
                                 </DatePicker.TableCellTrigger>
                               </DatePicker.TableCell>
@@ -172,5 +184,5 @@ export const LbsDatePicker = ({
         </DatePicker.Positioner>
       </Portal>
     </DatePicker.Root>
-  );
-};
+  )
+}
