@@ -1,22 +1,22 @@
-"use client";
+'use client'
 /**
  * Barre de filtres interactifs de la page Campagnes.
  * Utilise les composants FilterSelect pour statut et admin, même style que le dashboard.
  */
-import { useRouter } from "next/navigation";
-import { useCallback, useRef } from "react";
-import { Filter, Sparkles } from "lucide-react";
+import { useRouter } from 'next/navigation'
+import { useCallback, useRef } from 'react'
+import { Filter, Sparkles } from 'lucide-react'
 
-import { FilterSelect } from "@/components/ui/filter-select";
+import { FilterSelect } from '@/components/ui/filter-select'
 
-type AdminOption = Readonly<{ value: string; label: string }>;
+type AdminOption = Readonly<{ value: string; label: string }>
 type CampaignsFiltersProps = Readonly<{
-  adminOptions: readonly AdminOption[];
-  currentStatus: string;
-  currentAdmin: string;
-  currentQuery: string;
-  currentMinCalls: number;
-}>;
+  adminOptions: readonly AdminOption[]
+  currentStatus: string
+  currentAdmin: string
+  currentQuery: string
+  currentMinCalls: number
+}>
 
 export const CampaignsFilters = ({
   adminOptions,
@@ -25,40 +25,45 @@ export const CampaignsFilters = ({
   currentQuery,
   currentMinCalls,
 }: CampaignsFiltersProps): React.JSX.Element => {
-  const router = useRouter();
-  const queryRef = useRef<HTMLInputElement>(null);
-  const minCallsRef = useRef<HTMLInputElement>(null);
+  const router = useRouter()
+  const queryRef = useRef<HTMLInputElement>(null)
+  const minCallsRef = useRef<HTMLInputElement>(null)
   const statusOptions: readonly { value: string; label: string }[] = [
-    { value: "active", label: "Active" },
-    { value: "completed", label: "Terminée" },
-  ];
+    { value: 'active', label: 'Active' },
+    { value: 'completed', label: 'Terminée' },
+  ]
   const handleApply = useCallback((): void => {
-    const params: URLSearchParams = new URLSearchParams();
-    const statusInput: HTMLInputElement | null = document.querySelector<HTMLInputElement>("input[name='status']");
-    const adminInput: HTMLInputElement | null = document.querySelector<HTMLInputElement>("input[name='admin']");
-    const statusValue: string = statusInput?.value ?? "";
-    const adminValue: string = adminInput?.value ?? "";
-    const queryValue: string = queryRef.current?.value.trim() ?? "";
-    const minCallsValue: string = minCallsRef.current?.value.trim() ?? "";
+    const params: URLSearchParams = new URLSearchParams()
+    const statusInput: HTMLInputElement | null =
+      document.querySelector<HTMLInputElement>("input[name='status']")
+    const adminInput: HTMLInputElement | null =
+      document.querySelector<HTMLInputElement>("input[name='admin']")
+    const statusValue: string = statusInput?.value ?? ''
+    const adminValue: string = adminInput?.value ?? ''
+    const queryValue: string = queryRef.current?.value.trim() ?? ''
+    const minCallsValue: string = minCallsRef.current?.value.trim() ?? ''
     if (queryValue.length > 0) {
-      params.set("q", queryValue);
+      params.set('q', queryValue)
     }
     if (statusValue.length > 0) {
-      params.set("status", statusValue);
+      params.set('status', statusValue)
     }
     if (adminValue.length > 0) {
-      params.set("admin", adminValue);
+      params.set('admin', adminValue)
     }
     if (minCallsValue.length > 0 && Number(minCallsValue) > 0) {
-      params.set("minCalls", minCallsValue);
+      params.set('minCalls', minCallsValue)
     }
-    const qs: string = params.toString();
-    router.push(`/dashboard/super-admin/campaigns${qs.length > 0 ? `?${qs}` : ""}`);
-  }, [router]);
+    const qs: string = params.toString()
+    router.push(`/dashboard/super-admin/campaigns${qs.length > 0 ? `?${qs}` : ''}`)
+  }, [router])
   return (
-    <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]" suppressHydrationWarning>
+    <div
+      className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+      suppressHydrationWarning
+    >
       <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-        <Filter className="size-4 text-lbs-blue" />
+        <Filter className="text-lbs-blue size-4" />
         Filtres
       </h3>
       <div className="grid items-end gap-3 md:grid-cols-5" suppressHydrationWarning>
@@ -69,7 +74,7 @@ export const CampaignsFilters = ({
             type="text"
             defaultValue={currentQuery}
             placeholder="Rechercher..."
-            className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition focus:border-lbs-blue focus:ring-2 focus:ring-lbs-blue/20 dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100"
+            className="focus:border-lbs-blue focus:ring-lbs-blue/20 h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100"
           />
         </div>
         <FilterSelect
@@ -94,9 +99,9 @@ export const CampaignsFilters = ({
             ref={minCallsRef}
             type="number"
             min={0}
-            defaultValue={currentMinCalls > 0 ? String(currentMinCalls) : ""}
+            defaultValue={currentMinCalls > 0 ? String(currentMinCalls) : ''}
             placeholder="0"
-            className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition focus:border-lbs-blue focus:ring-2 focus:ring-lbs-blue/20 dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100"
+            className="focus:border-lbs-blue focus:ring-lbs-blue/20 h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100"
           />
         </div>
         <div className="flex items-end">
@@ -111,5 +116,5 @@ export const CampaignsFilters = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

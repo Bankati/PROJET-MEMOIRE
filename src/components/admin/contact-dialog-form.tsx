@@ -1,28 +1,28 @@
-"use client";
+'use client'
 /**
  * Formulaire d'ajout de contact dans un dialog centré animé.
  * Tous les champs métier du modèle contacts avec sélection de campagne.
  */
-import { useState } from "react";
-import { Contact, Plus, UserPlus } from "lucide-react";
+import { useState } from 'react'
+import { Contact, Plus, UserPlus } from 'lucide-react'
 
-import { FormDialog } from "@/components/ui/form-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { FormDialog } from '@/components/ui/form-dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 
-type CampaignOption = Readonly<{ id: string; title: string }>;
+type CampaignOption = Readonly<{ id: string; title: string }>
 
 type ContactDialogFormProps = Readonly<{
-  campaigns: readonly CampaignOption[];
-  addAction: (formData: FormData) => void;
-}>;
+  campaigns: readonly CampaignOption[]
+  addAction: (formData: FormData) => void
+}>
 
 export const ContactDialogForm = ({
   campaigns,
   addAction,
 }: ContactDialogFormProps): React.JSX.Element => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false)
   return (
     <>
       <Button
@@ -37,7 +37,7 @@ export const ContactDialogForm = ({
         onClose={() => setIsOpen(false)}
         title="Ajouter un contact"
         description="Remplissez les informations du prospect à ajouter à votre campagne."
-        icon={<Contact className="size-5 text-lbs-blue dark:text-blue-300" />}
+        icon={<Contact className="text-lbs-blue size-5 dark:text-blue-300" />}
         maxWidth="max-w-xl"
       >
         <form action={addAction} className="space-y-4">
@@ -54,11 +54,7 @@ export const ContactDialogForm = ({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dialog-contact-lastName">Nom</Label>
-              <Input
-                id="dialog-contact-lastName"
-                name="lastName"
-                placeholder="Nom de famille"
-              />
+              <Input id="dialog-contact-lastName" name="lastName" placeholder="Nom de famille" />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -104,11 +100,7 @@ export const ContactDialogForm = ({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="dialog-contact-city">Ville</Label>
-              <Input
-                id="dialog-contact-city"
-                name="city"
-                placeholder="Douala, Yaoundé..."
-              />
+              <Input id="dialog-contact-city" name="city" placeholder="Douala, Yaoundé..." />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dialog-contact-desiredProgram">Filière souhaitée</Label>
@@ -126,17 +118,24 @@ export const ContactDialogForm = ({
                 id="dialog-contact-campaignId"
                 name="campaignId"
                 required
-                className="flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 outline-none transition focus:border-lbs-blue dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                className="focus:border-lbs-blue flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
               >
                 <option value="">Sélectionner une campagne</option>
                 {campaigns.map((c) => (
-                  <option key={c.id} value={c.id}>{c.title}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="flex items-center justify-end gap-3 border-t border-zinc-100 pt-4 dark:border-white/5">
-            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} className="text-zinc-500">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsOpen(false)}
+              className="text-zinc-500"
+            >
               Annuler
             </Button>
             <button
@@ -150,5 +149,5 @@ export const ContactDialogForm = ({
         </form>
       </FormDialog>
     </>
-  );
-};
+  )
+}

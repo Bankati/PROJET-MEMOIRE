@@ -1,112 +1,130 @@
-"use client";
-import { useState, useRef, useCallback } from "react";
-import { FileText, Trash2, Upload, Loader2, CheckCircle2, AlertCircle, RefreshCw, Database } from "lucide-react";
+'use client'
+import { useState, useRef, useCallback } from 'react'
+import {
+  FileText,
+  Trash2,
+  Upload,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  Database,
+} from 'lucide-react'
 
 type StoredDocument = Readonly<{
-  document_name: string;
-  chunk_count: number;
-  created_at: string;
-}>;
+  document_name: string
+  chunk_count: number
+  created_at: string
+}>
 
 type UploadState =
-  | { status: "idle" }
-  | { status: "uploading" }
-  | { status: "success"; message: string; chunks: number }
-  | { status: "error"; message: string };
+  | { status: 'idle' }
+  | { status: 'uploading' }
+  | { status: 'success'; message: string; chunks: number }
+  | { status: 'error'; message: string }
 
 export const RagManager = (): React.JSX.Element => {
-  const [documents, setDocuments] = useState<StoredDocument[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [uploadState, setUploadState] = useState<UploadState>({ status: "idle" });
-  const [deletingDoc, setDeletingDoc] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState<boolean>(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [documents, setDocuments] = useState<StoredDocument[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [uploadState, setUploadState] = useState<UploadState>({ status: 'idle' })
+  const [deletingDoc, setDeletingDoc] = useState<string | null>(null)
+  const [hasFetched, setHasFetched] = useState<boolean>(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const fetchDocuments = useCallback(async (): Promise<void> => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const res = await fetch("/api/ai/documents");
-      const data = await res.json() as { ok: boolean; documents: StoredDocument[] };
-      if (data.ok) setDocuments(data.documents);
+      const res = await fetch('/api/ai/documents')
+      const data = (await res.json()) as { ok: boolean; documents: StoredDocument[] }
+      if (data.ok) setDocuments(data.documents)
     } catch {
       // silently fail
     } finally {
-      setIsLoading(false);
-      setHasFetched(true);
+      setIsLoading(false)
+      setHasFetched(true)
     }
-  }, []);
+  }, [])
 
   const handleTabActivate = (): void => {
-    if (!hasFetched) fetchDocuments();
-  };
+    if (!hasFetched) fetchDocuments()
+  }
 
   const handleFileUpload = async (file: File): Promise<void> => {
-    setUploadState({ status: "uploading" });
-    const formData = new FormData();
-    formData.append("file", file);
+    setUploadState({ status: 'uploading' })
+    const formData = new FormData()
+    formData.append('file', file)
 
     try {
-      const res = await fetch("/api/ai/ingest", { method: "POST", body: formData });
-      const data = await res.json() as { ok: boolean; message: string; chunks_stored: number; error?: string };
+      const res = await fetch('/api/ai/ingest', { method: 'POST', body: formData })
+      const data = (await res.json()) as {
+        ok: boolean
+        message: string
+        chunks_stored: number
+        error?: string
+      }
       if (data.ok) {
-        setUploadState({ status: "success", message: data.message, chunks: data.chunks_stored });
-        await fetchDocuments();
+        setUploadState({ status: 'success', message: data.message, chunks: data.chunks_stored })
+        await fetchDocuments()
       } else {
-        setUploadState({ status: "error", message: data.error ?? "Erreur inconnue." });
+        setUploadState({ status: 'error', message: data.error ?? 'Erreur inconnue.' })
       }
     } catch {
-      setUploadState({ status: "error", message: "Erreur réseau lors de l'upload." });
+      setUploadState({ status: 'error', message: "Erreur réseau lors de l'upload." })
     }
-  };
+  }
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>): void => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) handleFileUpload(file);
-  };
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    if (file) handleFileUpload(file)
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const file = e.target.files?.[0];
-    if (file) handleFileUpload(file);
-    e.target.value = "";
-  };
+    const file = e.target.files?.[0]
+    if (file) handleFileUpload(file)
+    e.target.value = ''
+  }
 
   const handleDelete = async (documentName: string): Promise<void> => {
-    setDeletingDoc(documentName);
+    setDeletingDoc(documentName)
     try {
-      const res = await fetch("/api/ai/documents", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/ai/documents', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ document_name: documentName }),
-      });
-      const data = await res.json() as { ok: boolean };
-      if (data.ok) setDocuments((prev) => prev.filter((d) => d.document_name !== documentName));
+      })
+      const data = (await res.json()) as { ok: boolean }
+      if (data.ok) setDocuments((prev) => prev.filter((d) => d.document_name !== documentName))
     } catch {
       // silently fail
     } finally {
-      setDeletingDoc(null);
+      setDeletingDoc(null)
     }
-  };
+  }
 
   return (
     <div className="space-y-6" onFocus={handleTabActivate}>
       {/* Upload zone */}
       <div>
-        <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Ajouter un document à la base de connaissances</h3>
+        <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+          Ajouter un document à la base de connaissances
+        </h3>
         <div
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
-          onClick={() => uploadState.status !== "uploading" && fileInputRef.current?.click()}
+          onClick={() => uploadState.status !== 'uploading' && fileInputRef.current?.click()}
           className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 transition-colors ${
-            uploadState.status === "uploading"
-              ? "cursor-not-allowed border-zinc-300 bg-zinc-50 dark:border-white/10 dark:bg-white/5"
-              : "border-zinc-300 bg-zinc-50 hover:border-[#244976] hover:bg-blue-50/30 dark:border-white/10 dark:bg-white/5 dark:hover:border-blue-400"
+            uploadState.status === 'uploading'
+              ? 'cursor-not-allowed border-zinc-300 bg-zinc-50 dark:border-white/10 dark:bg-white/5'
+              : 'border-zinc-300 bg-zinc-50 hover:border-[#244976] hover:bg-blue-50/30 dark:border-white/10 dark:bg-white/5 dark:hover:border-blue-400'
           }`}
         >
-          {uploadState.status === "uploading" ? (
+          {uploadState.status === 'uploading' ? (
             <>
               <Loader2 className="size-8 animate-spin text-[#244976] dark:text-blue-400" />
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">Traitement en cours — génération des embeddings...</p>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Traitement en cours — génération des embeddings...
+              </p>
             </>
           ) : (
             <>
@@ -114,20 +132,28 @@ export const RagManager = (): React.JSX.Element => {
                 <Upload className="size-6 text-[#244976] dark:text-blue-400" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Glissez un fichier ou cliquez pour sélectionner</p>
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Glissez un fichier ou cliquez pour sélectionner
+                </p>
                 <p className="mt-1 text-xs text-zinc-400">PDF, TXT, Markdown — max 20 Mo</p>
               </div>
             </>
           )}
         </div>
-        <input ref={fileInputRef} type="file" accept=".pdf,.txt,.md" className="hidden" onChange={handleInputChange} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.txt,.md"
+          className="hidden"
+          onChange={handleInputChange}
+        />
 
-        {uploadState.status === "success" ? (
+        {uploadState.status === 'success' ? (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
             <CheckCircle2 className="size-4 shrink-0" />
             {uploadState.message}
           </div>
-        ) : uploadState.status === "error" ? (
+        ) : uploadState.status === 'error' ? (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">
             <AlertCircle className="size-4 shrink-0" />
             {uploadState.message}
@@ -148,7 +174,7 @@ export const RagManager = (): React.JSX.Element => {
             disabled={isLoading}
             className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-zinc-500 transition hover:bg-zinc-100 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-white/10"
           >
-            <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             Actualiser
           </button>
         </div>
@@ -180,10 +206,16 @@ export const RagManager = (): React.JSX.Element => {
                   <FileText className="size-4 text-[#244976] dark:text-blue-400" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-zinc-800 dark:text-white">{doc.document_name}</p>
+                  <p className="truncate text-sm font-medium text-zinc-800 dark:text-white">
+                    {doc.document_name}
+                  </p>
                   <p className="text-xs text-zinc-400">
-                    {doc.chunk_count} segment{doc.chunk_count > 1 ? "s" : ""} · indexé le{" "}
-                    {new Date(doc.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
+                    {doc.chunk_count} segment{doc.chunk_count > 1 ? 's' : ''} · indexé le{' '}
+                    {new Date(doc.created_at).toLocaleDateString('fr-FR', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
                   </p>
                 </div>
                 <button
@@ -204,5 +236,5 @@ export const RagManager = (): React.JSX.Element => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}

@@ -1,72 +1,72 @@
-"use client";
+'use client'
 /**
  * Sélecteur dropdown filtrable réutilisable.
  * Même style que CampaignSelect mais générique pour tout type d'option.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Check, ChevronDown, Search, X } from 'lucide-react'
 
 type FilterOption = Readonly<{
-  value: string;
-  label: string;
-}>;
+  value: string
+  label: string
+}>
 type FilterSelectProps = Readonly<{
-  name: string;
-  label?: string;
-  options: readonly FilterOption[];
-  defaultValue?: string;
-  placeholder?: string;
-  searchable?: boolean;
-  searchPlaceholder?: string;
-}>;
+  name: string
+  label?: string
+  options: readonly FilterOption[]
+  defaultValue?: string
+  placeholder?: string
+  searchable?: boolean
+  searchPlaceholder?: string
+}>
 
 export const FilterSelect = ({
   name,
-  label = "",
+  label = '',
   options,
-  defaultValue = "",
-  placeholder = "Tous",
+  defaultValue = '',
+  placeholder = 'Tous',
   searchable = true,
-  searchPlaceholder = "Rechercher...",
+  searchPlaceholder = 'Rechercher...',
 }: FilterSelectProps): React.JSX.Element => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [search, setSearch] = useState<string>("");
-  const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const selectedOption: FilterOption | undefined = options.find((o) => o.value === selectedValue);
-  const displayLabel: string = selectedOption?.label ?? placeholder;
+  const [isOpen, setIsOpen] = useState<boolean>(false)
+  const [search, setSearch] = useState<string>('')
+  const [selectedValue, setSelectedValue] = useState<string>(defaultValue)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const selectedOption: FilterOption | undefined = options.find((o) => o.value === selectedValue)
+  const displayLabel: string = selectedOption?.label ?? placeholder
   const filteredOptions: readonly FilterOption[] = searchable
     ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
-    : options;
+    : options
   const handleToggle = useCallback((): void => {
-    setIsOpen((prev) => !prev);
-    setSearch("");
-  }, []);
+    setIsOpen((prev) => !prev)
+    setSearch('')
+  }, [])
   const handleSelect = useCallback((value: string): void => {
-    setSelectedValue(value);
-    setIsOpen(false);
-    setSearch("");
-  }, []);
+    setSelectedValue(value)
+    setIsOpen(false)
+    setSearch('')
+  }, [])
   const handleClear = useCallback((): void => {
-    setSelectedValue("");
-    setSearch("");
-  }, []);
+    setSelectedValue('')
+    setSearch('')
+  }, [])
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setSearch("");
+        setIsOpen(false)
+        setSearch('')
       }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+      inputRef.current.focus()
     }
-  }, [isOpen]);
+  }, [isOpen])
   return (
     <div ref={wrapperRef} className="relative">
       {label.length > 0 ? (
@@ -76,9 +76,15 @@ export const FilterSelect = ({
       <button
         type="button"
         onClick={handleToggle}
-        className="flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-left text-sm shadow-sm transition hover:border-zinc-300 focus:border-lbs-blue focus:outline-none focus:ring-2 focus:ring-lbs-blue/20 dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100 dark:hover:border-white/20"
+        className="focus:border-lbs-blue focus:ring-lbs-blue/20 flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-left text-sm shadow-sm transition hover:border-zinc-300 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100 dark:hover:border-white/20"
       >
-        <span className={selectedValue.length > 0 ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-400 dark:text-zinc-500"}>
+        <span
+          className={
+            selectedValue.length > 0
+              ? 'text-zinc-900 dark:text-zinc-100'
+              : 'text-zinc-400 dark:text-zinc-500'
+          }
+        >
           {displayLabel}
         </span>
         <div className="flex items-center gap-1">
@@ -86,18 +92,28 @@ export const FilterSelect = ({
             <span
               role="button"
               tabIndex={0}
-              onClick={(e) => { e.stopPropagation(); handleClear(); }}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); handleClear(); } }}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleClear()
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.stopPropagation()
+                  handleClear()
+                }
+              }}
               className="rounded p-0.5 text-rose-500 transition hover:bg-rose-50 dark:hover:bg-rose-500/10"
             >
               <X className="size-3.5" />
             </span>
           ) : null}
-          <ChevronDown className={`size-4 text-zinc-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`size-4 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          />
         </div>
       </button>
       {isOpen ? (
-        <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="absolute top-full left-0 z-50 mt-1 w-full rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#1a2332]">
           {searchable ? (
             <div className="flex items-center gap-2 border-b border-zinc-100 px-3 py-2 dark:border-white/5">
               <Search className="size-3.5 text-zinc-400" />
@@ -115,15 +131,15 @@ export const FilterSelect = ({
             <li>
               <button
                 type="button"
-                onClick={() => handleSelect("")}
+                onClick={() => handleSelect('')}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
-                  selectedValue === ""
-                    ? "bg-lbs-blue/10 text-lbs-blue"
-                    : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-white/5"
+                  selectedValue === ''
+                    ? 'bg-lbs-blue/10 text-lbs-blue'
+                    : 'text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-white/5'
                 }`}
               >
                 {placeholder}
-                {selectedValue === "" ? <Check className="size-3.5" /> : null}
+                {selectedValue === '' ? <Check className="size-3.5" /> : null}
               </button>
             </li>
             {filteredOptions.length === 0 ? (
@@ -136,8 +152,8 @@ export const FilterSelect = ({
                     onClick={() => handleSelect(option.value)}
                     className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
                       selectedValue === option.value
-                        ? "bg-lbs-blue/10 text-lbs-blue"
-                        : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-white/5"
+                        ? 'bg-lbs-blue/10 text-lbs-blue'
+                        : 'text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-white/5'
                     }`}
                   >
                     {option.label}
@@ -150,5 +166,5 @@ export const FilterSelect = ({
         </div>
       ) : null}
     </div>
-  );
-};
+  )
+}

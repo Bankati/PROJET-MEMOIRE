@@ -1,9 +1,9 @@
-"use client";
+'use client'
 /**
  * Section d'informations rapides sur l'établissement.
  * Permet à l'agent d'accéder rapidement aux informations clés sans quitter l'écran.
  */
-import { useState } from "react";
+import { useState } from 'react'
 import {
   Building2,
   Calendar,
@@ -13,14 +13,14 @@ import {
   Info,
   MapPin,
   Users,
-} from "lucide-react";
+} from 'lucide-react'
 
 type EstablishmentInfoProps = Readonly<{
-  campaignTitle: string;
-  campaignDetails: string | null;
-  schoolName: string | null;
-  city: string | null;
-}>;
+  campaignTitle: string
+  campaignDetails: string | null
+  schoolName: string | null
+  city: string | null
+}>
 
 export const EstablishmentInfo = ({
   campaignTitle,
@@ -28,13 +28,25 @@ export const EstablishmentInfo = ({
   schoolName,
   city,
 }: EstablishmentInfoProps): React.JSX.Element => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false)
 
   const infoItems: readonly { icon: React.ReactNode; label: string; value: string }[] = [
-    { icon: <Building2 className="size-4 text-blue-400" />, label: "Établissement", value: schoolName ?? "Non spécifié" },
-    { icon: <MapPin className="size-4 text-emerald-400" />, label: "Ville", value: city ?? "Non spécifiée" },
-    { icon: <GraduationCap className="size-4 text-violet-400" />, label: "Campagne", value: campaignTitle },
-  ];
+    {
+      icon: <Building2 className="size-4 text-blue-400" />,
+      label: 'Établissement',
+      value: schoolName ?? 'Non spécifié',
+    },
+    {
+      icon: <MapPin className="size-4 text-emerald-400" />,
+      label: 'Ville',
+      value: city ?? 'Non spécifiée',
+    },
+    {
+      icon: <GraduationCap className="size-4 text-violet-400" />,
+      label: 'Campagne',
+      value: campaignTitle,
+    },
+  ]
 
   return (
     <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
@@ -64,7 +76,9 @@ export const EstablishmentInfo = ({
                 {item.icon}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">{item.label}</p>
-                  <p className="truncate text-sm font-medium text-zinc-800 dark:text-white">{item.value}</p>
+                  <p className="truncate text-sm font-medium text-zinc-800 dark:text-white">
+                    {item.value}
+                  </p>
                 </div>
               </div>
             ))}
@@ -72,7 +86,9 @@ export const EstablishmentInfo = ({
 
           {campaignDetails ? (
             <div className="mt-4 rounded-xl bg-zinc-50 p-3 dark:bg-white/5">
-              <p className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">Détails de la campagne</p>
+              <p className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                Détails de la campagne
+              </p>
               <p className="text-sm text-zinc-700 dark:text-zinc-300">{campaignDetails}</p>
             </div>
           ) : null}
@@ -92,5 +108,5 @@ export const EstablishmentInfo = ({
         </div>
       ) : null}
     </div>
-  );
-};
+  )
+}

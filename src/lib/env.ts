@@ -3,19 +3,19 @@
  * Centralizes required env vars and ensures fast failure in dev.
  * Set SKIP_ENV_VALIDATION=1 in Vercel build settings to bypass at build time.
  */
-import { z } from "zod";
+import { z } from 'zod'
 
 const parseOptionalEnvString = ({
   value,
 }: Readonly<{
-  value: string | undefined;
+  value: string | undefined
 }>): string | undefined => {
   if (value === undefined) {
-    return undefined;
+    return undefined
   }
-  const trimmedValue: string = value.trim();
-  return trimmedValue.length > 0 ? trimmedValue : undefined;
-};
+  const trimmedValue: string = value.trim()
+  return trimmedValue.length > 0 ? trimmedValue : undefined
+}
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
@@ -27,33 +27,41 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_TEST_TO: z.string().email().optional(),
-});
+})
 
 const buildEnv = () => {
-  if (process.env.SKIP_ENV_VALIDATION === "1") {
+  if (process.env.SKIP_ENV_VALIDATION === '1') {
     return envSchema.parse({
-      DATABASE_URL: process.env.DATABASE_URL ?? "placeholder",
+      DATABASE_URL: process.env.DATABASE_URL ?? 'placeholder',
       AUTH_SECRET: parseOptionalEnvString({ value: process.env.AUTH_SECRET }),
       SUPABASE_URL: parseOptionalEnvString({ value: process.env.SUPABASE_URL }),
-      SUPABASE_SERVICE_ROLE_KEY: parseOptionalEnvString({ value: process.env.SUPABASE_SERVICE_ROLE_KEY }),
+      SUPABASE_SERVICE_ROLE_KEY: parseOptionalEnvString({
+        value: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      }),
       COHERE_API_KEY: parseOptionalEnvString({ value: process.env.COHERE_API_KEY }),
-      GOOGLE_GENERATIVE_AI_API_KEY: parseOptionalEnvString({ value: process.env.GOOGLE_GENERATIVE_AI_API_KEY }),
+      GOOGLE_GENERATIVE_AI_API_KEY: parseOptionalEnvString({
+        value: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+      }),
       OPENAI_API_KEY: parseOptionalEnvString({ value: process.env.OPENAI_API_KEY }),
       RESEND_API_KEY: parseOptionalEnvString({ value: process.env.RESEND_API_KEY }),
       RESEND_TEST_TO: parseOptionalEnvString({ value: process.env.RESEND_TEST_TO }),
-    });
+    })
   }
   return envSchema.parse({
     DATABASE_URL: process.env.DATABASE_URL,
     AUTH_SECRET: parseOptionalEnvString({ value: process.env.AUTH_SECRET }),
     SUPABASE_URL: parseOptionalEnvString({ value: process.env.SUPABASE_URL }),
-    SUPABASE_SERVICE_ROLE_KEY: parseOptionalEnvString({ value: process.env.SUPABASE_SERVICE_ROLE_KEY }),
+    SUPABASE_SERVICE_ROLE_KEY: parseOptionalEnvString({
+      value: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    }),
     COHERE_API_KEY: parseOptionalEnvString({ value: process.env.COHERE_API_KEY }),
-    GOOGLE_GENERATIVE_AI_API_KEY: parseOptionalEnvString({ value: process.env.GOOGLE_GENERATIVE_AI_API_KEY }),
+    GOOGLE_GENERATIVE_AI_API_KEY: parseOptionalEnvString({
+      value: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    }),
     OPENAI_API_KEY: parseOptionalEnvString({ value: process.env.OPENAI_API_KEY }),
     RESEND_API_KEY: parseOptionalEnvString({ value: process.env.RESEND_API_KEY }),
     RESEND_TEST_TO: parseOptionalEnvString({ value: process.env.RESEND_TEST_TO }),
-  });
-};
+  })
+}
 
-export const env = buildEnv();
+export const env = buildEnv()

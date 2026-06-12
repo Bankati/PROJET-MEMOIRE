@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next'
 
-import { AuthShell } from "@/components/auth/auth-shell";
-import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+import { AuthShell } from '@/components/auth/auth-shell'
+import { ForgotPasswordForm } from '@/components/auth/forgot-password-form'
 
 export const metadata: Metadata = {
-  title: "Mot de passe oublié",
-  description: "Générez un OTP de réinitialisation valide 3 minutes.",
-};
+  title: 'Mot de passe oublié',
+  description: 'Générez un OTP de réinitialisation valide 3 minutes.',
+}
 
 export default function ForgotPasswordPage(): React.JSX.Element {
   return (
@@ -19,5 +19,5 @@ export default function ForgotPasswordPage(): React.JSX.Element {
     >
       <ForgotPasswordForm />
     </AuthShell>
-  );
+  )
 }

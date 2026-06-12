@@ -1,6 +1,17 @@
 {
   "subject": "filieres",
-  "keywords": ["filière", "formation", "programme", "option", "spécialité", "licence", "master", "bachelor", "cursus", "département"],
+  "keywords": [
+    "filière",
+    "formation",
+    "programme",
+    "option",
+    "spécialité",
+    "licence",
+    "master",
+    "bachelor",
+    "cursus",
+    "département"
+  ],
   "system_instructions": "Tu réponds à une question sur les filières et formations proposées. Liste toutes les filières mentionnées dans le contexte avec leur niveau (Licence, Master, BTS, etc.) et leur durée si disponible. Ne mentionne pas les tarifs ici. Structure en liste si plusieurs filières. Aucun exemple fictif, aucune image, aucune illustration.",
   "response_format": "Liste des filières avec niveau et durée si disponibles.",
   "forbidden": ["images", "illustrations", "filières inventées", "tarifs dans cette réponse"]

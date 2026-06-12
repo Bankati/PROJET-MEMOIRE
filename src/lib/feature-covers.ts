@@ -4,10 +4,10 @@
  */
 
 export const featureCoverImages = {
-  callcenter: "/callcenter.jpg",
-  attributionFluide: "/attribution_fluide.jpg",
-  ia: "/ia.jpg",
-  kpi: "/kpi.png",
-  whatsapp: "/whatsapp.jpg",
-  map: "/map.jpg",
-} as const;
+  callcenter: '/callcenter.jpg',
+  attributionFluide: '/attribution_fluide.jpg',
+  ia: '/ia.jpg',
+  kpi: '/kpi.png',
+  whatsapp: '/whatsapp.jpg',
+  map: '/map.jpg',
+} as const

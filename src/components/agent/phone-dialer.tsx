@@ -1,24 +1,17 @@
-"use client";
+'use client'
 /**
  * Composeur d'appel pour l'agent.
  * Affiche les numéros disponibles et permet de sélectionner lequel appeler.
  */
-import { useState } from "react";
-import {
-  Check,
-  ChevronDown,
-  MessageCircle,
-  Phone,
-  PhoneCall,
-  PhoneOff,
-} from "lucide-react";
+import { useState } from 'react'
+import { Check, ChevronDown, MessageCircle, Phone, PhoneCall, PhoneOff } from 'lucide-react'
 
 type PhoneDialerProps = Readonly<{
-  phonePrimary: string;
-  phoneSecondary: string | null;
-  contactName: string;
-  onPhoneSelect?: (phone: string) => void;
-}>;
+  phonePrimary: string
+  phoneSecondary: string | null
+  contactName: string
+  onPhoneSelect?: (phone: string) => void
+}>
 
 export const PhoneDialer = ({
   phonePrimary,
@@ -26,39 +19,39 @@ export const PhoneDialer = ({
   contactName,
   onPhoneSelect,
 }: PhoneDialerProps): React.JSX.Element => {
-  const [selectedPhone, setSelectedPhone] = useState<string>(phonePrimary);
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  const [callStatus, setCallStatus] = useState<"idle" | "calling" | "connected" | "ended">("idle");
+  const [selectedPhone, setSelectedPhone] = useState<string>(phonePrimary)
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false)
+  const [callStatus, setCallStatus] = useState<'idle' | 'calling' | 'connected' | 'ended'>('idle')
 
   const phones: readonly { label: string; value: string }[] = [
-    { label: "Principal", value: phonePrimary },
-    ...(phoneSecondary ? [{ label: "Secondaire", value: phoneSecondary }] : []),
-  ];
+    { label: 'Principal', value: phonePrimary },
+    ...(phoneSecondary ? [{ label: 'Secondaire', value: phoneSecondary }] : []),
+  ]
 
   const handlePhoneSelect = (phone: string): void => {
-    setSelectedPhone(phone);
-    onPhoneSelect?.(phone);
-    setIsDropdownOpen(false);
-  };
+    setSelectedPhone(phone)
+    onPhoneSelect?.(phone)
+    setIsDropdownOpen(false)
+  }
 
   const handleStartCall = (): void => {
-    setCallStatus("calling");
+    setCallStatus('calling')
     // Simulate connection after 2 seconds
     setTimeout(() => {
-      setCallStatus("connected");
-    }, 2000);
-  };
+      setCallStatus('connected')
+    }, 2000)
+  }
 
   const handleEndCall = (): void => {
-    setCallStatus("ended");
+    setCallStatus('ended')
     setTimeout(() => {
-      setCallStatus("idle");
-    }, 1000);
-  };
+      setCallStatus('idle')
+    }, 1000)
+  }
 
   const formatPhoneDisplay = (phone: string): string => {
-    return phone.replace(/(\+\d{2,3})(\d{3})(\d{3})(\d{3,4})/, "$1 $2 $3 $4");
-  };
+    return phone.replace(/(\+\d{2,3})(\d{3})(\d{3})(\d{3,4})/, '$1 $2 $3 $4')
+  }
 
   return (
     <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
@@ -67,12 +60,12 @@ export const PhoneDialer = ({
           <Phone className="size-4 text-blue-400" />
           Composeur d&apos;appel
         </h3>
-        {callStatus === "connected" ? (
+        {callStatus === 'connected' ? (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
             <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
             En ligne
           </span>
-        ) : callStatus === "calling" ? (
+        ) : callStatus === 'calling' ? (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
             <span className="size-2 animate-pulse rounded-full bg-amber-500" />
             Appel en cours...
@@ -88,7 +81,7 @@ export const PhoneDialer = ({
           <button
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            disabled={callStatus !== "idle"}
+            disabled={callStatus !== 'idle'}
             className="flex w-full items-center justify-between rounded-xl border border-zinc-200 bg-white px-4 py-3 text-left transition hover:border-zinc-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:bg-[#0f1729] dark:hover:border-white/25"
           >
             <div className="flex items-center gap-3">
@@ -100,16 +93,18 @@ export const PhoneDialer = ({
                   {formatPhoneDisplay(selectedPhone)}
                 </p>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  {phones.find((p) => p.value === selectedPhone)?.label ?? "Principal"}
+                  {phones.find((p) => p.value === selectedPhone)?.label ?? 'Principal'}
                 </p>
               </div>
             </div>
             {phones.length > 1 ? (
-              <ChevronDown className={`size-5 text-zinc-400 transition ${isDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`size-5 text-zinc-400 transition ${isDropdownOpen ? 'rotate-180' : ''}`}
+              />
             ) : null}
           </button>
           {isDropdownOpen && phones.length > 1 ? (
-            <div className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-white/15 dark:bg-[#1a2332]">
+            <div className="absolute top-full right-0 left-0 z-10 mt-1 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-white/15 dark:bg-[#1a2332]">
               {phones.map((phone) => (
                 <button
                   key={phone.value}
@@ -134,14 +129,14 @@ export const PhoneDialer = ({
       </div>
 
       <div className="flex items-center gap-3">
-        {callStatus === "idle" || callStatus === "ended" ? (
+        {callStatus === 'idle' || callStatus === 'ended' ? (
           <button
             type="button"
             onClick={handleStartCall}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
           >
             <PhoneCall className="size-4" />
-            Appeler {contactName.split(" ")[0]}
+            Appeler {contactName.split(' ')[0]}
           </button>
         ) : (
           <button
@@ -154,7 +149,7 @@ export const PhoneDialer = ({
           </button>
         )}
         <a
-          href={`https://wa.me/${selectedPhone.replace(/\s+/g, "").replace(/^\+/, "")}`}
+          href={`https://wa.me/${selectedPhone.replace(/\s+/g, '').replace(/^\+/, '')}`}
           target="_blank"
           rel="noopener noreferrer"
           className="grid size-12 place-items-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
@@ -168,5 +163,5 @@ export const PhoneDialer = ({
         L&apos;intégration Twilio sera activée prochainement
       </p>
     </div>
-  );
-};
+  )
+}

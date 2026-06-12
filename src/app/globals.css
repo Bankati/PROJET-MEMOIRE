@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @config "../../tailwind.config.ts";
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -34,7 +34,7 @@
 
   /* Couleurs de la marque LBS enregistrées dans Tailwind v4 */
   --color-lbs-blue: #244976;
-  --color-lbs-blue-2: #21416C;
+  --color-lbs-blue-2: #21416c;
   --color-lbs-red: #800000;
 }
 
@@ -78,7 +78,8 @@ html {
 }
 
 @keyframes lbs-soft-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     box-shadow: 0 0 0 0 rgba(36, 73, 118, 0.12);
   }
@@ -89,29 +90,54 @@ html {
 }
 
 @keyframes lbs-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes lbs-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 @keyframes lbs-gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes lbs-mesh-move {
-  0% { background-position: 0% 0%; }
-  50% { background-position: 100% 100%; }
-  100% { background-position: 0% 0%; }
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lbs-soft-pulse, .lbs-shimmer, .lbs-float { animation: none; }
+  .lbs-soft-pulse,
+  .lbs-shimmer,
+  .lbs-float {
+    animation: none;
+  }
 }
 
 /* ── Interactivité globale ──────────────────────────────────────────────────
@@ -122,7 +148,7 @@ html {
 @layer base {
   /* Curseur pointer sur tout élément cliquable */
   button:not(:disabled),
-  [role="button"],
+  [role='button'],
   select:not(:disabled),
   label[for] {
     cursor: pointer;
@@ -130,9 +156,10 @@ html {
 
   /* Transitions douces et uniformes */
   button,
-  [role="button"],
+  [role='button'],
   a[href] {
-    transition-property: background-color, color, border-color, box-shadow, opacity, filter, transform;
+    transition-property:
+      background-color, color, border-color, box-shadow, opacity, filter, transform;
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -140,13 +167,13 @@ html {
   /* Survol — légère luminosité pour signaler l'interactivité.
      Les classes Tailwind hover:brightness-* ou hover:bg-* priment ici. */
   button:not(:disabled):hover,
-  [role="button"]:hover {
+  [role='button']:hover {
     filter: brightness(1.08);
   }
 
   /* Pression au clic — sensation de "bouton physique" */
   button:not(:disabled):active,
-  [role="button"]:active,
+  [role='button']:active,
   a[href]:active {
     filter: brightness(0.88);
     opacity: 0.82;
@@ -155,7 +182,7 @@ html {
 
   /* Désactivé — aucun feedback interactif */
   button:disabled,
-  [aria-disabled="true"] {
+  [aria-disabled='true'] {
     cursor: not-allowed;
     filter: none;
     opacity: 0.5;
