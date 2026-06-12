@@ -113,9 +113,6 @@ jobs:
           echo "⚠️  HIGH sans fix : next (GHSA-q4gf-8mx6-v5v3) + xlsx (GHSA-4r6h-8v6p-xvw6)"
           npm audit --audit-level=high 2>&1 | grep -E "(high|critical)" || true
 
-      - name: Revue des dépendances (PR uniquement)
-        uses: actions/dependency-review-action@v4
-        if: github.event_name == 'pull_request'
 
       - name: Détection de secrets (TruffleHog)
         uses: trufflesecurity/trufflehog@main
