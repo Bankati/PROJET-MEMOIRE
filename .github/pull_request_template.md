@@ -1,6 +1,6 @@
 ## 📋 Description
 
-<!-- Décris les changements effectués et pourquoi -->
+<!-- Décris les changements effectués et pourquoi hum -->
 
 ## 🎯 Type de changement
 
