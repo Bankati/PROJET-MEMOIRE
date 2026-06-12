@@ -2,8 +2,6 @@ import { Resend } from 'resend'
 
 import { env } from '@/lib/env'
 
-const resend = new Resend(env.RESEND_API_KEY)
-
 const buildOtpDigits = (otpCode: string): string =>
   otpCode
     .split('')
@@ -159,6 +157,7 @@ export const sendPasswordResetOtp = async ({
   to: string
   otpCode: string
 }>): Promise<void> => {
+  const resend = new Resend(env.RESEND_API_KEY)
   const recipient = env.RESEND_TEST_TO ?? to
   if (env.RESEND_TEST_TO) {
     console.log(`[Resend] Mode sandbox — redirection de ${to} vers ${recipient}`)
