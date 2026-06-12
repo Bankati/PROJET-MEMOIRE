@@ -121,7 +121,6 @@ jobs:
           echo "========================================"
           npm audit 2>&1 || true
 
-
       - name: Détection de secrets (TruffleHog)
         uses: trufflesecurity/trufflehog@main
         with:
