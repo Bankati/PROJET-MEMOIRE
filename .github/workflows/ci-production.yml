@@ -42,17 +42,15 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          NEXT_PUBLIC_APP_URL_PROD: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
         run: |
           MISSING=0
           for VAR in DATABASE_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY AUTH_SECRET \
-                     GOOGLE_API_KEY ANTHROPIC_API_KEY VERCEL_TOKEN VERCEL_ORG_ID \
-                     VERCEL_PROJECT_ID NEXT_PUBLIC_APP_URL_PROD; do
+                     COHERE_API_KEY OPENAI_API_KEY \
+                     VERCEL_PROJECT_ID NEXT_PUBLIC_APP_URL; do
             if [ -z "${!VAR}" ]; then
               echo "❌ Secret de production manquant : $VAR"
               MISSING=1
@@ -82,8 +80,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXT_TELEMETRY_DISABLED: 1
 
       - uses: codecov/codecov-action@v4
@@ -187,8 +185,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1
@@ -283,7 +281,6 @@ jobs:
         run: |
           echo "🚀 Démarrage du déploiement de production..."
           DEPLOY_OUTPUT=$(vercel deploy --prod \
-            --token ${{ secrets.VERCEL_TOKEN }} \
             --yes \
             2>&1)
           echo "$DEPLOY_OUTPUT"
@@ -292,7 +289,6 @@ jobs:
           echo "deploy_status=success" >> $GITHUB_OUTPUT
           echo "✅ URL de production : $DEPLOY_URL"
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
   # ── 9. SMOKE TESTS POST-DÉPLOIEMENT PRODUCTION ────────────────────────

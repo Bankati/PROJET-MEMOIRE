@@ -41,15 +41,13 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           MISSING=0
           for VAR in DATABASE_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY AUTH_SECRET \
-                     GOOGLE_API_KEY ANTHROPIC_API_KEY VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+                     COHERE_API_KEY OPENAI_API_KEY VERCEL_PROJECT_ID; do
             if [ -z "${!VAR}" ]; then
               echo "❌ Secret manquant : $VAR"
               MISSING=1
@@ -79,8 +77,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXT_TELEMETRY_DISABLED: 1
 
       - uses: codecov/codecov-action@v4
@@ -156,8 +154,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
           NEXT_TELEMETRY_DISABLED: 1
 
@@ -185,13 +183,11 @@ jobs:
         id: vercel
         run: |
           DEPLOY_URL=$(vercel deploy \
-            --token ${{ secrets.VERCEL_TOKEN }} \
             --yes \
             2>&1 | grep "https://" | grep -v "Inspect" | tail -1)
           echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           echo "✅ URL de déploiement : $DEPLOY_URL"
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
   # ── 7. SMOKE TESTS POST-DÉPLOIEMENT ──────────────────────────────────
@@ -284,12 +280,10 @@ jobs:
         run: |
           npm install -g vercel@latest
           DEPLOY_URL=$(vercel deploy \
-            --token ${{ secrets.VERCEL_TOKEN }} \
             --yes \
             2>&1 | grep "https://" | grep -v "Inspect" | tail -1)
           echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Poster le commentaire de déploiement sur la PR
