@@ -38,16 +38,16 @@ jobs:
 
       - name: Vérifier tous les secrets de production
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL_PROD }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_PROD }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_PROD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          NEXT_PUBLIC_APP_URL_PROD: ${{ secrets.NEXT_PUBLIC_APP_URL_PROD }}
+          NEXT_PUBLIC_APP_URL_PROD: ${{ secrets.NEXT_PUBLIC_APP_URL }}
         run: |
           MISSING=0
           for VAR in DATABASE_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY AUTH_SECRET \
@@ -78,10 +78,10 @@ jobs:
       - name: Exécuter les tests avec couverture stricte
         run: npm run test:ci
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL_PROD }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_PROD }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_PROD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           NEXT_TELEMETRY_DISABLED: 1
@@ -183,13 +183,13 @@ jobs:
       - name: Build Next.js (production — sans rimraf)
         run: npx next build
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL_PROD }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_PROD }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_PROD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL_PROD }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1
 
@@ -229,7 +229,7 @@ jobs:
       - name: Exécuter la suite E2E complète contre staging
         run: npx playwright test
         env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.NEXT_PUBLIC_APP_URL_STAGING }}
+          PLAYWRIGHT_BASE_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
 
       - name: Archiver le rapport Playwright
         uses: actions/upload-artifact@v4
@@ -257,8 +257,8 @@ jobs:
         uses: treosh/lighthouse-ci-action@v11
         with:
           urls: |
-            ${{ secrets.NEXT_PUBLIC_APP_URL_STAGING }}
-            ${{ secrets.NEXT_PUBLIC_APP_URL_STAGING }}/login
+            ${{ secrets.NEXT_PUBLIC_APP_URL }}
+            ${{ secrets.NEXT_PUBLIC_APP_URL }}/login
           budgetPath: ./.lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
@@ -304,7 +304,7 @@ jobs:
     steps:
       - name: Attendre la stabilisation du déploiement (max 5min)
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL_PROD }}"
+          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
           echo "Surveillance de : $URL"
           for i in {1..20}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" 2>/dev/null || echo "000")
@@ -322,28 +322,28 @@ jobs:
 
       - name: Health check — Page d'accueil
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL_PROD }}"
+          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
           echo "/ → HTTP $STATUS"
           [[ "$STATUS" == "200" || "$STATUS" == "308" ]] || { echo "❌ Homepage inaccessible"; exit 1; }
 
       - name: Health check — Page de login
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL_PROD }}"
+          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/login")
           echo "/login → HTTP $STATUS"
           [ "$STATUS" = "200" ] || { echo "❌ /login inaccessible en production"; exit 1; }
 
       - name: Health check — API auth accessible
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL_PROD }}"
+          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/api/auth/session")
           echo "/api/auth/session → HTTP $STATUS"
           [ "$STATUS" != "000" ] || { echo "❌ API auth non accessible"; exit 1; }
 
       - name: Vérifier les headers de sécurité
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL_PROD }}"
+          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
           HEADERS=$(curl -sI "$URL")
           echo "$HEADERS"
           echo "$HEADERS" | grep -qi "x-frame-options" \

@@ -46,10 +46,10 @@ jobs:
 
       - name: Vérifier que tous les secrets sont configurés
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL_DEV }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_DEV }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
@@ -89,10 +89,10 @@ jobs:
       - name: Exécuter les tests avec couverture
         run: npm run test:ci
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL_DEV }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_DEV }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           NEXT_TELEMETRY_DISABLED: 1
@@ -180,13 +180,13 @@ jobs:
         # qui supprimerait le cache restauré ci-dessus
         run: npx next build
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL_DEV }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_DEV }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          NEXT_PUBLIC_APP_URL: https://dev.lbs-callcenter.vercel.app
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
           NEXT_TELEMETRY_DISABLED: 1
 
       - name: Statistiques du bundle

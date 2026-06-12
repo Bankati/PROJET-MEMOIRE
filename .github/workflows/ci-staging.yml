@@ -37,10 +37,10 @@ jobs:
 
       - name: Vérifier tous les secrets staging
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL_STAGING }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_STAGING }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -75,10 +75,10 @@ jobs:
       - name: Exécuter les tests avec couverture
         run: npm run test:ci
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL_STAGING }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_STAGING }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           NEXT_TELEMETRY_DISABLED: 1
@@ -152,13 +152,13 @@ jobs:
       - name: Build Next.js (CI — sans rimraf)
         run: npx next build
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL_STAGING }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_STAGING }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_STAGING }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL_STAGING }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
           NEXT_TELEMETRY_DISABLED: 1
 
       - name: Statistiques du bundle
@@ -245,7 +245,7 @@ jobs:
   e2e-tests:
     name: 🎭 Tests E2E
     runs-on: ubuntu-latest
-    needs: smoke-test
+    needs: [smoke-test, deploy-staging]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -260,9 +260,9 @@ jobs:
       - name: Exécuter les tests E2E contre l'URL staging
         run: npx playwright test
         env:
-          PLAYWRIGHT_BASE_URL: ${{ needs.deploy-staging.outputs.deploy_url || secrets.NEXT_PUBLIC_APP_URL_STAGING }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET_STAGING }}
+          PLAYWRIGHT_BASE_URL: ${{ needs.deploy-staging.outputs.deploy_url || secrets.NEXT_PUBLIC_APP_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
 
       - name: Archiver le rapport Playwright
         uses: actions/upload-artifact@v4
