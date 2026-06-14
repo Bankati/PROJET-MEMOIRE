@@ -2,27 +2,27 @@
  * Marketing animation helpers.
  * Keeps framer-motion in small client components so the page can stay a Server Component.
  */
-"use client";
+'use client'
 
-import * as React from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import * as React from 'react'
+import { motion, useReducedMotion, type Variants } from 'framer-motion'
 
 type RevealProps = {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-};
+  children: React.ReactNode
+  className?: string
+  delay?: number
+}
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 22, filter: "blur(6px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)" },
-};
+  hidden: { opacity: 0, y: 22, filter: 'blur(6px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)' },
+}
 
 export function Reveal({ children, className, delay = 0 }: RevealProps) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotion()
 
   if (reduce) {
-    return <div className={className}>{children}</div>;
+    return <div className={className}>{children}</div>
   }
 
   return (
@@ -31,9 +31,9 @@ export function Reveal({ children, className, delay = 0 }: RevealProps) {
       variants={fadeUp}
       initial="hidden"
       whileInView="show"
-      viewport={{ once: true, margin: "-12% 0px" }}
+      viewport={{ once: true, margin: '-12% 0px' }}
       transition={{
-        type: "spring",
+        type: 'spring',
         stiffness: 260,
         damping: 28,
         delay,
@@ -41,6 +41,5 @@ export function Reveal({ children, className, delay = 0 }: RevealProps) {
     >
       {children}
     </motion.div>
-  );
+  )
 }
-

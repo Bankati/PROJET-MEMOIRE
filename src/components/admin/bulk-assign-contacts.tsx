@@ -1,9 +1,9 @@
-"use client";
+'use client'
 /**
  * Composant de sélection multiple et attribution en masse de contacts.
  * Permet à l'admin de sélectionner plusieurs contacts et de les attribuer à un agent ou à lui-même.
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback } from 'react'
 import {
   CheckCircle2,
   Contact as ContactIcon,
@@ -12,33 +12,33 @@ import {
   UserPlus,
   Users,
   X,
-} from "lucide-react";
-import Link from "next/link";
+} from 'lucide-react'
+import Link from 'next/link'
 
 type ContactData = Readonly<{
-  ccId: string;
-  firstName: string;
-  lastName: string | null;
-  phonePrimary: string;
-  phoneSecondary: string | null;
-  email: string | null;
-  schoolName: string | null;
-  isAssigned: boolean;
-  assignedTo: string | null;
-}>;
+  ccId: string
+  firstName: string
+  lastName: string | null
+  phonePrimary: string
+  phoneSecondary: string | null
+  email: string | null
+  schoolName: string | null
+  isAssigned: boolean
+  assignedTo: string | null
+}>
 
 type Agent = Readonly<{
-  id: string;
-  fullName: string;
-}>;
+  id: string
+  fullName: string
+}>
 
 type BulkAssignContactsProps = Readonly<{
-  contacts: readonly ContactData[];
-  agents: readonly Agent[];
-  adminId: string;
-  adminName: string;
-  bulkAssignAction: (formData: FormData) => Promise<void>;
-}>;
+  contacts: readonly ContactData[]
+  agents: readonly Agent[]
+  adminId: string
+  adminName: string
+  bulkAssignAction: (formData: FormData) => Promise<void>
+}>
 
 export const BulkAssignContacts = ({
   contacts,
@@ -47,67 +47,69 @@ export const BulkAssignContacts = ({
   adminName,
   bulkAssignAction,
 }: BulkAssignContactsProps): React.JSX.Element => {
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [showAssignModal, setShowAssignModal] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showAssignModal, setShowAssignModal] = useState<boolean>(false)
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
-  const unassignedContacts = contacts.filter((c) => !c.isAssigned);
-  const allSelected = unassignedContacts.length > 0 && unassignedContacts.every((c) => selectedIds.has(c.ccId));
-  const someSelected = selectedIds.size > 0;
+  const unassignedContacts = contacts.filter((c) => !c.isAssigned)
+  const allSelected =
+    unassignedContacts.length > 0 && unassignedContacts.every((c) => selectedIds.has(c.ccId))
+  const someSelected = selectedIds.size > 0
 
   const toggleSelect = useCallback((ccId: string): void => {
     setSelectedIds((prev) => {
-      const next = new Set(prev);
+      const next = new Set(prev)
       if (next.has(ccId)) {
-        next.delete(ccId);
+        next.delete(ccId)
       } else {
-        next.add(ccId);
+        next.add(ccId)
       }
-      return next;
-    });
-  }, []);
+      return next
+    })
+  }, [])
 
   const toggleSelectAll = useCallback((): void => {
     if (allSelected) {
-      setSelectedIds(new Set());
+      setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(unassignedContacts.map((c) => c.ccId)));
+      setSelectedIds(new Set(unassignedContacts.map((c) => c.ccId)))
     }
-  }, [allSelected, unassignedContacts]);
+  }, [allSelected, unassignedContacts])
 
   const handleAssign = async (formData: FormData): Promise<void> => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await bulkAssignAction(formData);
-      setSelectedIds(new Set());
-      setShowAssignModal(false);
+      await bulkAssignAction(formData)
+      setSelectedIds(new Set())
+      setShowAssignModal(false)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const clearSelection = useCallback((): void => {
-    setSelectedIds(new Set());
-  }, []);
+    setSelectedIds(new Set())
+  }, [])
 
   return (
     <>
       {someSelected ? (
-        <div className="mb-4 flex items-center justify-between rounded-xl border border-lbs-blue/30 bg-lbs-blue/5 px-4 py-3 dark:border-blue-400/30 dark:bg-blue-500/10">
+        <div className="border-lbs-blue/30 bg-lbs-blue/5 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 dark:border-blue-400/30 dark:bg-blue-500/10">
           <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-lg bg-lbs-blue/10 dark:bg-blue-500/20">
-              <CheckCircle2 className="size-5 text-lbs-blue dark:text-blue-400" />
+            <div className="bg-lbs-blue/10 grid size-10 place-items-center rounded-lg dark:bg-blue-500/20">
+              <CheckCircle2 className="text-lbs-blue size-5 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-lbs-blue dark:text-blue-300">
-                {selectedIds.size} contact{selectedIds.size > 1 ? "s" : ""} sélectionné{selectedIds.size > 1 ? "s" : ""}
+              <p className="text-lbs-blue text-sm font-medium dark:text-blue-300">
+                {selectedIds.size} contact{selectedIds.size > 1 ? 's' : ''} sélectionné
+                {selectedIds.size > 1 ? 's' : ''}
               </p>
-              <p className="text-xs text-lbs-blue/70 dark:text-blue-400/70">
+              <p className="text-lbs-blue/70 text-xs dark:text-blue-400/70">
                 Prêts pour attribution
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
               onClick={() => setShowAssignModal(true)}
@@ -131,22 +133,24 @@ export const BulkAssignContacts = ({
       {contacts.length === 0 ? (
         <div className="rounded-2xl border border-zinc-200/70 bg-white p-8 text-center shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
           <ContactIcon className="mx-auto mb-3 size-12 text-zinc-300 dark:text-zinc-600" />
-          <p className="text-zinc-500 dark:text-zinc-400">Aucun contact trouvé. Importez ou ajoutez des contacts.</p>
+          <p className="text-zinc-500 dark:text-zinc-400">
+            Aucun contact trouvé. Importez ou ajoutez des contacts.
+          </p>
         </div>
       ) : (
         <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-white/10">
-                  <th className="px-5 py-3 w-12">
+                <tr className="border-b border-zinc-200 text-xs text-zinc-500 uppercase dark:border-white/10">
+                  <th className="w-12 px-5 py-3">
                     <label className="flex cursor-pointer items-center">
                       <input
                         type="checkbox"
                         checked={allSelected}
                         onChange={toggleSelectAll}
                         disabled={unassignedContacts.length === 0}
-                        className="size-4 rounded border-zinc-300 text-lbs-blue focus:ring-lbs-blue disabled:opacity-50"
+                        className="text-lbs-blue focus:ring-lbs-blue size-4 rounded border-zinc-300 disabled:opacity-50"
                       />
                     </label>
                   </th>
@@ -164,8 +168,8 @@ export const BulkAssignContacts = ({
                     key={c.ccId}
                     className={`border-b border-zinc-100 transition dark:border-white/5 ${
                       selectedIds.has(c.ccId)
-                        ? "bg-lbs-blue/5 dark:bg-blue-500/10"
-                        : "hover:bg-zinc-50/50 dark:hover:bg-white/5"
+                        ? 'bg-lbs-blue/5 dark:bg-blue-500/10'
+                        : 'hover:bg-zinc-50/50 dark:hover:bg-white/5'
                     }`}
                   >
                     <td className="px-5 py-3">
@@ -175,22 +179,26 @@ export const BulkAssignContacts = ({
                           checked={selectedIds.has(c.ccId)}
                           onChange={() => toggleSelect(c.ccId)}
                           disabled={c.isAssigned}
-                          className="size-4 rounded border-zinc-300 text-lbs-blue focus:ring-lbs-blue disabled:opacity-50"
+                          className="text-lbs-blue focus:ring-lbs-blue size-4 rounded border-zinc-300 disabled:opacity-50"
                         />
                       </label>
                     </td>
                     <td className="px-5 py-3">
                       <p className="font-medium text-zinc-800 dark:text-white">
-                        {c.firstName} {c.lastName ?? ""}
+                        {c.firstName} {c.lastName ?? ''}
                       </p>
-                      {c.email ? <p className="text-xs text-zinc-500 dark:text-zinc-400">{c.email}</p> : null}
+                      {c.email ? (
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{c.email}</p>
+                      ) : null}
                     </td>
                     <td className="px-5 py-3">
                       <p className="text-zinc-700 dark:text-zinc-200">{c.phonePrimary}</p>
-                      {c.phoneSecondary ? <p className="text-xs text-zinc-400">{c.phoneSecondary}</p> : null}
+                      {c.phoneSecondary ? (
+                        <p className="text-xs text-zinc-400">{c.phoneSecondary}</p>
+                      ) : null}
                     </td>
                     <td className="px-5 py-3 text-zinc-600 dark:text-zinc-300">
-                      {c.schoolName ?? "—"}
+                      {c.schoolName ?? '—'}
                     </td>
                     <td className="px-5 py-3">
                       {c.isAssigned && c.assignedTo ? (
@@ -203,7 +211,7 @@ export const BulkAssignContacts = ({
                     </td>
                     <td className="px-5 py-3">
                       <a
-                        href={`https://wa.me/${c.phonePrimary.replace(/\s+/g, "").replace(/^\+/, "")}`}
+                        href={`https://wa.me/${c.phonePrimary.replace(/\s+/g, '').replace(/^\+/, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="rounded-lg p-1.5 text-emerald-500 transition hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
@@ -217,7 +225,7 @@ export const BulkAssignContacts = ({
                         {!c.isAssigned ? (
                           <Link
                             href={`/dashboard/admin/contacts?assign=${c.ccId}`}
-                            className="rounded-lg p-1.5 text-zinc-500 transition hover:bg-zinc-100 hover:text-lbs-blue dark:text-zinc-400 dark:hover:bg-white/10"
+                            className="hover:text-lbs-blue rounded-lg p-1.5 text-zinc-500 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/10"
                             title="Attribuer individuellement"
                           >
                             <UserPlus className="size-4" />
@@ -238,8 +246,8 @@ export const BulkAssignContacts = ({
           <div className="w-full max-w-md rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#1a2332]">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-800 dark:text-white">
-                <Users className="size-5 text-lbs-blue" />
-                Attribuer {selectedIds.size} contact{selectedIds.size > 1 ? "s" : ""}
+                <Users className="text-lbs-blue size-5" />
+                Attribuer {selectedIds.size} contact{selectedIds.size > 1 ? 's' : ''}
               </h2>
               <button
                 type="button"
@@ -250,7 +258,7 @@ export const BulkAssignContacts = ({
               </button>
             </div>
             <form action={handleAssign} className="space-y-4">
-              <input type="hidden" name="contactIds" value={Array.from(selectedIds).join(",")} />
+              <input type="hidden" name="contactIds" value={Array.from(selectedIds).join(',')} />
               <div>
                 <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   Attribuer à *
@@ -258,13 +266,11 @@ export const BulkAssignContacts = ({
                 <select
                   name="agentId"
                   required
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-800 outline-none transition focus:border-lbs-blue focus:ring-2 focus:ring-lbs-blue/20 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                  className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
                 >
                   <option value="">Sélectionner un destinataire</option>
                   <optgroup label="Moi-même (Admin)">
-                    <option value={adminId}>
-                      👤 {adminName} (Moi)
-                    </option>
+                    <option value={adminId}>👤 {adminName} (Moi)</option>
                   </optgroup>
                   {agents.length > 0 ? (
                     <optgroup label="Mes agents">
@@ -279,8 +285,10 @@ export const BulkAssignContacts = ({
               </div>
               <div className="rounded-xl bg-zinc-50 p-3 dark:bg-white/5">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Les {selectedIds.size} contact{selectedIds.size > 1 ? "s" : ""} sélectionné{selectedIds.size > 1 ? "s" : ""} seront attribué{selectedIds.size > 1 ? "s" : ""} à la personne choisie.
-                  {selectedIds.size > 1 ? " Chaque contact sera traité individuellement." : ""}
+                  Les {selectedIds.size} contact{selectedIds.size > 1 ? 's' : ''} sélectionné
+                  {selectedIds.size > 1 ? 's' : ''} seront attribué{selectedIds.size > 1 ? 's' : ''}{' '}
+                  à la personne choisie.
+                  {selectedIds.size > 1 ? ' Chaque contact sera traité individuellement.' : ''}
                 </p>
               </div>
               <div className="flex items-center justify-end gap-3 pt-2">
@@ -301,7 +309,7 @@ export const BulkAssignContacts = ({
                   ) : (
                     <UserPlus className="size-4" />
                   )}
-                  {isSubmitting ? "Attribution..." : "Attribuer"}
+                  {isSubmitting ? 'Attribution...' : 'Attribuer'}
                 </button>
               </div>
             </form>
@@ -309,5 +317,5 @@ export const BulkAssignContacts = ({
         </div>
       ) : null}
     </>
-  );
-};
+  )
+}

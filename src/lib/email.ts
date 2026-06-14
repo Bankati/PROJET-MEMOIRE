@@ -1,12 +1,10 @@
-import { Resend } from "resend";
+import { Resend } from 'resend'
 
-import { env } from "@/lib/env";
-
-const resend = new Resend(env.RESEND_API_KEY);
+import { env } from '@/lib/env'
 
 const buildOtpDigits = (otpCode: string): string =>
   otpCode
-    .split("")
+    .split('')
     .map(
       (digit) =>
         `<td style="padding:0 5px;">
@@ -17,9 +15,9 @@ const buildOtpDigits = (otpCode: string): string =>
               </td>
             </tr>
           </table>
-        </td>`,
+        </td>`
     )
-    .join("");
+    .join('')
 
 const buildEmailHtml = (otpCode: string): string => `
 <!DOCTYPE html>
@@ -150,31 +148,32 @@ const buildEmailHtml = (otpCode: string): string => `
   </table>
 </body>
 </html>
-`;
+`
 
 export const sendPasswordResetOtp = async ({
   to,
   otpCode,
 }: Readonly<{
-  to: string;
-  otpCode: string;
+  to: string
+  otpCode: string
 }>): Promise<void> => {
-  const recipient = env.RESEND_TEST_TO ?? to;
+  const resend = new Resend(env.RESEND_API_KEY)
+  const recipient = env.RESEND_TEST_TO ?? to
   if (env.RESEND_TEST_TO) {
-    console.log(`[Resend] Mode sandbox — redirection de ${to} vers ${recipient}`);
+    console.log(`[Resend] Mode sandbox — redirection de ${to} vers ${recipient}`)
   }
 
   const { data, error } = await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: 'onboarding@resend.dev',
     to: recipient,
-    subject: "Votre code de réinitialisation — LBS Call Center",
+    subject: 'Votre code de réinitialisation — LBS Call Center',
     html: buildEmailHtml(otpCode),
-  });
+  })
 
   if (error) {
-    console.error("[Resend] Échec envoi email:", error);
-    throw new Error(`Impossible d'envoyer l'email : ${error.message}`);
+    console.error('[Resend] Échec envoi email:', error)
+    throw new Error(`Impossible d'envoyer l'email : ${error.message}`)
   }
 
-  console.log("[Resend] Email envoyé avec succès, id:", data?.id);
-};
+  console.log('[Resend] Email envoyé avec succès, id:', data?.id)
+}

@@ -1,27 +1,27 @@
-"use client";
+'use client'
 /**
  * Dialog animé plein écran centré pour les formulaires.
  * Inspiré du MissionSuccessDialog avec backdrop blur, animation scale+opacity,
  * et fermeture au clic extérieur / touche Escape.
  * Adapté au design system LBS avec support complet du dark mode.
  */
-import { useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X } from 'lucide-react'
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 type FormDialogProps = Readonly<{
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  description?: string;
-  icon?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-  maxWidth?: string;
-}>;
+  isOpen: boolean
+  onClose: () => void
+  title: string
+  description?: string
+  icon?: React.ReactNode
+  children: React.ReactNode
+  className?: string
+  maxWidth?: string
+}>
 
 export const FormDialog = ({
   isOpen,
@@ -31,27 +31,27 @@ export const FormDialog = ({
   icon,
   children,
   className,
-  maxWidth = "max-w-lg",
+  maxWidth = 'max-w-lg',
 }: FormDialogProps): React.JSX.Element => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent): void => {
-      if (event.key === "Escape") {
-        onClose();
+      if (event.key === 'Escape') {
+        onClose()
       }
     },
-    [onClose],
-  );
+    [onClose]
+  )
   useEffect(() => {
     if (!isOpen) {
-      return;
+      return
     }
-    document.addEventListener("keydown", handleKeyDown);
-    document.body.style.overflow = "hidden";
+    document.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [isOpen, handleKeyDown]);
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [isOpen, handleKeyDown])
   return (
     <AnimatePresence>
       {isOpen ? (
@@ -68,18 +68,18 @@ export const FormDialog = ({
             initial={{ opacity: 0, scale: 0.92, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 24 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             className={cn(
-              "relative z-10 w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-2xl dark:border-white/10 dark:bg-[#1a2332]",
+              'relative z-10 w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-2xl dark:border-white/10 dark:bg-[#1a2332]',
               maxWidth,
-              className,
+              className
             )}
           >
             <div className="relative p-6">
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-3 top-3 size-8 rounded-full text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200"
+                className="absolute top-3 right-3 size-8 rounded-full text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200"
                 onClick={onClose}
                 aria-label="Fermer"
               >
@@ -87,7 +87,7 @@ export const FormDialog = ({
               </Button>
               <div className="mb-5 flex items-start gap-3">
                 {icon ? (
-                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-lbs-blue/10 dark:bg-lbs-blue/20">
+                  <div className="bg-lbs-blue/10 dark:bg-lbs-blue/20 grid size-10 shrink-0 place-items-center rounded-xl">
                     {icon}
                   </div>
                 ) : null}
@@ -104,5 +104,5 @@ export const FormDialog = ({
         </div>
       ) : null}
     </AnimatePresence>
-  );
-};
+  )
+}

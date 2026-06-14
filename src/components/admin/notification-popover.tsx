@@ -1,19 +1,19 @@
-"use client";
+'use client'
 
-import { Bell, Megaphone } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useNotifications } from "@/components/admin/layout-shell";
+import { Bell, Megaphone } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useNotifications } from '@/components/admin/layout-shell'
 
 type NotificationItem = Readonly<{
-  id: string;
-  message: string;
-  senderName: string;
-  createdAt: Date;
-}>;
+  id: string
+  message: string
+  senderName: string
+  createdAt: Date
+}>
 
 type NotificationPopoverProps = Readonly<{
-  notifications: readonly NotificationItem[];
-}>;
+  notifications: readonly NotificationItem[]
+}>
 
 function Dot({ className }: Readonly<{ className?: string }>) {
   return (
@@ -28,42 +28,45 @@ function Dot({ className }: Readonly<{ className?: string }>) {
     >
       <circle cx="3" cy="3" r="3" />
     </svg>
-  );
+  )
 }
 
 const formatRelative = (date: Date): string => {
-  const now = Date.now();
-  const diff = now - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (minutes < 1) return "À l'instant";
-  if (minutes < 60) return `Il y a ${minutes} min`;
-  if (hours < 24) return `Il y a ${hours}h`;
-  if (days < 7) return `Il y a ${days} jour${days > 1 ? "s" : ""}`;
-  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-};
+  const now = Date.now()
+  const diff = now - date.getTime()
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+  if (minutes < 1) return "À l'instant"
+  if (minutes < 60) return `Il y a ${minutes} min`
+  if (hours < 24) return `Il y a ${hours}h`
+  if (days < 7) return `Il y a ${days} jour${days > 1 ? 's' : ''}`
+  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+}
 
-export const NotificationPopover = ({ notifications }: NotificationPopoverProps): React.JSX.Element => {
-  const { unreadCount, isRead, markAsRead, markAllAsRead } = useNotifications();
+export const NotificationPopover = ({
+  notifications,
+}: NotificationPopoverProps): React.JSX.Element => {
+  const { unreadCount, isRead, markAsRead, markAllAsRead } = useNotifications()
 
   const items = notifications.map((n) => ({
     ...n,
     unread: !isRead(n.id),
-  }));
+  }))
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
+          suppressHydrationWarning
           className="relative grid size-9 place-items-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 dark:border-white/15 dark:text-zinc-300 dark:hover:bg-white/10"
           aria-label="Notifications"
         >
           <Bell className="size-4" />
           {unreadCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-lbs-blue px-1 text-[10px] font-bold leading-none text-white">
-              {unreadCount > 9 ? "9+" : unreadCount}
+            <span className="bg-lbs-blue absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-bold text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </button>
@@ -77,7 +80,7 @@ export const NotificationPopover = ({ notifications }: NotificationPopoverProps)
             <button
               type="button"
               onClick={markAllAsRead}
-              className="text-xs font-medium text-lbs-blue hover:underline dark:text-blue-400"
+              className="text-lbs-blue text-xs font-medium hover:underline dark:text-blue-400"
             >
               Tout marquer comme lu
             </button>
@@ -108,14 +111,17 @@ export const NotificationPopover = ({ notifications }: NotificationPopoverProps)
                       onClick={() => markAsRead(notif.id)}
                       className="w-full text-left after:absolute after:inset-0"
                     >
-                      <p className="text-xs leading-relaxed text-zinc-700 dark:text-zinc-300 line-clamp-2">
+                      <p className="line-clamp-2 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">
                         <span className="font-semibold text-zinc-900 dark:text-white">
                           {notif.senderName}
-                        </span>{" "}
+                        </span>{' '}
                         {notif.message}
                       </p>
                     </button>
-                    <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                    <p
+                      className="text-[11px] text-zinc-400 dark:text-zinc-500"
+                      suppressHydrationWarning
+                    >
                       {formatRelative(notif.createdAt)}
                     </p>
                   </div>
@@ -132,5 +138,5 @@ export const NotificationPopover = ({ notifications }: NotificationPopoverProps)
         )}
       </PopoverContent>
     </Popover>
-  );
-};
+  )
+}

@@ -1,42 +1,42 @@
-"use client";
+'use client'
 /**
  * Formulaire d'initialisation du premier super-admin.
  */
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 
 type SetupResponse = Readonly<{
-  ok: boolean;
-  message?: string;
-}>;
+  ok: boolean
+  message?: string
+}>
 
 export const SetupSuperAdminForm = (): React.JSX.Element => {
-  const router = useRouter();
-  const [fullName, setFullName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [feedback, setFeedback] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const router = useRouter()
+  const [fullName, setFullName] = useState<string>('')
+  const [email, setEmail] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
+  const [feedback, setFeedback] = useState<string>('')
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-    setFeedback("");
-    setIsSubmitting(true);
-    const response: Response = await fetch("/api/auth/setup-super-admin", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
+    event.preventDefault()
+    setFeedback('')
+    setIsSubmitting(true)
+    const response: Response = await fetch('/api/auth/setup-super-admin', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ fullName, email, password }),
-    });
-    const payload: SetupResponse = await response.json();
+    })
+    const payload: SetupResponse = await response.json()
     if (!payload.ok) {
-      setFeedback(payload.message ?? "Initialisation impossible.");
-      setIsSubmitting(false);
-      return;
+      setFeedback(payload.message ?? 'Initialisation impossible.')
+      setIsSubmitting(false)
+      return
     }
-    router.push("/login");
-    router.refresh();
-  };
+    router.push('/login')
+    router.refresh()
+  }
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2 text-left">
@@ -46,8 +46,10 @@ export const SetupSuperAdminForm = (): React.JSX.Element => {
         <input
           id="fullName"
           value={fullName}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>): void => setFullName(event.target.value)}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition focus:border-lbs-blue/50 focus:ring-2 focus:ring-lbs-blue/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
+          onChange={(event: React.ChangeEvent<HTMLInputElement>): void =>
+            setFullName(event.target.value)
+          }
+          className="focus:border-lbs-blue/50 focus:ring-lbs-blue/20 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
           required
         />
       </div>
@@ -59,8 +61,10 @@ export const SetupSuperAdminForm = (): React.JSX.Element => {
           id="email"
           type="email"
           value={email}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>): void => setEmail(event.target.value)}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition focus:border-lbs-blue/50 focus:ring-2 focus:ring-lbs-blue/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
+          onChange={(event: React.ChangeEvent<HTMLInputElement>): void =>
+            setEmail(event.target.value)
+          }
+          className="focus:border-lbs-blue/50 focus:ring-lbs-blue/20 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
           required
         />
       </div>
@@ -72,8 +76,10 @@ export const SetupSuperAdminForm = (): React.JSX.Element => {
           id="password"
           type="password"
           value={password}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>): void => setPassword(event.target.value)}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition focus:border-lbs-blue/50 focus:ring-2 focus:ring-lbs-blue/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
+          onChange={(event: React.ChangeEvent<HTMLInputElement>): void =>
+            setPassword(event.target.value)
+          }
+          className="focus:border-lbs-blue/50 focus:ring-lbs-blue/20 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
           required
         />
       </div>
@@ -83,8 +89,8 @@ export const SetupSuperAdminForm = (): React.JSX.Element => {
         </p>
       ) : null}
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Initialisation..." : "Créer le super-admin"}
+        {isSubmitting ? 'Initialisation...' : 'Créer le super-admin'}
       </Button>
     </form>
-  );
-};
+  )
+}

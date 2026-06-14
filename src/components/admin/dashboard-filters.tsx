@@ -1,52 +1,62 @@
-"use client";
+'use client'
 /**
  * Barre de filtres du dashboard administrateur.
  * Sélection de campagne et période avec DatePicker et CampaignSelect.
  * Identité visuelle LBS Blue cohérente avec l'ensemble de l'interface admin.
  */
-import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { useRouter } from 'next/navigation'
+import { useCallback, useState } from 'react'
+import { Sparkles } from 'lucide-react'
 
-import { LbsDatePicker } from "@/components/ui/date-picker";
-import { CampaignSelect } from "@/components/ui/campaign-select";
+import { LbsDatePicker } from '@/components/ui/date-picker'
+import { CampaignSelect } from '@/components/ui/campaign-select'
 
-type CampaignOption = Readonly<{ id: string; title: string }>;
+type CampaignOption = Readonly<{ id: string; title: string }>
 type AdminDashboardFiltersProps = Readonly<{
-  campaigns: readonly CampaignOption[];
-  currentCampaign: string;
-  currentFrom: string;
-  currentTo: string;
-}>;
+  campaigns: readonly CampaignOption[]
+  currentCampaign: string
+  currentFrom: string
+  currentTo: string
+  hero?: boolean
+}>
 
 export const AdminDashboardFilters = ({
   campaigns,
   currentCampaign,
   currentFrom,
   currentTo,
+  hero = false,
 }: AdminDashboardFiltersProps): React.JSX.Element => {
-  const router = useRouter();
-  const [dateFrom, setDateFrom] = useState<string>(currentFrom);
-  const [dateTo, setDateTo] = useState<string>(currentTo);
+  const router = useRouter()
+  const [dateFrom, setDateFrom] = useState<string>(currentFrom)
+  const [dateTo, setDateTo] = useState<string>(currentTo)
   const handleApply = useCallback((): void => {
-    const params: URLSearchParams = new URLSearchParams();
-    const campaignInput: HTMLInputElement | null = document.querySelector<HTMLInputElement>("input[name='campaign']");
-    const campaignValue: string = campaignInput?.value ?? "";
+    const params: URLSearchParams = new URLSearchParams()
+    const campaignInput: HTMLInputElement | null =
+      document.querySelector<HTMLInputElement>("input[name='campaign']")
+    const campaignValue: string = campaignInput?.value ?? ''
     if (campaignValue.length > 0) {
-      params.set("campaign", campaignValue);
+      params.set('campaign', campaignValue)
     }
     if (dateFrom.length > 0) {
-      params.set("from", dateFrom);
+      params.set('from', dateFrom)
     }
     if (dateTo.length > 0) {
-      params.set("to", dateTo);
+      params.set('to', dateTo)
     }
-    const queryString: string = params.toString();
-    const url: string = queryString.length > 0 ? `?${queryString}` : "";
-    router.push(`/dashboard/admin${url}`);
-  }, [dateFrom, dateTo, router]);
+    const queryString: string = params.toString()
+    const url: string = queryString.length > 0 ? `?${queryString}` : ''
+    router.push(`/dashboard/admin${url}`)
+  }, [dateFrom, dateTo, router])
   return (
-    <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]" suppressHydrationWarning>
+    <div
+      className={
+        hero
+          ? 'rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm'
+          : 'rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]'
+      }
+      suppressHydrationWarning
+    >
       <div className="grid items-end gap-3 md:grid-cols-4" suppressHydrationWarning>
         <CampaignSelect
           name="campaign"
@@ -71,13 +81,17 @@ export const AdminDashboardFilters = ({
             type="button"
             onClick={handleApply}
             suppressHydrationWarning
-            className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+            className={
+              hero
+                ? 'inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-[#244976] shadow-sm transition hover:bg-white/90'
+                : 'inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-sm font-medium text-white shadow-sm transition hover:brightness-110'
+            }
           >
             <Sparkles className="size-3.5" />
-            Appliquer les filtres
+            {hero ? 'Actualiser' : 'Appliquer les filtres'}
           </button>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

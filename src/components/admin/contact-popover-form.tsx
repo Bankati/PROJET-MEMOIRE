@@ -1,26 +1,26 @@
-"use client";
+'use client'
 /**
  * Formulaire d'ajout de contact dans un MorphingPopover animé.
  * Tous les champs métier du modèle contacts avec sélection de campagne.
  */
-import * as motion from "motion/react-client";
-import { Plus, UserPlus } from "lucide-react";
+import * as motion from 'motion/react-client'
+import { Plus, UserPlus } from 'lucide-react'
 
 import {
   MorphingPopover,
   MorphingPopoverContent,
   MorphingPopoverTrigger,
-} from "@/components/ui/morphing-popover";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/morphing-popover'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 
-type CampaignOption = Readonly<{ id: string; title: string }>;
+type CampaignOption = Readonly<{ id: string; title: string }>
 
 type ContactPopoverFormProps = Readonly<{
-  campaigns: readonly CampaignOption[];
-  addAction: (formData: FormData) => void;
-}>;
+  campaigns: readonly CampaignOption[]
+  addAction: (formData: FormData) => void
+}>
 
 export const ContactPopoverForm = ({
   campaigns,
@@ -29,11 +29,11 @@ export const ContactPopoverForm = ({
   return (
     <MorphingPopover
       variants={{
-        initial: { opacity: 0, filter: "blur(8px)", scale: 0.96 },
-        animate: { opacity: 1, filter: "blur(0px)", scale: 1 },
-        exit: { opacity: 0, filter: "blur(8px)", scale: 0.96 },
+        initial: { opacity: 0, filter: 'blur(8px)', scale: 0.96 },
+        animate: { opacity: 1, filter: 'blur(0px)', scale: 1 },
+        exit: { opacity: 0, filter: 'blur(8px)', scale: 0.96 },
       }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
       <MorphingPopoverTrigger asChild>
         <Button className="gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-white shadow-sm hover:brightness-110">
@@ -47,12 +47,12 @@ export const ContactPopoverForm = ({
           </motion.span>
         </Button>
       </MorphingPopoverTrigger>
-      <MorphingPopoverContent className="right-0 top-full mt-2 w-[520px] p-5 shadow-xl">
+      <MorphingPopoverContent className="top-full right-0 mt-2 w-[520px] p-5 shadow-xl">
         <form action={addAction} className="space-y-4">
           <motion.h3
             layoutId="contact-add-label"
             layout="position"
-            className="text-base font-semibold leading-none text-zinc-800 dark:text-white"
+            className="text-base leading-none font-semibold text-zinc-800 dark:text-white"
           >
             Ajouter un contact
           </motion.h3>
@@ -73,11 +73,7 @@ export const ContactPopoverForm = ({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="contact-lastName">Nom</Label>
-                <Input
-                  id="contact-lastName"
-                  name="lastName"
-                  placeholder="Nom de famille"
-                />
+                <Input id="contact-lastName" name="lastName" placeholder="Nom de famille" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -113,21 +109,13 @@ export const ContactPopoverForm = ({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="contact-schoolName">Établissement</Label>
-                <Input
-                  id="contact-schoolName"
-                  name="schoolName"
-                  placeholder="Nom de l'école"
-                />
+                <Input id="contact-schoolName" name="schoolName" placeholder="Nom de l'école" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="contact-city">Ville</Label>
-                <Input
-                  id="contact-city"
-                  name="city"
-                  placeholder="Douala, Yaoundé..."
-                />
+                <Input id="contact-city" name="city" placeholder="Douala, Yaoundé..." />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="contact-desiredProgram">Filière souhaitée</Label>
@@ -145,7 +133,7 @@ export const ContactPopoverForm = ({
                   id="contact-campaignId"
                   name="campaignId"
                   required
-                  className="flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 outline-none transition focus:border-lbs-blue dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                  className="focus:border-lbs-blue flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
                 >
                   <option value="">Sélectionner</option>
                   {campaigns.map((c) => (
@@ -169,5 +157,5 @@ export const ContactPopoverForm = ({
         </form>
       </MorphingPopoverContent>
     </MorphingPopover>
-  );
-};
+  )
+}

@@ -1,13 +1,13 @@
-import { desc, eq } from "drizzle-orm";
-import { Megaphone, MessageSquare } from "lucide-react";
+import { desc, eq } from 'drizzle-orm'
+import { Megaphone, MessageSquare } from 'lucide-react'
 
-import { requireRole } from "@/lib/auth/server-auth";
-import { db } from "@/lib/db";
-import { broadcastMessages, users } from "@/db/schema";
-import { MarkMessagesRead } from "@/components/admin/mark-messages-read";
+import { requireRole } from '@/lib/auth/server-auth'
+import { db } from '@/lib/db'
+import { broadcastMessages, users } from '@/db/schema'
+import { MarkMessagesRead } from '@/components/admin/mark-messages-read'
 
 export default async function AdminMessagesPage(): Promise<React.JSX.Element> {
-  await requireRole({ allowedRoles: ["admin"] });
+  await requireRole({ allowedRoles: ['admin'] })
 
   const messages = await db
     .select({
@@ -19,10 +19,10 @@ export default async function AdminMessagesPage(): Promise<React.JSX.Element> {
     .from(broadcastMessages)
     .innerJoin(users, eq(broadcastMessages.sentByUserId, users.id))
     .orderBy(desc(broadcastMessages.createdAt))
-    .limit(100);
+    .limit(100)
 
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const recentCount = messages.filter((m) => m.createdAt >= sevenDaysAgo).length;
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  const recentCount = messages.filter((m) => m.createdAt >= sevenDaysAgo).length
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -35,9 +35,9 @@ export default async function AdminMessagesPage(): Promise<React.JSX.Element> {
           </p>
         </div>
         {recentCount > 0 ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-lbs-blue/30 bg-lbs-blue/10 px-3 py-1 text-xs font-semibold text-lbs-blue dark:border-blue-400/30 dark:bg-blue-500/15 dark:text-blue-300">
-            <span className="size-1.5 rounded-full bg-lbs-blue dark:bg-blue-400" />
-            {recentCount} nouveau{recentCount > 1 ? "x" : ""} cette semaine
+          <span className="border-lbs-blue/30 bg-lbs-blue/10 text-lbs-blue inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold dark:border-blue-400/30 dark:bg-blue-500/15 dark:text-blue-300">
+            <span className="bg-lbs-blue size-1.5 rounded-full dark:bg-blue-400" />
+            {recentCount} nouveau{recentCount > 1 ? 'x' : ''} cette semaine
           </span>
         ) : null}
       </div>
@@ -57,19 +57,19 @@ export default async function AdminMessagesPage(): Promise<React.JSX.Element> {
       ) : (
         <div className="space-y-3">
           {messages.map((msg) => {
-            const isRecent = msg.createdAt >= sevenDaysAgo;
+            const isRecent = msg.createdAt >= sevenDaysAgo
             return (
               <div
                 key={msg.id}
                 className={`relative rounded-2xl border bg-white p-5 shadow-sm transition dark:bg-[#1a2332] ${
                   isRecent
-                    ? "border-lbs-blue/30 dark:border-blue-400/20"
-                    : "border-zinc-200/70 dark:border-white/10"
+                    ? 'border-lbs-blue/30 dark:border-blue-400/20'
+                    : 'border-zinc-200/70 dark:border-white/10'
                 }`}
               >
                 {isRecent ? (
-                  <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-lbs-blue/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lbs-blue dark:bg-blue-500/15 dark:text-blue-300">
-                    <span className="size-1.5 animate-pulse rounded-full bg-lbs-blue dark:bg-blue-400" />
+                  <span className="bg-lbs-blue/10 text-lbs-blue absolute top-4 right-4 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase dark:bg-blue-500/15 dark:text-blue-300">
+                    <span className="bg-lbs-blue size-1.5 animate-pulse rounded-full dark:bg-blue-400" />
                     Nouveau
                   </span>
                 ) : null}
@@ -83,26 +83,26 @@ export default async function AdminMessagesPage(): Promise<React.JSX.Element> {
                       {msg.senderName}
                     </p>
                     <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                      {msg.createdAt.toLocaleDateString("fr-FR", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
+                      {msg.createdAt.toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
                       })}
                     </p>
                   </div>
                 </div>
 
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 dark:text-zinc-200">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap text-zinc-700 dark:text-zinc-200">
                   {msg.message}
                 </p>
               </div>
-            );
+            )
           })}
         </div>
       )}
     </div>
-  );
+  )
 }

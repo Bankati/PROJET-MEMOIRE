@@ -92,12 +92,8 @@
           "name": "agent_contact_assignments_campaign_contact_id_campaign_contacts_id_fk",
           "tableFrom": "agent_contact_assignments",
           "tableTo": "campaign_contacts",
-          "columnsFrom": [
-            "campaign_contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["campaign_contact_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -105,12 +101,8 @@
           "name": "agent_contact_assignments_agent_id_users_id_fk",
           "tableFrom": "agent_contact_assignments",
           "tableTo": "users",
-          "columnsFrom": [
-            "agent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["agent_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -118,12 +110,8 @@
           "name": "agent_contact_assignments_assigned_by_admin_id_users_id_fk",
           "tableFrom": "agent_contact_assignments",
           "tableTo": "users",
-          "columnsFrom": [
-            "assigned_by_admin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_by_admin_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -262,12 +250,8 @@
           "name": "call_results_assignment_id_agent_contact_assignments_id_fk",
           "tableFrom": "call_results",
           "tableTo": "agent_contact_assignments",
-          "columnsFrom": [
-            "assignment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assignment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -275,12 +259,8 @@
           "name": "call_results_campaign_id_campaigns_id_fk",
           "tableFrom": "call_results",
           "tableTo": "campaigns",
-          "columnsFrom": [
-            "campaign_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["campaign_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -288,12 +268,8 @@
           "name": "call_results_contact_id_contacts_id_fk",
           "tableFrom": "call_results",
           "tableTo": "contacts",
-          "columnsFrom": [
-            "contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["contact_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -301,12 +277,8 @@
           "name": "call_results_agent_id_users_id_fk",
           "tableFrom": "call_results",
           "tableTo": "users",
-          "columnsFrom": [
-            "agent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["agent_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -377,12 +349,8 @@
           "name": "campaign_collaborators_campaign_id_campaigns_id_fk",
           "tableFrom": "campaign_collaborators",
           "tableTo": "campaigns",
-          "columnsFrom": [
-            "campaign_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["campaign_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -390,12 +358,8 @@
           "name": "campaign_collaborators_admin_id_users_id_fk",
           "tableFrom": "campaign_collaborators",
           "tableTo": "users",
-          "columnsFrom": [
-            "admin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["admin_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -403,12 +367,8 @@
           "name": "campaign_collaborators_added_by_admin_id_users_id_fk",
           "tableFrom": "campaign_collaborators",
           "tableTo": "users",
-          "columnsFrom": [
-            "added_by_admin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["added_by_admin_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -416,10 +376,7 @@
       "compositePrimaryKeys": {
         "campaign_collaborators_pk": {
           "name": "campaign_collaborators_pk",
-          "columns": [
-            "campaign_id",
-            "admin_id"
-          ]
+          "columns": ["campaign_id", "admin_id"]
         }
       },
       "uniqueConstraints": {},
@@ -543,12 +500,8 @@
           "name": "campaign_contacts_campaign_id_campaigns_id_fk",
           "tableFrom": "campaign_contacts",
           "tableTo": "campaigns",
-          "columnsFrom": [
-            "campaign_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["campaign_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -556,12 +509,8 @@
           "name": "campaign_contacts_contact_id_contacts_id_fk",
           "tableFrom": "campaign_contacts",
           "tableTo": "contacts",
-          "columnsFrom": [
-            "contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["contact_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -569,12 +518,8 @@
           "name": "campaign_contacts_imported_by_admin_id_users_id_fk",
           "tableFrom": "campaign_contacts",
           "tableTo": "users",
-          "columnsFrom": [
-            "imported_by_admin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["imported_by_admin_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -698,12 +643,8 @@
           "name": "campaigns_created_by_admin_id_users_id_fk",
           "tableFrom": "campaigns",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by_admin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_admin_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -942,12 +883,8 @@
           "name": "password_reset_otps_user_id_users_id_fk",
           "tableFrom": "password_reset_otps",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1093,12 +1030,8 @@
           "name": "users_created_by_user_id_users_id_fk",
           "tableFrom": "users",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1106,12 +1039,8 @@
           "name": "users_managed_by_admin_id_users_id_fk",
           "tableFrom": "users",
           "tableTo": "users",
-          "columnsFrom": [
-            "managed_by_admin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["managed_by_admin_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1127,12 +1056,7 @@
     "public.assignment_status": {
       "name": "assignment_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "in_progress",
-        "completed",
-        "cancelled"
-      ]
+      "values": ["pending", "in_progress", "completed", "cancelled"]
     },
     "public.call_outcome": {
       "name": "call_outcome",
@@ -1150,65 +1074,37 @@
     "public.campaign_permission": {
       "name": "campaign_permission",
       "schema": "public",
-      "values": [
-        "owner",
-        "editor",
-        "viewer"
-      ]
+      "values": ["owner", "editor", "viewer"]
     },
     "public.campaign_status": {
       "name": "campaign_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "active",
-        "paused",
-        "completed",
-        "archived"
-      ]
+      "values": ["draft", "active", "paused", "completed", "archived"]
     },
     "public.contact_source": {
       "name": "contact_source",
       "schema": "public",
-      "values": [
-        "excel_import",
-        "manual_form",
-        "campaign_reuse"
-      ]
+      "values": ["excel_import", "manual_form", "campaign_reuse"]
     },
     "public.otp_purpose": {
       "name": "otp_purpose",
       "schema": "public",
-      "values": [
-        "password_reset"
-      ]
+      "values": ["password_reset"]
     },
     "public.otp_status": {
       "name": "otp_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "used",
-        "expired"
-      ]
+      "values": ["pending", "used", "expired"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "super_admin",
-        "admin",
-        "agent"
-      ]
+      "values": ["super_admin", "admin", "agent"]
     },
     "public.user_status": {
       "name": "user_status",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive",
-        "expired"
-      ]
+      "values": ["active", "inactive", "expired"]
     }
   },
   "schemas": {},

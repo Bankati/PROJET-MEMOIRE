@@ -1,26 +1,26 @@
-"use client";
+'use client'
 /**
  * Formulaire de création d'agent dans un MorphingPopover animé.
  * Inclut l'alerte sur la durée de vie liée à la campagne.
  */
-import * as motion from "motion/react-client";
-import { Shield, UserPlus } from "lucide-react";
+import * as motion from 'motion/react-client'
+import { Shield, UserPlus } from 'lucide-react'
 
 import {
   MorphingPopover,
   MorphingPopoverContent,
   MorphingPopoverTrigger,
-} from "@/components/ui/morphing-popover";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/morphing-popover'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 
-type CampaignOption = Readonly<{ id: string; title: string }>;
+type CampaignOption = Readonly<{ id: string; title: string }>
 
 type AgentPopoverFormProps = Readonly<{
-  campaigns: readonly CampaignOption[];
-  createAction: (formData: FormData) => void;
-}>;
+  campaigns: readonly CampaignOption[]
+  createAction: (formData: FormData) => void
+}>
 
 export const AgentPopoverForm = ({
   campaigns,
@@ -29,11 +29,11 @@ export const AgentPopoverForm = ({
   return (
     <MorphingPopover
       variants={{
-        initial: { opacity: 0, filter: "blur(8px)", scale: 0.96 },
-        animate: { opacity: 1, filter: "blur(0px)", scale: 1 },
-        exit: { opacity: 0, filter: "blur(8px)", scale: 0.96 },
+        initial: { opacity: 0, filter: 'blur(8px)', scale: 0.96 },
+        animate: { opacity: 1, filter: 'blur(0px)', scale: 1 },
+        exit: { opacity: 0, filter: 'blur(8px)', scale: 0.96 },
       }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
       <MorphingPopoverTrigger asChild>
         <Button className="gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-white shadow-sm hover:brightness-110">
@@ -47,12 +47,12 @@ export const AgentPopoverForm = ({
           </motion.span>
         </Button>
       </MorphingPopoverTrigger>
-      <MorphingPopoverContent className="right-0 top-full mt-2 w-[460px] p-5 shadow-xl">
+      <MorphingPopoverContent className="top-full right-0 mt-2 w-[460px] p-5 shadow-xl">
         <form action={createAction} className="space-y-4">
           <motion.h3
             layoutId="agent-create-label"
             layout="position"
-            className="text-base font-semibold leading-none text-zinc-800 dark:text-white"
+            className="text-base leading-none font-semibold text-zinc-800 dark:text-white"
           >
             Créer un agent
           </motion.h3>
@@ -99,7 +99,7 @@ export const AgentPopoverForm = ({
                 <select
                   id="agent-campaignId"
                   name="campaignId"
-                  className="flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 outline-none transition focus:border-lbs-blue dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                  className="focus:border-lbs-blue flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
                 >
                   <option value="">Aucune</option>
                   {campaigns.map((c) => (
@@ -112,9 +112,8 @@ export const AgentPopoverForm = ({
             </div>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-            <Shield className="mb-0.5 inline size-3.5" /> La durée de vie de
-            l&apos;agent est liée à la campagne. À l&apos;expiration, il sera
-            automatiquement désactivé.
+            <Shield className="mb-0.5 inline size-3.5" /> La durée de vie de l&apos;agent est liée à
+            la campagne. À l&apos;expiration, il sera automatiquement désactivé.
           </div>
           <div className="flex justify-end gap-2 pt-1">
             <button
@@ -128,5 +127,5 @@ export const AgentPopoverForm = ({
         </form>
       </MorphingPopoverContent>
     </MorphingPopover>
-  );
-};
+  )
+}
