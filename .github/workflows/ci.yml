@@ -110,8 +110,6 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
 
   # ── 5. BUILD ─────────────────────────────────────────────────────────────
   build:
