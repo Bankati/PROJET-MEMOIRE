@@ -2,81 +2,119 @@
  * Page de performances pour l'administrateur.
  * KPI globaux, performances par agent, par campagne, avec graphiques et filtres.
  */
+import { BarChart3, Phone, PhoneMissed, Send, TrendingUp, Users } from 'lucide-react'
+import { and, count, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm'
+
+import { requireRole } from '@/lib/auth/server-auth'
+import { db } from '@/lib/db'
 import {
-  BarChart3,
-  Phone,
-  PhoneMissed,
-  Send,
-  TrendingUp,
-  Users,
-} from "lucide-react";
-import { and, count, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+  agentContactAssignments,
+  callResults,
+  campaignContacts,
+  campaigns,
+  users,
+} from '@/db/schema'
 
-import { requireRole } from "@/lib/auth/server-auth";
-import { db } from "@/lib/db";
-import { agentContactAssignments, callResults, campaignContacts, campaigns, users } from "@/db/schema";
-
-type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
+type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 
 const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): string => {
-  const raw: string | string[] | undefined = sp[key];
-  if (typeof raw === "string") return raw;
-  return Array.isArray(raw) ? (raw[0] ?? "") : "";
-};
+  const raw: string | string[] | undefined = sp[key]
+  if (typeof raw === 'string') return raw
+  return Array.isArray(raw) ? (raw[0] ?? '') : ''
+}
 
 const extractCount = ({ value }: Readonly<{ value: number | string | null }>): number => {
-  if (typeof value === "number") return value;
-  if (typeof value === "string") { const n = Number(value); return Number.isFinite(n) ? n : 0; }
-  return 0;
-};
+  if (typeof value === 'number') return value
+  if (typeof value === 'string') {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : 0
+  }
+  return 0
+}
 
 const buildDefaultFrom = (): string => {
-  const d = new Date(); d.setMonth(d.getMonth() - 3); return d.toISOString().slice(0, 10);
-};
-const buildDefaultTo = (): string => new Date().toISOString().slice(0, 10);
+  const d = new Date()
+  d.setMonth(d.getMonth() - 3)
+  return d.toISOString().slice(0, 10)
+}
+const buildDefaultTo = (): string => new Date().toISOString().slice(0, 10)
 
 export default async function AdminPerformancePage({
   searchParams,
 }: Readonly<{ searchParams?: Promise<SearchParams> }>): Promise<React.JSX.Element> {
-  const user = await requireRole({ allowedRoles: ["admin"] });
-  const sp: SearchParams = (await searchParams) ?? {};
-  const campaignFilter = readParam({ sp, key: "campaign" });
-  const agentFilter = readParam({ sp, key: "agent" });
-  const dateFromStr = readParam({ sp, key: "from" }) || buildDefaultFrom();
-  const dateToStr = readParam({ sp, key: "to" }) || buildDefaultTo();
-  const dateFrom = new Date(dateFromStr);
-  const dateTo = new Date(dateToStr + "T23:59:59.999Z");
+  const user = await requireRole({ allowedRoles: ['admin'] })
+  const sp: SearchParams = (await searchParams) ?? {}
+  const campaignFilter = readParam({ sp, key: 'campaign' })
+  const agentFilter = readParam({ sp, key: 'agent' })
+  const dateFromStr = readParam({ sp, key: 'from' }) || buildDefaultFrom()
+  const dateToStr = readParam({ sp, key: 'to' }) || buildDefaultTo()
+  const dateFrom = new Date(dateFromStr)
+  const dateTo = new Date(dateToStr + 'T23:59:59.999Z')
 
   const myCampaigns = await db
     .select({ id: campaigns.id, title: campaigns.title })
     .from(campaigns)
-    .where(eq(campaigns.createdByAdminId, user.id))
-    .orderBy(desc(campaigns.createdAt));
-  const myCampaignIds = myCampaigns.map((c) => c.id);
+    .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+    .orderBy(desc(campaigns.createdAt))
+  const myCampaignIds = myCampaigns.map((c) => c.id)
 
   const myAgents = await db
     .select({ id: users.id, fullName: users.fullName })
     .from(users)
-    .where(and(eq(users.role, "agent"), eq(users.managedByAdminId, user.id)));
+    .where(and(eq(users.role, 'agent'), eq(users.managedByAdminId, user.id)))
 
-  const hasCampaigns = myCampaignIds.length > 0;
-  const callConditions: ReturnType<typeof and>[] = [gte(callResults.createdAt, dateFrom), lte(callResults.createdAt, dateTo)];
+  const hasCampaigns = myCampaignIds.length > 0
+  const callConditions: ReturnType<typeof and>[] = [
+    gte(callResults.createdAt, dateFrom),
+    lte(callResults.createdAt, dateTo),
+  ]
   if (campaignFilter.length > 0) {
-    callConditions.push(eq(callResults.campaignId, campaignFilter));
+    callConditions.push(eq(callResults.campaignId, campaignFilter))
   } else if (hasCampaigns) {
-    callConditions.push(inArray(callResults.campaignId, myCampaignIds));
+    callConditions.push(inArray(callResults.campaignId, myCampaignIds))
   }
-  if (agentFilter.length > 0) callConditions.push(eq(callResults.agentId, agentFilter));
-  const callWhereClause = and(...callConditions);
+  if (agentFilter.length > 0) callConditions.push(eq(callResults.agentId, agentFilter))
+  const callWhereClause = and(...callConditions)
 
-  const totalCallsCount = hasCampaigns ? (await db.select({ value: count(callResults.id) }).from(callResults).where(callWhereClause))[0]?.value ?? 0 : 0;
-  const falseNumbersCount = hasCampaigns ? (await db.select({ value: count(callResults.id) }).from(callResults).where(and(callWhereClause, eq(callResults.outcome, "false_number"))))[0]?.value ?? 0 : 0;
-  const whatsappCount = hasCampaigns ? (await db.select({ value: count(callResults.id) }).from(callResults).where(and(callWhereClause, eq(callResults.isWhatsappRedirected, true))))[0]?.value ?? 0 : 0;
-  const interestedCount = hasCampaigns ? (await db.select({ value: count(callResults.id) }).from(callResults).where(and(callWhereClause, eq(callResults.outcome, "interested"))))[0]?.value ?? 0 : 0;
+  const totalCallsCount = hasCampaigns
+    ? ((
+        await db
+          .select({ value: count(callResults.id) })
+          .from(callResults)
+          .where(callWhereClause)
+      )[0]?.value ?? 0)
+    : 0
+  const falseNumbersCount = hasCampaigns
+    ? ((
+        await db
+          .select({ value: count(callResults.id) })
+          .from(callResults)
+          .where(and(callWhereClause, eq(callResults.outcome, 'false_number')))
+      )[0]?.value ?? 0)
+    : 0
+  const whatsappCount = hasCampaigns
+    ? ((
+        await db
+          .select({ value: count(callResults.id) })
+          .from(callResults)
+          .where(and(callWhereClause, eq(callResults.isWhatsappRedirected, true)))
+      )[0]?.value ?? 0)
+    : 0
+  const interestedCount = hasCampaigns
+    ? ((
+        await db
+          .select({ value: count(callResults.id) })
+          .from(callResults)
+          .where(and(callWhereClause, eq(callResults.outcome, 'interested')))
+      )[0]?.value ?? 0)
+    : 0
 
-  const falseRate = totalCallsCount === 0 ? 0 : Math.round((falseNumbersCount / totalCallsCount) * 100);
-  const whatsappRate = totalCallsCount === 0 ? 0 : Math.round((whatsappCount / totalCallsCount) * 100);
-  const interestedRate = totalCallsCount === 0 ? 0 : Math.round((interestedCount / totalCallsCount) * 100);
+  const falseRate =
+    totalCallsCount === 0 ? 0 : Math.round((falseNumbersCount / totalCallsCount) * 100)
+  const whatsappRate =
+    totalCallsCount === 0 ? 0 : Math.round((whatsappCount / totalCallsCount) * 100)
+  const interestedRate =
+    totalCallsCount === 0 ? 0 : Math.round((interestedCount / totalCallsCount) * 100)
 
   // Agent performance: contacts WhatsApp count + calls called vs assigned
   const agentPerformance = hasCampaigns
@@ -92,7 +130,7 @@ export default async function AdminPerformancePage({
         .where(callWhereClause)
         .groupBy(callResults.agentId, users.fullName)
         .orderBy(desc(count(callResults.id)))
-    : [];
+    : []
 
   // Assigned contacts count per agent for progress calculation
   const agentAssignedCounts = hasCampaigns
@@ -102,12 +140,15 @@ export default async function AdminPerformancePage({
           assignedCount: count(agentContactAssignments.id),
         })
         .from(agentContactAssignments)
-        .innerJoin(campaignContacts, eq(agentContactAssignments.campaignContactId, campaignContacts.id))
+        .innerJoin(
+          campaignContacts,
+          eq(agentContactAssignments.campaignContactId, campaignContacts.id)
+        )
         .where(inArray(campaignContacts.campaignId, myCampaignIds))
         .groupBy(agentContactAssignments.agentId)
-    : [];
+    : []
 
-  const assignedMap = new Map(agentAssignedCounts.map((a) => [a.agentId, a.assignedCount]));
+  const assignedMap = new Map(agentAssignedCounts.map((a) => [a.agentId, a.assignedCount]))
 
   // Campaign performance: total contacts in campaign
   const campaignPerformance = hasCampaigns
@@ -122,7 +163,7 @@ export default async function AdminPerformancePage({
         .where(callWhereClause)
         .groupBy(callResults.campaignId, campaigns.title)
         .orderBy(desc(count(callResults.id)))
-    : [];
+    : []
 
   const campaignContactCounts = hasCampaigns
     ? await db
@@ -133,43 +174,82 @@ export default async function AdminPerformancePage({
         .from(campaignContacts)
         .where(inArray(campaignContacts.campaignId, myCampaignIds))
         .groupBy(campaignContacts.campaignId)
-    : [];
+    : []
 
-  const contactCountMap = new Map(campaignContactCounts.map((c) => [c.campaignId, c.totalContacts]));
+  const contactCountMap = new Map(campaignContactCounts.map((c) => [c.campaignId, c.totalContacts]))
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Performances</h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">Analysez les résultats de vos campagnes et agents</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          Analysez les résultats de vos campagnes et agents
+        </p>
       </div>
 
       {/* Filters */}
       <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
-        <form className="grid items-end gap-3 md:grid-cols-5">
+        <form className="grid items-end gap-3 sm:grid-cols-2 md:grid-cols-5">
           <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">Campagne</label>
-            <select name="campaign" defaultValue={campaignFilter} className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white">
+            <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              Campagne
+            </label>
+            <select
+              name="campaign"
+              defaultValue={campaignFilter}
+              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+            >
               <option value="">Toutes</option>
-              {myCampaigns.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+              {myCampaigns.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">Agent</label>
-            <select name="agent" defaultValue={agentFilter} className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white">
+            <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              Agent
+            </label>
+            <select
+              name="agent"
+              defaultValue={agentFilter}
+              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+            >
               <option value="">Tous</option>
-              {myAgents.map((a) => <option key={a.id} value={a.id}>{a.fullName}</option>)}
+              {myAgents.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.fullName}
+                </option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">Du</label>
-            <input name="from" type="date" defaultValue={dateFromStr} className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white" />
+            <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              Du
+            </label>
+            <input
+              name="from"
+              type="date"
+              defaultValue={dateFromStr}
+              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">Au</label>
-            <input name="to" type="date" defaultValue={dateToStr} className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white" />
+            <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              Au
+            </label>
+            <input
+              name="to"
+              type="date"
+              defaultValue={dateToStr}
+              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+            />
           </div>
-          <button type="submit" className="inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-sm font-medium text-white shadow-sm transition hover:brightness-110">
+          <button
+            type="submit"
+            className="inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+          >
             <BarChart3 className="size-3.5" />
             Filtrer
           </button>
@@ -190,7 +270,9 @@ export default async function AdminPerformancePage({
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Faux numéros</p>
             <PhoneMissed className="size-4 text-rose-400" />
           </div>
-          <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{falseNumbersCount}</p>
+          <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
+            {falseNumbersCount}
+          </p>
           <p className="mt-1 text-xs text-zinc-400">{falseRate}% du total</p>
         </div>
         <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-[#1a2332]">
@@ -224,7 +306,7 @@ export default async function AdminPerformancePage({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-white/10">
+                  <tr className="border-b border-zinc-200 text-xs text-zinc-500 uppercase dark:border-white/10">
                     <th className="px-3 py-2">Agent</th>
                     <th className="px-3 py-2">Appels</th>
                     <th className="px-3 py-2">Contacts WhatsApp</th>
@@ -233,13 +315,21 @@ export default async function AdminPerformancePage({
                 </thead>
                 <tbody>
                   {agentPerformance.map((agent) => {
-                    const assigned = assignedMap.get(agent.agentId) ?? 0;
-                    const progress = assigned === 0 ? 0 : Math.round((agent.totalCalls / assigned) * 100);
-                    const waCount = extractCount({ value: agent.whatsappCalls });
+                    const assigned = assignedMap.get(agent.agentId) ?? 0
+                    const progress =
+                      assigned === 0 ? 0 : Math.round((agent.totalCalls / assigned) * 100)
+                    const waCount = extractCount({ value: agent.whatsappCalls })
                     return (
-                      <tr key={agent.agentId} className="border-b border-zinc-100 dark:border-white/5">
-                        <td className="px-3 py-3 font-medium text-zinc-800 dark:text-white">{agent.agentName}</td>
-                        <td className="px-3 py-3 text-zinc-600 dark:text-zinc-300">{agent.totalCalls}</td>
+                      <tr
+                        key={agent.agentId}
+                        className="border-b border-zinc-100 dark:border-white/5"
+                      >
+                        <td className="px-3 py-3 font-medium text-zinc-800 dark:text-white">
+                          {agent.agentName}
+                        </td>
+                        <td className="px-3 py-3 text-zinc-600 dark:text-zinc-300">
+                          {agent.totalCalls}
+                        </td>
                         <td className="px-3 py-3">
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                             <Send className="size-3" /> {waCount}
@@ -248,14 +338,21 @@ export default async function AdminPerformancePage({
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-2">
                             <div className="h-2 flex-1 overflow-hidden rounded-full bg-zinc-100 dark:bg-white/10">
-                              <div className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600" style={{ width: `${Math.min(100, progress)}%` }} />
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600"
+                                style={{ width: `${Math.min(100, progress)}%` }}
+                              />
                             </div>
-                            <span className="text-xs text-zinc-500 dark:text-zinc-400">{progress}%</span>
+                            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                              {progress}%
+                            </span>
                           </div>
-                          <p className="mt-0.5 text-[10px] text-zinc-400">{agent.totalCalls}/{assigned} assignés</p>
+                          <p className="mt-0.5 text-[10px] text-zinc-400">
+                            {agent.totalCalls}/{assigned} assignés
+                          </p>
                         </td>
                       </tr>
-                    );
+                    )
                   })}
                 </tbody>
               </table>
@@ -275,7 +372,7 @@ export default async function AdminPerformancePage({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-white/10">
+                  <tr className="border-b border-zinc-200 text-xs text-zinc-500 uppercase dark:border-white/10">
                     <th className="px-3 py-2">Campagne</th>
                     <th className="px-3 py-2">Appels</th>
                     <th className="px-3 py-2">Total Contacts</th>
@@ -284,23 +381,40 @@ export default async function AdminPerformancePage({
                 </thead>
                 <tbody>
                   {campaignPerformance.map((campaign) => {
-                    const totalContacts = contactCountMap.get(campaign.campaignId) ?? 0;
-                    const progress = totalContacts === 0 ? 0 : Math.round((campaign.totalCalls / totalContacts) * 100);
+                    const totalContacts = contactCountMap.get(campaign.campaignId) ?? 0
+                    const progress =
+                      totalContacts === 0
+                        ? 0
+                        : Math.round((campaign.totalCalls / totalContacts) * 100)
                     return (
-                      <tr key={campaign.campaignId} className="border-b border-zinc-100 dark:border-white/5">
-                        <td className="px-3 py-3 font-medium text-zinc-800 dark:text-white">{campaign.campaignTitle}</td>
-                        <td className="px-3 py-3 text-zinc-600 dark:text-zinc-300">{campaign.totalCalls}</td>
-                        <td className="px-3 py-3 text-zinc-600 dark:text-zinc-300">{totalContacts}</td>
+                      <tr
+                        key={campaign.campaignId}
+                        className="border-b border-zinc-100 dark:border-white/5"
+                      >
+                        <td className="px-3 py-3 font-medium text-zinc-800 dark:text-white">
+                          {campaign.campaignTitle}
+                        </td>
+                        <td className="px-3 py-3 text-zinc-600 dark:text-zinc-300">
+                          {campaign.totalCalls}
+                        </td>
+                        <td className="px-3 py-3 text-zinc-600 dark:text-zinc-300">
+                          {totalContacts}
+                        </td>
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-2">
                             <div className="h-2 flex-1 overflow-hidden rounded-full bg-zinc-100 dark:bg-white/10">
-                              <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600" style={{ width: `${Math.min(100, progress)}%` }} />
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600"
+                                style={{ width: `${Math.min(100, progress)}%` }}
+                              />
                             </div>
-                            <span className="text-xs text-zinc-500 dark:text-zinc-400">{progress}%</span>
+                            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                              {progress}%
+                            </span>
                           </div>
                         </td>
                       </tr>
-                    );
+                    )
                   })}
                 </tbody>
               </table>
@@ -309,5 +423,5 @@ export default async function AdminPerformancePage({
         </div>
       </div>
     </div>
-  );
+  )
 }

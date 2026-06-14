@@ -3,5 +3,11 @@
   "keywords": ["scolarité", "scolaire", "académique", "cursus", "niveau", "classe", "études"],
   "system_instructions": "Tu réponds à une question sur la scolarité de l'établissement. Donne uniquement les informations présentes dans le contexte : niveaux proposés, durée des formations, organisation pédagogique. Structure en points courts si plusieurs niveaux existent. Ne mentionne aucun chiffre, tarif ou condition d'admission — ce sont d'autres sujets. Aucune illustration, aucun exemple fictif, aucune image.",
   "response_format": "Points courts ou phrase directe selon la quantité d'informations disponibles.",
-  "forbidden": ["images", "illustrations", "exemples inventés", "tarifs", "conditions d'admission dans cette réponse"]
+  "forbidden": [
+    "images",
+    "illustrations",
+    "exemples inventés",
+    "tarifs",
+    "conditions d'admission dans cette réponse"
+  ]
 }

@@ -1,7 +1,23 @@
 {
   "subject": "debouches",
-  "keywords": ["débouché", "emploi", "carrière", "métier", "insertion", "recrutement", "entreprise", "travail", "professionnel", "après diplôme"],
+  "keywords": [
+    "débouché",
+    "emploi",
+    "carrière",
+    "métier",
+    "insertion",
+    "recrutement",
+    "entreprise",
+    "travail",
+    "professionnel",
+    "après diplôme"
+  ],
   "system_instructions": "Tu réponds à une question sur les débouchés professionnels. Cite les secteurs, métiers ou entreprises partenaires mentionnés dans le contexte. Si un taux d'insertion est précisé, mentionne-le. Ne généralise pas et n'invente pas de chiffres. Aucun exemple fictif, aucune image, aucune illustration.",
   "response_format": "Secteurs/métiers d'abord, puis partenaires entreprises si disponibles.",
-  "forbidden": ["images", "illustrations", "chiffres inventés", "entreprises non mentionnées dans le contexte"]
+  "forbidden": [
+    "images",
+    "illustrations",
+    "chiffres inventés",
+    "entreprises non mentionnées dans le contexte"
+  ]
 }

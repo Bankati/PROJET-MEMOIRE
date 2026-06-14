@@ -1,8 +1,9 @@
-"use client";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+'use client'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import {
+  ArrowRightLeft,
   BarChart3,
   Bell,
   Bot,
@@ -11,119 +12,216 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Contact,
-  FileDown,
   FolderOpen,
   LayoutDashboard,
   Megaphone,
   MessageSquare,
   UserCircle2,
   Users,
-} from "lucide-react";
+  X,
+} from 'lucide-react'
 
-import { useAdminSidebar, useNotifications } from "@/components/admin/layout-shell";
+import { useAdminSidebar, useNotifications } from '@/components/admin/layout-shell'
 
 type NavItem = Readonly<{
-  id: string;
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-  badge?: number;
-}>;
+  id: string
+  label: string
+  href: string
+  icon: React.ReactNode
+  badge?: number
+}>
 
 const topNavItems: readonly NavItem[] = [
-  { id: "dashboard", label: "Dashboard", href: "/dashboard/admin", icon: <LayoutDashboard className="size-[18px] shrink-0" /> },
-];
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    href: '/dashboard/admin',
+    icon: <LayoutDashboard className="size-[18px] shrink-0" />,
+  },
+]
 
 const gestionItems: readonly NavItem[] = [
-  { id: "campaigns", label: "Campagnes", href: "/dashboard/admin/campaigns", icon: <Megaphone className="size-[18px] shrink-0" /> },
-  { id: "contacts", label: "Contacts", href: "/dashboard/admin/contacts", icon: <Contact className="size-[18px] shrink-0" /> },
-  { id: "agents", label: "Agents", href: "/dashboard/admin/agents", icon: <Users className="size-[18px] shrink-0" /> },
-];
+  {
+    id: 'campaigns',
+    label: 'Campagnes',
+    href: '/dashboard/admin/campaigns',
+    icon: <Megaphone className="size-[18px] shrink-0" />,
+  },
+  {
+    id: 'contacts',
+    label: 'Contacts',
+    href: '/dashboard/admin/contacts',
+    icon: <Contact className="size-[18px] shrink-0" />,
+  },
+  {
+    id: 'prospects',
+    label: 'Prospects',
+    href: '/dashboard/admin/prospects',
+    icon: <ArrowRightLeft className="size-[18px] shrink-0" />,
+  },
+  {
+    id: 'agents',
+    label: 'Agents',
+    href: '/dashboard/admin/agents',
+    icon: <Users className="size-[18px] shrink-0" />,
+  },
+]
 
-
-const isActiveRoute = ({ pathname, href }: Readonly<{ pathname: string; href: string }>): boolean => {
-  if (href === "/dashboard/admin") return pathname === "/dashboard/admin";
-  return pathname.startsWith(href);
-};
+const isActiveRoute = ({
+  pathname,
+  href,
+}: Readonly<{ pathname: string; href: string }>): boolean => {
+  if (href === '/dashboard/admin') return pathname === '/dashboard/admin'
+  return pathname.startsWith(href)
+}
 
 const isGestionActive = (pathname: string): boolean =>
-  gestionItems.some((item) => pathname.startsWith(item.href));
+  gestionItems.some((item) => pathname.startsWith(item.href))
+
+const contactsRappelsItems: readonly NavItem[] = [
+  {
+    id: 'calls',
+    label: 'Mes contacts',
+    href: '/dashboard/admin/calls',
+    icon: <Contact className="size-[18px] shrink-0" />,
+  },
+  {
+    id: 'rappels',
+    label: 'Rappels',
+    href: '/dashboard/admin/rappels',
+    icon: <Bell className="size-[18px] shrink-0" />,
+  },
+]
+
+const isContactsRappelsActive = (pathname: string): boolean =>
+  contactsRappelsItems.some((item) => pathname.startsWith(item.href))
 
 export const AdminSidebar = (): React.JSX.Element => {
-  const pathname: string = usePathname();
-  const { isCollapsed, toggle } = useAdminSidebar();
-  const { unreadCount: recentMessagesCount } = useNotifications();
-  const [gestionOpen, setGestionOpen] = useState<boolean>(() => isGestionActive(pathname));
+  const pathname: string = usePathname()
+  const { isCollapsed, toggle, isMobileOpen, closeMobile } = useAdminSidebar()
+  const { unreadCount: recentMessagesCount } = useNotifications()
+  const [gestionOpen, setGestionOpen] = useState<boolean>(() => isGestionActive(pathname))
+  const [contactsOpen, setContactsOpen] = useState<boolean>(() => isContactsRappelsActive(pathname))
+
+  /* Ferme le drawer mobile à chaque navigation */
+  useEffect(() => {
+    closeMobile()
+  }, [pathname, closeMobile])
 
   const bottomNavItems: readonly NavItem[] = [
-    { id: "rappels", label: "Rappels", href: "/dashboard/admin/rappels", icon: <Bell className="size-[18px] shrink-0" /> },
-    { id: "calls", label: "Mes contacts", href: "/dashboard/admin/calls", icon: <Contact className="size-[18px] shrink-0" /> },
-    { id: "messages", label: "Messages", href: "/dashboard/admin/messages", icon: <MessageSquare className="size-[18px] shrink-0" />, badge: recentMessagesCount },
-    { id: "assistant", label: "Assistant IA", href: "/dashboard/admin/assistant", icon: <Bot className="size-[18px] shrink-0" /> },
-    { id: "performance", label: "Performances", href: "/dashboard/admin/performance", icon: <BarChart3 className="size-[18px] shrink-0" /> },
-    { id: "export", label: "Export", href: "/dashboard/admin/export", icon: <FileDown className="size-[18px] shrink-0" /> },
-    { id: "profile", label: "Mon profil", href: "/dashboard/admin/profile", icon: <UserCircle2 className="size-[18px] shrink-0" /> },
-  ];
+    {
+      id: 'messages',
+      label: 'Messages',
+      href: '/dashboard/admin/messages',
+      icon: <MessageSquare className="size-[18px] shrink-0" />,
+      badge: recentMessagesCount,
+    },
+    {
+      id: 'assistant',
+      label: 'Assistant IA',
+      href: '/dashboard/admin/assistant',
+      icon: <Bot className="size-[18px] shrink-0" />,
+    },
+    {
+      id: 'performance',
+      label: 'Performances',
+      href: '/dashboard/admin/performance',
+      icon: <BarChart3 className="size-[18px] shrink-0" />,
+    },
+    {
+      id: 'profile',
+      label: 'Mon profil',
+      href: '/dashboard/admin/profile',
+      icon: <UserCircle2 className="size-[18px] shrink-0" />,
+    },
+  ]
 
   const renderNavItem = (item: NavItem) => {
-    const isActive = isActiveRoute({ pathname, href: item.href });
-    const showBadge = (item.badge ?? 0) > 0;
+    const isActive = isActiveRoute({ pathname, href: item.href })
+    const showBadge = (item.badge ?? 0) > 0
     return (
       <Link
         key={item.id}
         href={item.href}
         title={isCollapsed ? item.label : undefined}
         className={`group relative flex items-center rounded-xl transition-all duration-200 ${
-          isCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-4 py-2.5"
+          isCollapsed ? 'justify-center px-0 py-2.5 lg:justify-center' : 'gap-3 px-4 py-2.5'
         } text-sm font-medium ${
-          isActive ? "bg-white/20 text-white shadow-sm" : "text-white/70 hover:bg-white/10 hover:text-white"
+          isActive
+            ? 'bg-white/20 text-white shadow-sm'
+            : 'text-white/70 hover:bg-white/[0.15] hover:text-white active:bg-white/[0.22]'
         }`}
       >
-        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" /> : null}
+        {isActive ? (
+          <span className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" />
+        ) : null}
         <span className="relative shrink-0">
           {item.icon}
           {showBadge && isCollapsed ? (
-            <span className="absolute -right-1 -top-1 size-2 rounded-full bg-red-400" />
+            <span className="absolute -top-1 -right-1 size-2 rounded-full bg-red-400" />
           ) : null}
         </span>
         {isCollapsed ? null : (
           <span className="flex flex-1 items-center truncate">
             <span className="truncate">{item.label}</span>
             {showBadge ? (
-              <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+              <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] leading-none font-bold text-white">
                 {item.badge}
               </span>
             ) : null}
           </span>
         )}
         {isCollapsed ? (
-          <span className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-zinc-800">
+          <span className="pointer-events-none absolute left-full ml-2 rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-zinc-800">
             {item.label}
           </span>
         ) : null}
       </Link>
-    );
-  };
+    )
+  }
 
   return (
     <aside
-      className={`flex h-full shrink-0 flex-col bg-gradient-to-b from-[#244976] via-[#21416C] to-[#1a3354] transition-all duration-300 ease-in-out dark:from-[#152c4c] dark:via-[#112240] dark:to-[#0d1a33] ${
-        isCollapsed ? "w-[72px]" : "w-[240px]"
-      }`}
+      className={[
+        /* couleurs & flex */
+        'flex shrink-0 flex-col bg-gradient-to-b from-[#244976] via-[#21416C] to-[#1a3354]',
+        'dark:from-[#152c4c] dark:via-[#112240] dark:to-[#0d1a33]',
+        /* Mobile : drawer fixe à gauche */
+        'fixed inset-y-0 left-0 z-50 h-screen w-[260px]',
+        'transform transition-transform duration-300 ease-in-out',
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full',
+        /* Desktop : position relative, taille collapsible */
+        'lg:relative lg:inset-auto lg:z-auto lg:h-full lg:translate-x-0',
+        isCollapsed ? 'lg:w-[72px]' : 'lg:w-[240px]',
+      ].join(' ')}
     >
-      <div className={`flex items-center py-6 transition-all duration-300 ${isCollapsed ? "justify-center px-2" : "gap-2.5 px-6"}`}>
+      {/* Bouton fermer — mobile uniquement */}
+      <button
+        type="button"
+        onClick={closeMobile}
+        aria-label="Fermer le menu"
+        className="absolute top-3 right-3 grid size-7 place-items-center rounded-lg text-white/50 transition hover:bg-white/[0.15] hover:text-white active:bg-white/20 lg:hidden"
+      >
+        <X className="size-4" />
+      </button>
+
+      <div
+        className={`flex items-center py-6 transition-all duration-300 ${isCollapsed ? 'justify-center px-2' : 'gap-2.5 px-6'}`}
+      >
         <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/20 text-sm font-bold text-white shadow-inner">
           L
         </div>
         {isCollapsed ? null : (
           <div className="min-w-0 overflow-hidden">
-            <span className="block truncate text-base font-semibold tracking-wide text-white">LBS Center</span>
+            <span className="block truncate text-base font-semibold tracking-wide text-white">
+              LBS Center
+            </span>
             <span className="block truncate text-[10px] text-white/50">Espace administrateur</span>
           </div>
         )}
       </div>
       <div className="mx-4 mb-3 h-px bg-white/15" />
-      <nav className={`flex-1 space-y-0.5 overflow-y-auto ${isCollapsed ? "px-2" : "px-3"}`}>
+      <nav className={`flex-1 space-y-0.5 overflow-y-auto ${isCollapsed ? 'px-2' : 'px-3'}`}>
         {topNavItems.map(renderNavItem)}
 
         {/* Collapsible Gestion Campagne group */}
@@ -132,12 +230,16 @@ export const AdminSidebar = (): React.JSX.Element => {
             href="/dashboard/admin/campaigns"
             title="Gestion Campagne"
             className={`group relative flex items-center justify-center rounded-xl px-0 py-2.5 text-sm font-medium transition-all duration-200 ${
-              isGestionActive(pathname) ? "bg-white/20 text-white shadow-sm" : "text-white/70 hover:bg-white/10 hover:text-white"
+              isGestionActive(pathname)
+                ? 'bg-white/20 text-white shadow-sm'
+                : 'text-white/70 hover:bg-white/[0.15] hover:text-white active:bg-white/[0.22]'
             }`}
           >
-            {isGestionActive(pathname) ? <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" /> : null}
+            {isGestionActive(pathname) ? (
+              <span className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" />
+            ) : null}
             <FolderOpen className="size-[18px] shrink-0" />
-            <span className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-zinc-800">
+            <span className="pointer-events-none absolute left-full ml-2 rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-zinc-800">
               Gestion Campagne
             </span>
           </Link>
@@ -147,12 +249,18 @@ export const AdminSidebar = (): React.JSX.Element => {
               type="button"
               onClick={() => setGestionOpen((v) => !v)}
               className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
-                isGestionActive(pathname) ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
+                isGestionActive(pathname)
+                  ? 'bg-white/15 text-white'
+                  : 'text-white/70 hover:bg-white/[0.15] hover:text-white active:bg-white/[0.22]'
               }`}
             >
               <FolderOpen className="size-[18px] shrink-0" />
               <span className="flex-1 truncate text-left">Gestion Campagne</span>
-              {gestionOpen ? <ChevronDown className="size-4 shrink-0 opacity-70" /> : <ChevronRight className="size-4 shrink-0 opacity-70" />}
+              {gestionOpen ? (
+                <ChevronDown className="size-4 shrink-0 opacity-70" />
+              ) : (
+                <ChevronRight className="size-4 shrink-0 opacity-70" />
+              )}
             </button>
             {gestionOpen ? (
               <div className="ml-3 space-y-0.5 border-l border-white/20 pl-3">
@@ -162,14 +270,60 @@ export const AdminSidebar = (): React.JSX.Element => {
           </>
         )}
 
+        {/* Collapsible Contacts & Rappels group */}
+        {isCollapsed ? (
+          <Link
+            href="/dashboard/admin/calls"
+            title="Contacts & Rappels"
+            className={`group relative flex items-center justify-center rounded-xl px-0 py-2.5 text-sm font-medium transition-all duration-200 ${
+              isContactsRappelsActive(pathname)
+                ? 'bg-white/20 text-white shadow-sm'
+                : 'text-white/70 hover:bg-white/[0.15] hover:text-white active:bg-white/[0.22]'
+            }`}
+          >
+            {isContactsRappelsActive(pathname) ? (
+              <span className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" />
+            ) : null}
+            <Bell className="size-[18px] shrink-0" />
+            <span className="pointer-events-none absolute left-full ml-2 rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-zinc-800">
+              Contacts &amp; Rappels
+            </span>
+          </Link>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setContactsOpen((v) => !v)}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+                isContactsRappelsActive(pathname)
+                  ? 'bg-white/15 text-white'
+                  : 'text-white/70 hover:bg-white/[0.15] hover:text-white active:bg-white/[0.22]'
+              }`}
+            >
+              <Bell className="size-[18px] shrink-0" />
+              <span className="flex-1 truncate text-left">Contacts &amp; Rappels</span>
+              {contactsOpen ? (
+                <ChevronDown className="size-4 shrink-0 opacity-70" />
+              ) : (
+                <ChevronRight className="size-4 shrink-0 opacity-70" />
+              )}
+            </button>
+            {contactsOpen ? (
+              <div className="ml-3 space-y-0.5 border-l border-white/20 pl-3">
+                {contactsRappelsItems.map(renderNavItem)}
+              </div>
+            ) : null}
+          </>
+        )}
+
         {bottomNavItems.map(renderNavItem)}
       </nav>
       <div className="mx-4 mb-3 h-px bg-white/15" />
-      <div className={`pb-4 ${isCollapsed ? "px-2" : "px-4"}`}>
+      <div className={`pb-4 ${isCollapsed ? 'px-2' : 'px-4'}`}>
         <button
           type="button"
           onClick={toggle}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-white/70 transition-all duration-200 hover:bg-white/20 hover:text-white"
+          className="hidden w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-white/70 transition-all duration-200 hover:bg-white/[0.22] hover:text-white active:bg-white/[0.28] lg:flex"
         >
           {isCollapsed ? (
             <ChevronsRight className="size-4" />
@@ -194,5 +348,5 @@ export const AdminSidebar = (): React.JSX.Element => {
         </div>
       )}
     </aside>
-  );
-};
+  )
+}

@@ -1,43 +1,43 @@
-"use client";
+'use client'
 /**
  * Formulaire de connexion avec Auth.js.
  */
-import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { signIn } from 'next-auth/react'
+import { useState } from 'react'
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 
 export const LoginForm = (): React.JSX.Element => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
+  const [error, setError] = useState<string>('')
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setError("");
-    
+    event.preventDefault()
+    setIsSubmitting(true)
+    setError('')
+
     try {
-      const result = await signIn("credentials", {
+      const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
-      });
+      })
 
       if (result?.error) {
-        setError("Identifiants invalides.");
-        return;
+        setError('Identifiants invalides.')
+        return
       }
 
       // Hard redirect pour forcer le rechargement des cookies de session
-      window.location.href = "/dashboard";
+      window.location.href = '/dashboard'
     } catch {
-      setError("Le serveur est indisponible. Vérifiez le lancement de l'application.");
+      setError("Le serveur est indisponible. Vérifiez le lancement de l'application.")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
   return (
     <form className="space-y-4" onSubmit={handleSubmit} suppressHydrationWarning>
       <div className="space-y-2 text-left">
@@ -51,8 +51,10 @@ export const LoginForm = (): React.JSX.Element => {
           autoComplete="email"
           placeholder="vous@etablissement.fr"
           value={email}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>): void => setEmail(event.target.value)}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-lbs-blue/0 transition placeholder:text-zinc-400 focus:border-lbs-blue/50 focus:ring-2 focus:ring-lbs-blue/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500"
+          onChange={(event: React.ChangeEvent<HTMLInputElement>): void =>
+            setEmail(event.target.value)
+          }
+          className="ring-lbs-blue/0 focus:border-lbs-blue/50 focus:ring-lbs-blue/20 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 transition outline-none placeholder:text-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500"
           required
           suppressHydrationWarning
         />
@@ -68,8 +70,10 @@ export const LoginForm = (): React.JSX.Element => {
           autoComplete="current-password"
           placeholder="••••••••"
           value={password}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>): void => setPassword(event.target.value)}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-lbs-blue/50 focus:ring-2 focus:ring-lbs-blue/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
+          onChange={(event: React.ChangeEvent<HTMLInputElement>): void =>
+            setPassword(event.target.value)
+          }
+          className="focus:border-lbs-blue/50 focus:ring-lbs-blue/20 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 transition outline-none placeholder:text-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
           required
           suppressHydrationWarning
         />
@@ -79,9 +83,14 @@ export const LoginForm = (): React.JSX.Element => {
           {error}
         </p>
       ) : null}
-      <Button type="submit" className="mt-2 w-full" disabled={isSubmitting} suppressHydrationWarning>
-        {isSubmitting ? "Connexion..." : "Se connecter"}
+      <Button
+        type="submit"
+        className="mt-2 w-full"
+        disabled={isSubmitting}
+        suppressHydrationWarning
+      >
+        {isSubmitting ? 'Connexion...' : 'Se connecter'}
       </Button>
     </form>
-  );
-};
+  )
+}

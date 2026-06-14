@@ -1,39 +1,48 @@
-"use client";
-/**
- * Shell client du layout agent.
- * Gère l'état ouvert/fermé de la sidebar avec animation fluide.
- * Réplique le pattern de l'admin avec l'identité visuelle LBS Blue.
- */
-import { createContext, useCallback, useContext, useState } from "react";
+'use client'
+import { createContext, useCallback, useContext, useState } from 'react'
 
 type SidebarContextValue = Readonly<{
-  isCollapsed: boolean;
-  toggle: () => void;
-}>;
+  isCollapsed: boolean
+  toggle: () => void
+  isMobileOpen: boolean
+  openMobile: () => void
+  closeMobile: () => void
+}>
 
 const SidebarContext = createContext<SidebarContextValue>({
   isCollapsed: false,
   toggle: () => {},
-});
+  isMobileOpen: false,
+  openMobile: () => {},
+  closeMobile: () => {},
+})
 
-export const useAgentSidebar = (): SidebarContextValue => {
-  return useContext(SidebarContext);
-};
+export const useAgentSidebar = (): SidebarContextValue => useContext(SidebarContext)
 
 export const AgentLayoutShell = ({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>): React.JSX.Element => {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  const toggle = useCallback((): void => {
-    setIsCollapsed((prev) => !prev);
-  }, []);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false)
+  const toggle = useCallback((): void => setIsCollapsed((p) => !p), [])
+
+  const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false)
+  const openMobile = useCallback((): void => setIsMobileOpen(true), [])
+  const closeMobile = useCallback((): void => setIsMobileOpen(false), [])
+
   return (
-    <SidebarContext.Provider value={{ isCollapsed, toggle }}>
+    <SidebarContext.Provider value={{ isCollapsed, toggle, isMobileOpen, openMobile, closeMobile }}>
       <div className="flex h-screen overflow-hidden bg-[#f4f7fe] dark:bg-[#0b1120]">
+        {isMobileOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+            onClick={closeMobile}
+            aria-hidden="true"
+          />
+        )}
         {children}
       </div>
     </SidebarContext.Provider>
-  );
-};
+  )
+}

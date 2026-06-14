@@ -2,48 +2,45 @@
  * Barre de navigation marketing premium : logo, liens de section et CTA.
  * Glassmorphism avancé avec apparition en slide-down et effet de blur progressif.
  */
-"use client";
+'use client'
 
-import * as React from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import * as React from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import { Menu, X } from 'lucide-react'
 
-import { Button } from "@/components/ui/button";
-import { ThemeSwitch } from "@/components/ui/theme-switch-button";
-import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button'
+import { ThemeSwitch } from '@/components/ui/theme-switch-button'
+import { cn } from '@/lib/utils'
 
 type NavLink = Readonly<{
-  label: string;
-  href: string;
-}>;
+  label: string
+  href: string
+}>
 
 const navLinks: readonly NavLink[] = [
-  { label: "Fonctionnalités", href: "#fonctionnalites" },
-  { label: "Pour qui ?", href: "#pour-qui" },
-  { label: "Avantages", href: "#avantages" },
-  { label: "Démo", href: "#demo" },
-] as const;
+  { label: 'Fonctionnalités', href: '#fonctionnalites' },
+  { label: 'Pour qui ?', href: '#pour-qui' },
+  { label: 'Avantages', href: '#avantages' },
+  { label: 'Démo', href: '#demo' },
+] as const
 
 export function Navbar() {
-  const reduce = useReducedMotion();
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-  const { scrollY } = useScroll();
-  const bgOpacity = useTransform(scrollY, [0, 80], [0.55, 0.88]);
-  const borderOpacity = useTransform(scrollY, [0, 80], [0, 0.7]);
+  const reduce = useReducedMotion()
+  const [mobileOpen, setMobileOpen] = React.useState(false)
+  const { scrollY } = useScroll()
+  const bgOpacity = useTransform(scrollY, [0, 80], [0.55, 0.88])
+  const borderOpacity = useTransform(scrollY, [0, 80], [0, 0.7])
   return (
     <>
       <motion.header
         initial={reduce ? false : { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 32, delay: 0.1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32, delay: 0.1 }}
         className="fixed top-0 right-0 left-0 z-50"
       >
-        <motion.div
-          className="absolute inset-0 backdrop-blur-xl"
-          style={{ opacity: bgOpacity }}
-        >
+        <motion.div className="absolute inset-0 backdrop-blur-xl" style={{ opacity: bgOpacity }}>
           <div className="absolute inset-0 bg-white/80 dark:bg-zinc-950/80" />
         </motion.div>
         <motion.div
@@ -59,18 +56,18 @@ export function Navbar() {
             <motion.div
               whileHover={reduce ? undefined : { scale: 1.05 }}
               whileTap={reduce ? undefined : { scale: 0.97 }}
-              transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
             >
               <Image
                 src="/LBS%20LOGO.jpeg"
                 alt="Lomé Business School — LBS Call Center"
                 width={56}
                 height={56}
-                className="rounded-lg border border-zinc-200/70 object-cover transition-shadow group-hover:shadow-md group-hover:shadow-lbs-blue/15 dark:border-zinc-800/70"
+                className="group-hover:shadow-lbs-blue/15 rounded-lg border border-zinc-200/70 object-cover transition-shadow group-hover:shadow-md dark:border-zinc-800/70"
                 priority
               />
             </motion.div>
-            <span className="hidden text-sm font-semibold tracking-tight text-zinc-900 dark:text-white sm:inline">
+            <span className="hidden text-sm font-semibold tracking-tight text-zinc-900 sm:inline dark:text-white">
               LBS Call Center
             </span>
           </Link>
@@ -98,7 +95,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="grid size-9 place-items-center rounded-lg text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800 md:hidden"
+              className="grid size-9 place-items-center rounded-lg text-zinc-600 transition-colors hover:bg-zinc-100 md:hidden dark:text-zinc-400 dark:hover:bg-zinc-800"
               aria-label="Menu mobile"
             >
               {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -111,7 +108,7 @@ export function Navbar() {
           initial={reduce ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          className="fixed inset-x-0 top-[56px] z-40 border-b border-zinc-200/70 bg-white/95 p-4 backdrop-blur-xl dark:border-zinc-800/70 dark:bg-zinc-950/95 md:hidden"
+          className="fixed inset-x-0 top-[56px] z-40 border-b border-zinc-200/70 bg-white/95 p-4 backdrop-blur-xl md:hidden dark:border-zinc-800/70 dark:bg-zinc-950/95"
         >
           <div className="flex flex-col gap-1">
             {navLinks.map((link) => (
@@ -120,7 +117,7 @@ export function Navbar() {
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                  "rounded-xl px-4 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800/60",
+                  'rounded-xl px-4 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800/60'
                 )}
               >
                 {link.label}
@@ -130,5 +127,5 @@ export function Navbar() {
         </motion.div>
       )}
     </>
-  );
+  )
 }

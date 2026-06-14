@@ -1,29 +1,29 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
 
-import { SessionProvider } from "@/components/providers/session-provider";
+import { SessionProvider } from '@/components/providers/session-provider'
 
 const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-sans',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
   title: {
-    default: "LBS Call Center — Prospection intelligente pour l’enseignement supérieur",
-    template: "%s • LBS Call Center",
+    default: 'LBS Call Center — Prospection intelligente pour l’enseignement supérieur',
+    template: '%s • LBS Call Center',
   },
   description:
-    "Plateforme SaaS de gestion de centre d’appels pour universités et écoles: campagnes, attribution de contacts, interface agent avec IA (RAG), KPI par rôle, exports, et messagerie WhatsApp.",
-  applicationName: "LBS Call Center",
-  metadataBase: new URL("http://localhost:3000"),
-};
+    'Plateforme SaaS de gestion de centre d’appels pour universités et écoles: campagnes, attribution de contacts, interface agent avec IA (RAG), KPI par rôle, exports, et messagerie WhatsApp.',
+  applicationName: 'LBS Call Center',
+  metadataBase: new URL('http://localhost:3000'),
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="fr" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
@@ -34,9 +34,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-white text-zinc-950 dark:bg-black dark:text-zinc-50" suppressHydrationWarning>
+      <body
+        className="flex min-h-full flex-col bg-white text-zinc-950 dark:bg-black dark:text-zinc-50"
+        suppressHydrationWarning
+      >
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
-  );
+  )
 }

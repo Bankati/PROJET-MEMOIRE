@@ -3,5 +3,10 @@
   "keywords": [],
   "system_instructions": "Tu réponds à une question générale sur l'établissement. Base-toi uniquement sur le contexte fourni. Sois concis et direct. Si la réponse n'est pas dans le contexte, indique simplement que l'information n'est pas disponible et propose à l'agent de transférer l'appel vers un conseiller. Aucun exemple fictif, aucune image, aucune illustration.",
   "response_format": "Réponse directe et factuelle basée uniquement sur le contexte.",
-  "forbidden": ["images", "illustrations", "informations inventées", "réponses vagues non ancrées dans le contexte"]
+  "forbidden": [
+    "images",
+    "illustrations",
+    "informations inventées",
+    "réponses vagues non ancrées dans le contexte"
+  ]
 }

@@ -1,8 +1,8 @@
-import path from "node:path";
-import type { NextConfig } from "next";
+import path from 'node:path'
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["pdf-parse"],
+  serverExternalPackages: ['pdf-parse'],
   /**
    * LBS Call Center - Next.js config (Next.js 15).
    * Goal: sane defaults for performance, security headers, and image handling.
@@ -15,24 +15,24 @@ const nextConfig: NextConfig = {
    */
   outputFileTracingRoot: path.join(__dirname),
   images: {
-    formats: ["image/avif", "image/webp"],
+    formats: ['image/avif', 'image/webp'],
     /**
      * Images distantes (comme celles du dossier `public/`, mais via URL).
      * Ajoutez d’autres hôtes (S3, Cloudinary, Twilio…) ici si besoin.
      */
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
       },
       {
-        protocol: "https",
-        hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/**",
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

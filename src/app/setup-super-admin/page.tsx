@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next'
 
-import { AuthShell } from "@/components/auth/auth-shell";
-import { SetupSuperAdminForm } from "@/components/auth/setup-super-admin-form";
+import { AuthShell } from '@/components/auth/auth-shell'
+import { SetupSuperAdminForm } from '@/components/auth/setup-super-admin-form'
 
 export const metadata: Metadata = {
-  title: "Initialisation",
-  description: "Initialisez le premier super-admin de la plateforme.",
-};
+  title: 'Initialisation',
+  description: 'Initialisez le premier super-admin de la plateforme.',
+}
 
 export default function SetupSuperAdminPage(): React.JSX.Element {
   return (
@@ -19,5 +19,5 @@ export default function SetupSuperAdminPage(): React.JSX.Element {
     >
       <SetupSuperAdminForm />
     </AuthShell>
-  );
+  )
 }
