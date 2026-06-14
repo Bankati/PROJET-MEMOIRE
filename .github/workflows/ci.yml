@@ -44,11 +44,10 @@ jobs:
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
         run: |
           MISSING=0
           for VAR in DATABASE_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY AUTH_SECRET \
-                     COHERE_API_KEY OPENAI_API_KEY VERCEL_PROJECT_ID NEXT_PUBLIC_APP_URL; do
+                     COHERE_API_KEY OPENAI_API_KEY VERCEL_PROJECT_ID; do
             if [ -z "${!VAR}" ]; then
               echo "❌ Secret manquant : $VAR"
               MISSING=1
@@ -144,7 +143,6 @@ jobs:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
       - name: Statistiques du bundle
         run: |
           du -sh .next/ 2>/dev/null || true
@@ -239,6 +237,7 @@ jobs:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
+      deploy_url: ${{ steps.vercel.outputs.deploy_url }}
       deploy_status: ${{ steps.vercel.outputs.deploy_status }}
     steps:
       - uses: actions/checkout@v4
@@ -247,7 +246,10 @@ jobs:
       - name: Déployer en production sur Vercel
         id: vercel
         run: |
-          vercel deploy --prod --yes 2>&1
+          DEPLOY_OUTPUT=$(vercel deploy --prod --yes 2>&1)
+          echo "$DEPLOY_OUTPUT"
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep "https://" | grep -v "Inspect" | tail -1)
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           echo "deploy_status=success" >> $GITHUB_OUTPUT
         env:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -261,7 +263,7 @@ jobs:
     steps:
       - name: Attendre la stabilisation (max 5min)
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+          URL="${{ needs.deploy-production.outputs.deploy_url }}"
           for i in {1..20}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" 2>/dev/null || echo "000")
             echo "Tentative $i/20 — HTTP $STATUS"
@@ -273,25 +275,25 @@ jobs:
           done
       - name: Health check /
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+          URL="${{ needs.deploy-production.outputs.deploy_url }}"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
           echo "/ → HTTP $STATUS"
           [[ "$STATUS" == "200" || "$STATUS" == "308" ]] || { echo "❌ Homepage inaccessible"; exit 1; }
       - name: Health check /login
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+          URL="${{ needs.deploy-production.outputs.deploy_url }}"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/login")
           echo "/login → HTTP $STATUS"
           [ "$STATUS" = "200" ] || { echo "❌ /login inaccessible"; exit 1; }
       - name: Health check API auth
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+          URL="${{ needs.deploy-production.outputs.deploy_url }}"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/api/auth/session")
           echo "/api/auth/session → HTTP $STATUS"
           [ "$STATUS" != "000" ] || { echo "❌ API auth inaccessible"; exit 1; }
       - name: Headers de sécurité
         run: |
-          URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+          URL="${{ needs.deploy-production.outputs.deploy_url }}"
           HEADERS=$(curl -sI "$URL")
           echo "$HEADERS"
           echo "$HEADERS" | grep -qi "x-frame-options" \
