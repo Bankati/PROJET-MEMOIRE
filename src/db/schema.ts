@@ -240,6 +240,7 @@ export const callResults = pgTable(
     notes: text('notes'),
     isWhatsappRedirected: boolean('is_whatsapp_redirected').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }),
   },
   (table) => ({
     callResultsCampaignIdx: index('call_results_campaign_idx').on(table.campaignId),
@@ -278,10 +279,14 @@ export const broadcastMessages = pgTable(
       .references(() => users.id, { onDelete: 'restrict' }),
     message: text('message').notNull(),
     recipientCount: integer('recipient_count').notNull().default(0),
+    recipientRole: varchar('recipient_role', { length: 20 }).notNull().default('admin'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
     broadcastMessagesCreatedAtIdx: index('broadcast_messages_created_at_idx').on(table.createdAt),
+    broadcastMessagesRecipientRoleIdx: index('broadcast_messages_recipient_role_idx').on(
+      table.recipientRole
+    ),
   })
 )
 

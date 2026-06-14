@@ -7,15 +7,13 @@ import {
   Contact,
   Filter,
   Megaphone,
-  MessageSquare,
   Phone,
-  PhoneMissed,
-  Send,
   Sparkles,
   Trophy,
   Users,
 } from 'lucide-react'
-import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
+import Link from 'next/link'
 
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
@@ -446,25 +444,38 @@ export default async function AdminDashboardPage({
     h: 140,
   })
 
-  // Recent call comments (non-empty notes)
-  const recentComments = hasCampaigns
+  // Campagne en cours — la plus récente active, sinon la plus récente tout court
+  const [currentCampaign] = await db
+    .select({ id: campaigns.id, title: campaigns.title })
+    .from(campaigns)
+    .where(eq(campaigns.createdByAdminId, user.id))
+    .orderBy(
+      sql`case when ${campaigns.status} = 'active' then 0 else 1 end asc`,
+      desc(campaigns.createdAt)
+    )
+    .limit(1)
+
+  const campaignRows = currentCampaign
     ? await db
         .select({
+          ccId: campaignContacts.id,
+          firstName: contacts.firstName,
+          lastName: contacts.lastName,
+          phonePrimary: contacts.phonePrimary,
+          schoolName: contacts.schoolName,
+          assignmentStatus: agentContactAssignments.status,
           agentName: users.fullName,
-          notes: callResults.notes,
-          createdAt: callResults.createdAt,
         })
-        .from(callResults)
-        .innerJoin(users, eq(callResults.agentId, users.id))
-        .where(
-          and(
-            callWhereClause,
-            sql`${callResults.notes} is not null`,
-            sql`trim(${callResults.notes}) <> ''`
-          )
+        .from(campaignContacts)
+        .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
+        .leftJoin(
+          agentContactAssignments,
+          eq(agentContactAssignments.campaignContactId, campaignContacts.id)
         )
-        .orderBy(desc(callResults.createdAt))
-        .limit(6)
+        .leftJoin(users, eq(agentContactAssignments.agentId, users.id))
+        .where(eq(campaignContacts.campaignId, currentCampaign.id))
+        .orderBy(asc(campaignContacts.createdAt))
+        .limit(8)
     : []
 
   const statCards = [
@@ -920,104 +931,84 @@ export default async function AdminDashboardPage({
         </div>
       </div>
 
-      {/* Indicators + Comments */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
-          <h3 className="mb-4 text-sm font-semibold text-zinc-800 dark:text-white">
-            Indicateurs clés
+      {/* Campagne en cours */}
+      <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
+            <Contact className="size-4 text-blue-400" />
+            {currentCampaign ? (
+              <>
+                Campagne en cours
+                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                  {currentCampaign.title}
+                </span>
+              </>
+            ) : (
+              'Campagne en cours'
+            )}
           </h3>
+          <Link
+            href="/dashboard/admin/contacts"
+            className="text-xs text-[#244976] hover:underline dark:text-blue-300"
+          >
+            Voir tous →
+          </Link>
+        </div>
+        {campaignRows.length === 0 ? (
+          <p className="py-8 text-center text-sm text-zinc-400">
+            Aucun contact dans cette campagne.
+          </p>
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs text-zinc-500 uppercase dark:border-white/10">
-                  <th className="px-2 py-2">Indicateur</th>
-                  <th className="px-2 py-2">Valeur</th>
-                  <th className="px-2 py-2">Taux</th>
+                <tr className="border-b border-zinc-200 text-xs font-medium text-zinc-500 uppercase dark:border-white/10">
+                  <th className="px-3 py-2">Nom</th>
+                  <th className="px-3 py-2">École</th>
+                  <th className="px-3 py-2">Téléphone</th>
+                  <th className="px-3 py-2">Agent</th>
+                  <th className="px-3 py-2">Statut</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-zinc-100 dark:border-white/5">
-                  <td className="px-2 py-3 text-zinc-700 dark:text-zinc-200">
-                    <span className="inline-flex items-center gap-1.5">
-                      <PhoneMissed className="size-3.5 text-rose-400" />
-                      Faux numéros
-                    </span>
-                  </td>
-                  <td className="px-2 py-3 font-semibold text-zinc-900 dark:text-white">
-                    {falseNumbersCount}
-                  </td>
-                  <td className="px-2 py-3">
-                    <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
-                      {falseRate}%
-                    </span>
-                  </td>
-                </tr>
-                <tr className="border-b border-zinc-100 dark:border-white/5">
-                  <td className="px-2 py-3 text-zinc-700 dark:text-zinc-200">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Send className="size-3.5 text-emerald-400" />
-                      Absent WhatsApp
-                    </span>
-                  </td>
-                  <td className="px-2 py-3 font-semibold text-zinc-900 dark:text-white">
-                    {whatsappCount}
-                  </td>
-                  <td className="px-2 py-3">
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                      {whatsappRate}%
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-2 py-3 text-zinc-700 dark:text-zinc-200">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Phone className="size-3.5 text-amber-400" />
-                      Pas intéressé
-                    </span>
-                  </td>
-                  <td className="px-2 py-3 font-semibold text-zinc-900 dark:text-white">
-                    {notInterestedCount}
-                  </td>
-                  <td className="px-2 py-3">
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                      {notInterestedRate}%
-                    </span>
-                  </td>
-                </tr>
+                {campaignRows.map((c) => (
+                  <tr
+                    key={c.ccId}
+                    className="border-b border-zinc-100 transition hover:bg-zinc-50 dark:border-white/5 dark:hover:bg-white/5"
+                  >
+                    <td className="px-3 py-3 font-medium text-zinc-800 dark:text-white">
+                      {c.firstName} {c.lastName ?? ''}
+                    </td>
+                    <td className="px-3 py-3 text-zinc-500 dark:text-zinc-400">
+                      {c.schoolName ?? '—'}
+                    </td>
+                    <td className="px-3 py-3 text-zinc-500 dark:text-zinc-400">{c.phonePrimary}</td>
+                    <td className="px-3 py-3 text-zinc-500 dark:text-zinc-400">
+                      {c.agentName ?? (
+                        <span className="text-zinc-300 dark:text-zinc-600">Non assigné</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3">
+                      {c.assignmentStatus === 'completed' ? (
+                        <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                          Traité
+                        </span>
+                      ) : c.assignmentStatus !== null ? (
+                        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                          En attente
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:bg-white/10 dark:text-zinc-400">
+                          Non assigné
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Comments from agents */}
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
-            <MessageSquare className="size-4 text-blue-400" />
-            Commentaires agents récents
-          </h3>
-          {recentComments.length === 0 ? (
-            <p className="py-6 text-center text-sm text-zinc-400">Aucun commentaire enregistré.</p>
-          ) : (
-            <div className="space-y-3">
-              {recentComments.map((c, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-xl border border-zinc-100 bg-zinc-50 p-3 dark:border-white/5 dark:bg-white/[0.03]"
-                >
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-200">
-                      {c.agentName}
-                    </span>
-                    <span className="text-[10px] text-zinc-400">
-                      {formatTimeAgo({ date: c.createdAt })}
-                    </span>
-                  </div>
-                  <p className="line-clamp-2 text-xs text-zinc-600 dark:text-zinc-300">{c.notes}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )

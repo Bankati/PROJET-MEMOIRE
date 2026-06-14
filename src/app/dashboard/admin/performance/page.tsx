@@ -4,6 +4,7 @@
  */
 import { BarChart3, Phone, PhoneMissed, Send, TrendingUp, Users } from 'lucide-react'
 import { and, count, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm'
+import Link from 'next/link'
 
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
@@ -324,8 +325,13 @@ export default async function AdminPerformancePage({
                         key={agent.agentId}
                         className="border-b border-zinc-100 dark:border-white/5"
                       >
-                        <td className="px-3 py-3 font-medium text-zinc-800 dark:text-white">
-                          {agent.agentName}
+                        <td className="px-3 py-3 font-medium">
+                          <Link
+                            href={`/dashboard/admin/performance/${agent.agentId}${campaignFilter.length > 0 ? `?campaign=${campaignFilter}` : ''}`}
+                            className="text-[#244976] transition hover:underline dark:text-blue-300"
+                          >
+                            {agent.agentName}
+                          </Link>
                         </td>
                         <td className="px-3 py-3 text-zinc-600 dark:text-zinc-300">
                           {agent.totalCalls}

@@ -1,7 +1,3 @@
-/**
- * Page de messagerie diffusion du super-admin.
- * Envoi d'un message unique à l'ensemble des administrateurs actifs + historique.
- */
 import { and, count, desc, eq } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 import { Megaphone, Send } from 'lucide-react'
@@ -24,45 +20,45 @@ const readParam = ({
 
 const broadcastAction = async (formData: FormData): Promise<void> => {
   'use server'
-  const superAdmin = await requireRole({ allowedRoles: ['super_admin'] })
+  const admin = await requireRole({ allowedRoles: ['admin'] })
   const message: string = ((formData.get('message') as string | null) ?? '').trim()
   if (message.length < 8) {
     redirect(
-      '/dashboard/super-admin/messaging?notice=Le+message+doit+contenir+au+moins+8+caractères.&success=false'
+      '/dashboard/admin/messaging?notice=Le+message+doit+contenir+au+moins+8+caractères.&success=false'
     )
     return
   }
-  const targetAdmins: Array<{ value: number }> = await db
+  const [row] = await db
     .select({ value: count(users.id) })
     .from(users)
-    .where(and(eq(users.role, 'admin'), eq(users.status, 'active')))
-  const recipientCount: number = targetAdmins[0]?.value ?? 0
+    .where(and(eq(users.role, 'agent'), eq(users.status, 'active')))
+  const recipientCount: number = row?.value ?? 0
   await db.insert(broadcastMessages).values({
-    sentByUserId: superAdmin.id,
+    sentByUserId: admin.id,
     message,
     recipientCount,
-    recipientRole: 'admin',
+    recipientRole: 'agent',
   })
   redirect(
-    `/dashboard/super-admin/messaging?notice=Message+envoyé+à+${recipientCount}+administrateur${recipientCount > 1 ? 's' : ''}+actif${recipientCount > 1 ? 's' : ''}.&success=true`
+    `/dashboard/admin/messaging?notice=Message+envoyé+à+${recipientCount}+agent${recipientCount > 1 ? 's' : ''}+actif${recipientCount > 1 ? 's' : ''}.&success=true`
   )
 }
 
-export default async function MessagingPage({
+export default async function AdminMessagingPage({
   searchParams,
 }: Readonly<{
   searchParams?: Promise<SearchParams>
 }>): Promise<React.JSX.Element> {
-  const superAdmin = await requireRole({ allowedRoles: ['super_admin'] })
+  const admin = await requireRole({ allowedRoles: ['admin'] })
   const resolvedParams: SearchParams = (await searchParams) ?? {}
   const notice: string = readParam({ searchParams: resolvedParams, key: 'notice' })
   const isSuccess: boolean = readParam({ searchParams: resolvedParams, key: 'success' }) === 'true'
 
-  const activeAdminsResult: Array<{ value: number }> = await db
+  const [agentRow] = await db
     .select({ value: count(users.id) })
     .from(users)
-    .where(and(eq(users.role, 'admin'), eq(users.status, 'active')))
-  const activeAdminsCount: number = activeAdminsResult[0]?.value ?? 0
+    .where(and(eq(users.role, 'agent'), eq(users.status, 'active')))
+  const activeAgentsCount: number = agentRow?.value ?? 0
 
   const history = await db
     .select({
@@ -74,18 +70,21 @@ export default async function MessagingPage({
     })
     .from(broadcastMessages)
     .innerJoin(users, eq(broadcastMessages.sentByUserId, users.id))
-    .where(eq(broadcastMessages.recipientRole, 'admin'))
+    .where(
+      and(
+        eq(broadcastMessages.sentByUserId, admin.id),
+        eq(broadcastMessages.recipientRole, 'agent')
+      )
+    )
     .orderBy(desc(broadcastMessages.createdAt))
     .limit(50)
-
-  void superAdmin
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Messagerie</h1>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Messagerie agents</h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Diffusez un message à tous les administrateurs actifs
+          Diffusez un message à tous les agents actifs
         </p>
       </div>
 
@@ -110,8 +109,8 @@ export default async function MessagingPage({
           <div>
             <p className="text-sm font-medium text-zinc-800 dark:text-white">Destinataires</p>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              {activeAdminsCount} administrateur{activeAdminsCount > 1 ? 's' : ''} actif
-              {activeAdminsCount > 1 ? 's' : ''} recevront ce message
+              {activeAgentsCount} agent{activeAgentsCount > 1 ? 's' : ''} actif
+              {activeAgentsCount > 1 ? 's' : ''} recevront ce message
             </p>
           </div>
         </div>
@@ -133,7 +132,7 @@ export default async function MessagingPage({
               required
               minLength={8}
               rows={5}
-              placeholder="Rédigez ici votre communication à l'ensemble des administrateurs..."
+              placeholder="Rédigez ici votre communication à l'ensemble des agents..."
               className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
             />
           </div>
@@ -143,7 +142,7 @@ export default async function MessagingPage({
           className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-6 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
         >
           <Send className="size-4" />
-          Envoyer à tous les administrateurs
+          Envoyer à tous les agents
         </button>
       </form>
 
@@ -164,7 +163,7 @@ export default async function MessagingPage({
                 <thead>
                   <tr className="border-b border-zinc-100 text-xs text-zinc-400 uppercase dark:border-white/10 dark:text-zinc-500">
                     <th className="px-5 py-3">Message</th>
-                    <th className="px-5 py-3 whitespace-nowrap">Destinataires</th>
+                    <th className="px-5 py-3 whitespace-nowrap">Agents</th>
                     <th className="px-5 py-3 whitespace-nowrap">Envoyé le</th>
                   </tr>
                 </thead>
@@ -184,7 +183,7 @@ export default async function MessagingPage({
                       </td>
                       <td className="px-5 py-3 whitespace-nowrap">
                         <span className="bg-lbs-blue/10 text-lbs-blue inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium dark:bg-blue-500/15 dark:text-blue-300">
-                          {msg.recipientCount} admin{msg.recipientCount > 1 ? 's' : ''}
+                          {msg.recipientCount} agent{msg.recipientCount > 1 ? 's' : ''}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-xs whitespace-nowrap text-zinc-400 dark:text-zinc-500">

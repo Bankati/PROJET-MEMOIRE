@@ -45,6 +45,7 @@ const pageTitleMap: Readonly<Record<string, string>> = {
   '/dashboard/admin/performance': 'Performances',
   '/dashboard/admin/export': 'Export',
   '/dashboard/admin/profile': 'Mon profil',
+  '/dashboard/admin/messaging': 'Messagerie agents',
   '/dashboard/admin/messages': 'Messages',
   '/dashboard/admin/rappels': 'Rappels',
 }
@@ -55,6 +56,7 @@ const buildPageTitle = ({ pathname }: Readonly<{ pathname: string }>): string =>
   if (pathname.startsWith('/dashboard/admin/campaigns/')) return 'Campagnes'
   if (pathname.startsWith('/dashboard/admin/contacts/')) return 'Contacts'
   if (pathname.startsWith('/dashboard/admin/agents/')) return 'Agents'
+  if (pathname.startsWith('/dashboard/admin/performance/')) return 'Performances'
   return 'Administration'
 }
 

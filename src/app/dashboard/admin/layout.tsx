@@ -34,6 +34,7 @@ export default async function AdminLayout({
       })
       .from(broadcastMessages)
       .innerJoin(users, eq(broadcastMessages.sentByUserId, users.id))
+      .where(eq(broadcastMessages.recipientRole, 'admin'))
       .orderBy(desc(broadcastMessages.createdAt))
       .limit(20),
   ])

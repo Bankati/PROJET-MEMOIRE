@@ -1,0 +1,2 @@
+ALTER TABLE "broadcast_messages" ADD COLUMN "recipient_role" varchar(20) DEFAULT 'admin' NOT NULL;--> statement-breakpoint
+CREATE INDEX "broadcast_messages_recipient_role_idx" ON "broadcast_messages" USING btree ("recipient_role");

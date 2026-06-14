@@ -18,6 +18,7 @@ export default async function AdminMessagesPage(): Promise<React.JSX.Element> {
     })
     .from(broadcastMessages)
     .innerJoin(users, eq(broadcastMessages.sentByUserId, users.id))
+    .where(eq(broadcastMessages.recipientRole, 'admin'))
     .orderBy(desc(broadcastMessages.createdAt))
     .limit(100)
 
