@@ -146,4 +146,3 @@ jobs:
         run: |
           du -sh .next/ 2>/dev/null || true
           find .next/static/chunks -name "*.js" -exec du -sh {} \; 2>/dev/null | sort -rh | head -10 || true
-
