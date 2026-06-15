@@ -11,7 +11,7 @@ export const LogoutButton = (): React.JSX.Element => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const handleLogout = async (): Promise<void> => {
     setIsSubmitting(true)
-    await signOut({ callbackUrl: '/login' })
+    await signOut({ callbackUrl: '/' })
   }
   return (
     <Button variant="outline" onClick={handleLogout} disabled={isSubmitting}>
