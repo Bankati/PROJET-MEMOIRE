@@ -3,50 +3,26 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import {
+  BarChart3,
   Bell,
   ChevronsLeft,
   ChevronsRight,
   Contact,
   LayoutDashboard,
+  MessageSquare,
   UserCircle2,
   X,
 } from 'lucide-react'
 
-import { useAgentSidebar } from '@/components/agent/layout-shell'
+import { useAgentSidebar, useAgentNotifications } from '@/components/agent/layout-shell'
 
 type NavItem = Readonly<{
   id: string
   label: string
   href: string
   icon: React.ReactNode
+  badge?: number
 }>
-
-const navItems: readonly NavItem[] = [
-  {
-    id: 'dashboard',
-    label: 'Dashboard',
-    href: '/dashboard/agent',
-    icon: <LayoutDashboard className="size-[18px] shrink-0" />,
-  },
-  {
-    id: 'contacts',
-    label: 'Mes contacts',
-    href: '/dashboard/agent/contacts',
-    icon: <Contact className="size-[18px] shrink-0" />,
-  },
-  {
-    id: 'rappels',
-    label: 'Rappels',
-    href: '/dashboard/agent/rappels',
-    icon: <Bell className="size-[18px] shrink-0" />,
-  },
-  {
-    id: 'profile',
-    label: 'Mon profil',
-    href: '/dashboard/agent/profile',
-    icon: <UserCircle2 className="size-[18px] shrink-0" />,
-  },
-]
 
 const isActiveRoute = ({
   pathname,
@@ -59,6 +35,47 @@ const isActiveRoute = ({
 export const AgentSidebar = (): React.JSX.Element => {
   const pathname: string = usePathname()
   const { isCollapsed, toggle, isMobileOpen, closeMobile } = useAgentSidebar()
+  const { unreadCount } = useAgentNotifications()
+
+  const navItems: readonly NavItem[] = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      href: '/dashboard/agent',
+      icon: <LayoutDashboard className="size-[18px] shrink-0" />,
+    },
+    {
+      id: 'contacts',
+      label: 'Mes contacts',
+      href: '/dashboard/agent/contacts',
+      icon: <Contact className="size-[18px] shrink-0" />,
+    },
+    {
+      id: 'rappels',
+      label: 'Rappels',
+      href: '/dashboard/agent/rappels',
+      icon: <Bell className="size-[18px] shrink-0" />,
+    },
+    {
+      id: 'performance',
+      label: 'Mes appels',
+      href: '/dashboard/agent/performance',
+      icon: <BarChart3 className="size-[18px] shrink-0" />,
+    },
+    {
+      id: 'messages',
+      label: 'Messages',
+      href: '/dashboard/agent/messages',
+      icon: <MessageSquare className="size-[18px] shrink-0" />,
+      badge: unreadCount,
+    },
+    {
+      id: 'profile',
+      label: 'Mon profil',
+      href: '/dashboard/agent/profile',
+      icon: <UserCircle2 className="size-[18px] shrink-0" />,
+    },
+  ]
 
   useEffect(() => {
     closeMobile()
@@ -105,6 +122,7 @@ export const AgentSidebar = (): React.JSX.Element => {
       <nav className={`flex-1 space-y-0.5 overflow-y-auto ${isCollapsed ? 'px-2' : 'px-3'}`}>
         {navItems.map((item) => {
           const isActive: boolean = isActiveRoute({ pathname, href: item.href })
+          const showBadge = (item.badge ?? 0) > 0
           return (
             <Link
               key={item.id}
@@ -121,8 +139,22 @@ export const AgentSidebar = (): React.JSX.Element => {
               {isActive ? (
                 <span className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" />
               ) : null}
-              {item.icon}
-              {isCollapsed ? null : <span className="truncate">{item.label}</span>}
+              <span className="relative shrink-0">
+                {item.icon}
+                {showBadge && isCollapsed ? (
+                  <span className="absolute -top-1 -right-1 size-2 rounded-full bg-red-400" />
+                ) : null}
+              </span>
+              {isCollapsed ? null : (
+                <span className="flex flex-1 items-center truncate">
+                  <span className="truncate">{item.label}</span>
+                  {showBadge ? (
+                    <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] leading-none font-bold text-white">
+                      {item.badge}
+                    </span>
+                  ) : null}
+                </span>
+              )}
               {isCollapsed ? (
                 <span className="pointer-events-none absolute left-full ml-2 rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-zinc-800">
                   {item.label}

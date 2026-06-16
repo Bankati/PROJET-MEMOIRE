@@ -2,15 +2,24 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { Bell, Clock, Menu } from 'lucide-react'
+import { Clock, Menu } from 'lucide-react'
 
 import { LogoutButton } from '@/components/auth/logout-button'
 import { ThemeSwitch } from '@/components/ui/theme-switch-button'
 import { useAgentSidebar } from '@/components/agent/layout-shell'
+import { AgentNotificationPopover } from '@/components/agent/notification-popover'
+
+type Notification = Readonly<{
+  id: string
+  message: string
+  senderName: string
+  createdAt: Date
+}>
 
 type TopbarProps = Readonly<{
   fullName: string
   avatarUrl: string | null
+  notifications?: readonly Notification[]
 }>
 
 const extractInitials = ({ fullName }: Readonly<{ fullName: string }>): string => {
@@ -29,6 +38,8 @@ const pageTitleMap: Readonly<Record<string, string>> = {
   '/dashboard/agent': 'Dashboard',
   '/dashboard/agent/contacts': 'Mes contacts',
   '/dashboard/agent/rappels': 'Rappels',
+  '/dashboard/agent/performance': 'Mes appels',
+  '/dashboard/agent/messages': 'Messages',
   '/dashboard/agent/profile': 'Mon profil',
 }
 
@@ -45,7 +56,11 @@ const buildGreeting = (): string => {
   return 'Bonsoir'
 }
 
-export const AgentTopbar = ({ fullName, avatarUrl }: TopbarProps): React.JSX.Element => {
+export const AgentTopbar = ({
+  fullName,
+  avatarUrl,
+  notifications = [],
+}: TopbarProps): React.JSX.Element => {
   const pathname: string = usePathname()
   const { toggle, openMobile } = useAgentSidebar()
   const initials: string = extractInitials({ fullName })
@@ -96,14 +111,7 @@ export const AgentTopbar = ({ fullName, avatarUrl }: TopbarProps): React.JSX.Ele
             {currentTime}
           </div>
         ) : null}
-        <button
-          type="button"
-          className="relative grid size-9 shrink-0 place-items-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 dark:border-white/15 dark:text-zinc-300 dark:hover:bg-white/10"
-          aria-label="Notifications"
-        >
-          <Bell className="size-4" />
-          <span className="bg-lbs-blue absolute -top-0.5 -right-0.5 size-2 rounded-full" />
-        </button>
+        <AgentNotificationPopover notifications={notifications} />
         <ThemeSwitch />
         <Link
           href="/dashboard/agent/profile"

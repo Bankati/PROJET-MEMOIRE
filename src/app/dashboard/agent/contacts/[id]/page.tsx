@@ -13,6 +13,7 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  Pencil,
   Phone,
   Star,
 } from 'lucide-react'
@@ -29,6 +30,7 @@ import {
 } from '@/db/schema'
 import { CallCenterTabs } from '@/components/agent/call-center-tabs'
 import { AgentCallPanel } from '@/components/agent/agent-call-panel'
+import { CallResultForm } from '@/components/agent/call-result-form'
 
 type PageProps = Readonly<{ params: Promise<{ id: string }> }>
 
@@ -76,6 +78,71 @@ async function submitCallResult(formData: FormData): Promise<void> {
     .where(eq(agentContactAssignments.id, assignmentId))
 
   redirect('/dashboard/agent/contacts?notice=call_saved')
+}
+
+const VALID_OUTCOMES = [
+  'interested',
+  'not_interested',
+  'callback',
+  'no_answer',
+  'false_number',
+  'whatsapp_follow_up',
+  'other',
+] as const
+type CallOutcomeValue = (typeof VALID_OUTCOMES)[number]
+
+const isValidOutcome = (v: string): v is CallOutcomeValue =>
+  (VALID_OUTCOMES as readonly string[]).includes(v)
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+const toLocalDate = (d: Date): string =>
+  d.toLocaleDateString('fr-FR', { timeZone: 'Africa/Casablanca' })
+
+async function updateCallResult(formData: FormData): Promise<void> {
+  'use server'
+  const user = await requireRole({ allowedRoles: ['agent'] })
+  const callResultId = (formData.get('callResultId') as string | null) ?? ''
+  const outcome = (formData.get('outcome') as string | null) ?? ''
+  const durationSecondsStr = (formData.get('durationSeconds') as string | null) ?? '0'
+  const notes = (formData.get('notes') as string | null) ?? ''
+  const isWhatsappRedirected = formData.get('isWhatsappRedirected') === 'true'
+
+  if (!UUID_PATTERN.test(callResultId) || !isValidOutcome(outcome)) {
+    redirect('/dashboard/agent/contacts?notice=missing_fields')
+    return
+  }
+
+  const [existing] = await db
+    .select({ agentId: callResults.agentId, createdAt: callResults.createdAt })
+    .from(callResults)
+    .where(eq(callResults.id, callResultId))
+    .limit(1)
+
+  if (!existing || existing.agentId !== user.id) {
+    redirect('/dashboard/agent/contacts?notice=forbidden')
+    return
+  }
+
+  if (toLocalDate(existing.createdAt) !== toLocalDate(new Date())) {
+    redirect('/dashboard/agent/contacts?notice=edit_expired')
+    return
+  }
+
+  const durationSeconds = Math.max(0, parseInt(durationSecondsStr, 10) || 0)
+
+  await db
+    .update(callResults)
+    .set({
+      outcome,
+      notes: notes.trim().length > 0 ? notes.trim() : null,
+      durationSeconds,
+      isWhatsappRedirected,
+      updatedAt: new Date(),
+    })
+    .where(eq(callResults.id, callResultId))
+
+  redirect('/dashboard/agent/contacts?notice=call_updated')
 }
 
 export default async function AgentContactDetailPage({
@@ -191,6 +258,43 @@ export default async function AgentContactDetailPage({
       )
     )
     .limit(5)
+
+  // Fetch existing call result when assignment is completed
+  let existingResult:
+    | {
+        id: string
+        agentId: string
+        outcome: string
+        notes: string | null
+        durationSeconds: number
+        isWhatsappRedirected: boolean
+        createdAt: Date
+        updatedAt: Date | null
+      }
+    | undefined
+
+  if (isCompleted) {
+    const [row] = await db
+      .select({
+        id: callResults.id,
+        agentId: callResults.agentId,
+        outcome: callResults.outcome,
+        notes: callResults.notes,
+        durationSeconds: callResults.durationSeconds,
+        isWhatsappRedirected: callResults.isWhatsappRedirected,
+        createdAt: callResults.createdAt,
+        updatedAt: callResults.updatedAt,
+      })
+      .from(callResults)
+      .where(eq(callResults.assignmentId, contact.assignmentId))
+      .limit(1)
+    existingResult = row
+  }
+
+  const canEdit =
+    !!existingResult &&
+    existingResult.agentId === user.id &&
+    toLocalDate(existingResult.createdAt) === toLocalDate(new Date())
 
   const assignedDate = contact.assignedAt.toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -549,7 +653,116 @@ export default async function AgentContactDetailPage({
 
         {/* ── RIGHT PANEL — Result form + dialer ── */}
         <div>
-          {isCompleted ? (
+          {isCompleted && existingResult ? (
+            canEdit ? (
+              /* Edit mode — editable until end of current calendar day */
+              <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="grid size-8 place-items-center rounded-xl bg-amber-50 dark:bg-amber-500/10">
+                    <Pencil className="size-4 text-amber-500 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-800 dark:text-white">
+                      Modifier le résultat
+                    </p>
+                    <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                      Modifiable jusqu&apos;à la fin de la journée
+                    </p>
+                  </div>
+                </div>
+                <CallResultForm
+                  assignmentId={contact.assignmentId}
+                  campaignId={contact.campaignId}
+                  contactId={contact.contactId}
+                  dialedPhone={contact.phonePrimary}
+                  submitAction={updateCallResult}
+                  mode="edit"
+                  callResultId={existingResult.id}
+                  defaultOutcome={
+                    existingResult.outcome as
+                      | 'interested'
+                      | 'not_interested'
+                      | 'callback'
+                      | 'no_answer'
+                      | 'false_number'
+                      | 'whatsapp_follow_up'
+                      | 'other'
+                  }
+                  defaultNotes={existingResult.notes}
+                  defaultDuration={existingResult.durationSeconds}
+                  defaultWhatsapp={existingResult.isWhatsappRedirected}
+                />
+              </div>
+            ) : (
+              /* Read-only — past day or different agent */
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+                <div className="mb-3 flex items-center gap-3">
+                  <CheckCircle2 className="size-6 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <div>
+                    <p className="font-semibold text-emerald-800 dark:text-emerald-300">
+                      Appel traité
+                    </p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                      {existingResult.updatedAt
+                        ? `Modifié le ${existingResult.updatedAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                        : `Enregistré le ${existingResult.createdAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2 border-t border-emerald-200 pt-3 dark:border-emerald-500/20">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-emerald-700 dark:text-emerald-400">Résultat</span>
+                    <span className="font-medium text-emerald-900 dark:text-emerald-200">
+                      {{
+                        interested: 'Intéressé',
+                        not_interested: 'Pas intéressé',
+                        callback: 'À rappeler',
+                        no_answer: 'Pas de réponse',
+                        false_number: 'Faux numéro',
+                        whatsapp_follow_up: 'Suivi WhatsApp',
+                        other: 'Autre',
+                      }[existingResult.outcome] ?? existingResult.outcome}
+                    </span>
+                  </div>
+                  {existingResult.durationSeconds > 0 ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-emerald-700 dark:text-emerald-400">Durée</span>
+                      <span className="font-medium text-emerald-900 dark:text-emerald-200">
+                        {existingResult.durationSeconds}s
+                      </span>
+                    </div>
+                  ) : null}
+                  {existingResult.isWhatsappRedirected ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-emerald-700 dark:text-emerald-400">WhatsApp</span>
+                      <span className="font-medium text-emerald-900 dark:text-emerald-200">
+                        Oui
+                      </span>
+                    </div>
+                  ) : null}
+                  {existingResult.notes ? (
+                    <div className="pt-1">
+                      <p className="mb-1 text-xs text-emerald-700 dark:text-emerald-400">Notes</p>
+                      <p className="text-sm text-emerald-900 dark:text-emerald-200">
+                        {existingResult.notes}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            )
+          ) : !isCompleted ? (
+            <AgentCallPanel
+              assignmentId={contact.assignmentId}
+              campaignId={contact.campaignId}
+              contactId={contact.contactId}
+              phonePrimary={contact.phonePrimary}
+              phoneSecondary={contact.phoneSecondary}
+              contactName={contactName}
+              submitAction={submitCallResult}
+            />
+          ) : (
+            /* isCompleted mais existingResult manquant — incohérence de données */
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="size-6 text-emerald-600 dark:text-emerald-400" />
@@ -563,16 +776,6 @@ export default async function AgentContactDetailPage({
                 </div>
               </div>
             </div>
-          ) : (
-            <AgentCallPanel
-              assignmentId={contact.assignmentId}
-              campaignId={contact.campaignId}
-              contactId={contact.contactId}
-              phonePrimary={contact.phonePrimary}
-              phoneSecondary={contact.phoneSecondary}
-              contactName={contactName}
-              submitAction={submitCallResult}
-            />
           )}
         </div>
       </div>

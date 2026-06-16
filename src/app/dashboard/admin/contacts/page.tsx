@@ -4,7 +4,7 @@
  */
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { and, desc, eq, inArray, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { X } from 'lucide-react'
 
 import { requireRole } from '@/lib/auth/server-auth'
@@ -14,6 +14,7 @@ import { ContactDialogForm } from '@/components/admin/contact-dialog-form'
 import { ImportExcelDialog } from '@/components/admin/import-excel-dialog'
 import { BulkAssignContacts } from '@/components/admin/bulk-assign-contacts'
 import { ContactFilters } from '@/components/admin/contact-filters'
+import { AutoAssignPanel } from '@/components/admin/auto-assign-panel'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 
@@ -190,6 +191,92 @@ async function bulkAssignAction(formData: FormData): Promise<void> {
   redirect('/dashboard/admin/contacts?notice=assigned')
 }
 
+async function autoAssignAction(formData: FormData): Promise<void> {
+  'use server'
+  const user = await requireRole({ allowedRoles: ['admin'] })
+  const agentId = String(formData.get('agentId') ?? '').trim()
+  const countRaw = parseInt(String(formData.get('count') ?? '0'), 10)
+  const school = String(formData.get('school') ?? '').trim()
+  const campaign = String(formData.get('campaign') ?? '').trim()
+
+  if (agentId.length === 0 || !Number.isInteger(countRaw) || countRaw < 1 || countRaw > 500) {
+    redirect('/dashboard/admin/contacts?notice=missing_fields')
+    return
+  }
+
+  const isAdminItself = agentId === user.id
+  if (!isAdminItself) {
+    const [ownedAgent] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        and(eq(users.id, agentId), eq(users.managedByAdminId, user.id), eq(users.role, 'agent'))
+      )
+      .limit(1)
+    if (!ownedAgent) {
+      redirect('/dashboard/admin/contacts?notice=error')
+      return
+    }
+  }
+
+  const accessibleCampaigns = await db
+    .select({ id: campaigns.id })
+    .from(campaigns)
+    .where(
+      and(
+        or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')),
+        campaign.length > 0 ? eq(campaigns.id, campaign) : undefined
+      )
+    )
+
+  const accessibleCampaignIds = accessibleCampaigns.map((c) => c.id)
+  if (accessibleCampaignIds.length === 0) {
+    redirect('/dashboard/admin/contacts?notice=not_enough&available=0')
+    return
+  }
+
+  const toAssign = await db
+    .select({ ccId: campaignContacts.id })
+    .from(campaignContacts)
+    .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
+    .leftJoin(
+      agentContactAssignments,
+      eq(agentContactAssignments.campaignContactId, campaignContacts.id)
+    )
+    .where(
+      and(
+        inArray(campaignContacts.campaignId, accessibleCampaignIds),
+        isNull(agentContactAssignments.id),
+        school.length > 0 ? eq(contacts.schoolName, school) : undefined
+      )
+    )
+    .orderBy(asc(campaignContacts.createdAt))
+    .limit(countRaw)
+
+  if (toAssign.length < countRaw) {
+    redirect(`/dashboard/admin/contacts?notice=not_enough&available=${toAssign.length}`)
+    return
+  }
+
+  try {
+    await db
+      .insert(agentContactAssignments)
+      .values(
+        toAssign.map(({ ccId }) => ({
+          campaignContactId: ccId,
+          agentId,
+          assignedByAdminId: user.id,
+        }))
+      )
+      .onConflictDoNothing()
+  } catch {
+    redirect('/dashboard/admin/contacts?notice=error')
+    return
+  }
+
+  redirect(`/dashboard/admin/contacts?notice=auto_assigned&count=${countRaw}`)
+}
+
 export default async function AdminContactsPage({
   searchParams,
 }: Readonly<{ searchParams?: Promise<SearchParams> }>): Promise<React.JSX.Element> {
@@ -265,10 +352,52 @@ export default async function AdminContactsPage({
           .limit(200)
       : []
 
+  const unassignedCountResult =
+    myCampaignIds.length > 0
+      ? await db
+          .select({ total: count() })
+          .from(campaignContacts)
+          .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
+          .leftJoin(
+            agentContactAssignments,
+            eq(agentContactAssignments.campaignContactId, campaignContacts.id)
+          )
+          .where(
+            and(
+              campaignFilter.length > 0
+                ? eq(campaignContacts.campaignId, campaignFilter)
+                : inArray(campaignContacts.campaignId, myCampaignIds),
+              isNull(agentContactAssignments.id),
+              schoolFilter.length > 0 ? eq(contacts.schoolName, schoolFilter) : undefined
+            )
+          )
+      : [{ total: 0 }]
+  const unassignedCount = unassignedCountResult[0]?.total ?? 0
+
   const notice = readParam({ sp, key: 'notice' })
+  const availableStr = readParam({ sp, key: 'available' })
+  const autoCountStr = readParam({ sp, key: 'count' })
+  const availableNum = Number(availableStr)
+  const autoCountNum = Number(autoCountStr)
+
   const noticeMessages: Readonly<Record<string, { text: string; type: 'success' | 'error' }>> = {
     created: { text: 'Contact ajouté avec succès.', type: 'success' },
     assigned: { text: 'Contact(s) attribué(s) avec succès.', type: 'success' },
+    auto_assigned: {
+      text: `${autoCountNum} contact${autoCountNum > 1 ? 's' : ''} attribué${autoCountNum > 1 ? 's' : ''} automatiquement.`,
+      type: 'success',
+    },
+    not_enough: {
+      text:
+        availableNum === 0
+          ? 'Aucun contact non attribué ne correspond aux critères sélectionnés.'
+          : `Pas assez de contacts disponibles : seulement ${availableNum} non attribué${availableNum > 1 ? 's' : ''} correspond${availableNum > 1 ? 'ent' : ''} aux critères. Réduisez le nombre demandé.`,
+      type: 'error',
+    },
+    invalid_count: {
+      text: 'Le nombre de contacts doit être compris entre 1 et 500.',
+      type: 'error',
+    },
     missing_fields: { text: 'Veuillez remplir tous les champs obligatoires.', type: 'error' },
     error: { text: 'Une erreur est survenue.', type: 'error' },
   }
@@ -310,6 +439,17 @@ export default async function AdminContactsPage({
         schoolOptions={schoolOptions.flatMap((s) => (s.schoolName ? [s.schoolName] : []))}
         currentCampaign={campaignFilter}
         currentSchool={schoolFilter}
+      />
+
+      {/* Auto-attribution séquentielle */}
+      <AutoAssignPanel
+        agents={myAgents}
+        adminId={user.id}
+        adminName={user.fullName}
+        unassignedCount={unassignedCount}
+        autoAssignAction={autoAssignAction}
+        schoolFilter={schoolFilter}
+        campaignFilter={campaignFilter}
       />
 
       {/* Contacts table with bulk assignment */}

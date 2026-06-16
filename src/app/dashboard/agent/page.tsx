@@ -8,14 +8,11 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Contact,
-  Percent,
   Phone,
-  PhoneMissed,
-  Send,
   Sparkles,
   Target,
 } from 'lucide-react'
-import { and, count, desc, eq, gte, lte, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import Link from 'next/link'
 
 import { requireRole } from '@/lib/auth/server-auth'
@@ -196,24 +193,45 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
     h: 160,
   })
 
-  const recentContacts = await db
-    .select({
-      assignmentId: agentContactAssignments.id,
-      ccId: agentContactAssignments.campaignContactId,
-      status: agentContactAssignments.status,
-      firstName: contacts.firstName,
-      lastName: contacts.lastName,
-      phonePrimary: contacts.phonePrimary,
-      schoolName: contacts.schoolName,
-      campaignTitle: campaigns.title,
+  const [currentCampaign] = await db
+    .selectDistinct({
+      id: campaigns.id,
+      title: campaigns.title,
+      createdAt: campaigns.createdAt,
     })
     .from(agentContactAssignments)
     .innerJoin(campaignContacts, eq(agentContactAssignments.campaignContactId, campaignContacts.id))
-    .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
     .innerJoin(campaigns, eq(campaignContacts.campaignId, campaigns.id))
     .where(eq(agentContactAssignments.agentId, user.id))
-    .orderBy(desc(agentContactAssignments.assignedAt))
-    .limit(5)
+    .orderBy(desc(campaigns.createdAt))
+    .limit(1)
+
+  const campaignRows = currentCampaign
+    ? await db
+        .select({
+          assignmentId: agentContactAssignments.id,
+          ccId: agentContactAssignments.campaignContactId,
+          status: agentContactAssignments.status,
+          firstName: contacts.firstName,
+          lastName: contacts.lastName,
+          phonePrimary: contacts.phonePrimary,
+          schoolName: contacts.schoolName,
+        })
+        .from(agentContactAssignments)
+        .innerJoin(
+          campaignContacts,
+          eq(agentContactAssignments.campaignContactId, campaignContacts.id)
+        )
+        .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
+        .where(
+          and(
+            eq(agentContactAssignments.agentId, user.id),
+            eq(campaignContacts.campaignId, currentCampaign.id)
+          )
+        )
+        .orderBy(asc(agentContactAssignments.assignedAt))
+        .limit(8)
+    : []
 
   const statCards: readonly {
     label: string
@@ -361,21 +379,29 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
               </p>
               <p className="text-2xl font-bold text-zinc-900 dark:text-white">{totalCallsCount}</p>
             </div>
-            <span
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                callsTrend >= 0
-                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
-                  : 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'
-              }`}
-            >
-              {callsTrend >= 0 ? (
-                <ArrowUpRight className="size-3" />
-              ) : (
-                <ArrowDownRight className="size-3" />
-              )}
-              {callsTrend >= 0 ? '+' : ''}
-              {callsTrend}% vs semaine précédente
-            </span>
+            <div className="flex items-center gap-3">
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                  callsTrend >= 0
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+                    : 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'
+                }`}
+              >
+                {callsTrend >= 0 ? (
+                  <ArrowUpRight className="size-3" />
+                ) : (
+                  <ArrowDownRight className="size-3" />
+                )}
+                {callsTrend >= 0 ? '+' : ''}
+                {callsTrend}% vs semaine précédente
+              </span>
+              <Link
+                href="/dashboard/agent/performance"
+                className="text-lbs-blue text-xs hover:underline dark:text-blue-300"
+              >
+                Voir tout →
+              </Link>
+            </div>
           </div>
           <svg viewBox="0 0 500 160" className="h-40 w-full" preserveAspectRatio="none">
             <defs>
@@ -487,125 +513,82 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
           </div>
         ))}
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
-              <Contact className="size-4 text-blue-400" />
-              Contacts récents
-            </h3>
-            <Link
-              href="/dashboard/agent/contacts"
-              className="text-lbs-blue text-xs hover:underline dark:text-blue-300"
-            >
-              Voir tous
-            </Link>
-          </div>
-          {recentContacts.length === 0 ? (
-            <p className="py-6 text-center text-sm text-zinc-400">
-              Aucun contact assigné pour le moment.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {recentContacts.map((c) => (
-                <Link
-                  key={c.assignmentId}
-                  href={`/dashboard/agent/contacts/${c.ccId}`}
-                  className="hover:border-lbs-blue/30 flex items-center gap-3 rounded-xl border border-zinc-100 p-3 transition hover:bg-zinc-50 dark:border-white/5 dark:hover:border-blue-500/30 dark:hover:bg-white/5"
-                >
-                  <div className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-sm font-semibold text-white">
-                    {c.firstName.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-zinc-800 dark:text-white">
-                      {c.firstName} {c.lastName ?? ''}
-                    </p>
-                    <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                      {c.schoolName ?? c.phonePrimary}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {c.status === 'completed' ? (
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                        Traité
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                        En attente
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
-          <h3 className="mb-4 text-sm font-semibold text-zinc-800 dark:text-white">
-            Indicateurs clés
+      <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
+            <Contact className="size-4 text-blue-400" />
+            {currentCampaign ? (
+              <>
+                Campagne en cours
+                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                  {currentCampaign.title}
+                </span>
+              </>
+            ) : (
+              'Campagne en cours'
+            )}
           </h3>
+          <Link
+            href="/dashboard/agent/contacts"
+            className="text-xs text-[#244976] hover:underline dark:text-blue-300"
+          >
+            Voir tous →
+          </Link>
+        </div>
+        {campaignRows.length === 0 ? (
+          <p className="py-8 text-center text-sm text-zinc-400">
+            Aucun contact assigné pour le moment.
+          </p>
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs text-zinc-500 uppercase dark:border-white/10">
-                  <th className="px-2 py-2">Indicateur</th>
-                  <th className="px-2 py-2">Valeur</th>
-                  <th className="px-2 py-2">Taux</th>
+                <tr className="border-b border-zinc-200 text-xs font-medium text-zinc-500 uppercase dark:border-white/10">
+                  <th className="px-3 py-2">Nom</th>
+                  <th className="px-3 py-2">École</th>
+                  <th className="px-3 py-2">Téléphone</th>
+                  <th className="px-3 py-2">Statut</th>
+                  <th className="px-3 py-2" />
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-zinc-100 dark:border-white/5">
-                  <td className="px-2 py-3 text-zinc-700 dark:text-zinc-200">
-                    <span className="inline-flex items-center gap-1.5">
-                      <PhoneMissed className="size-3.5 text-rose-400" />
-                      Faux numéros
-                    </span>
-                  </td>
-                  <td className="px-2 py-3 font-semibold text-zinc-900 dark:text-white">
-                    {falseNumbersCount}
-                  </td>
-                  <td className="px-2 py-3">
-                    <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
-                      {falseRate}%
-                    </span>
-                  </td>
-                </tr>
-                <tr className="border-b border-zinc-100 dark:border-white/5">
-                  <td className="px-2 py-3 text-zinc-700 dark:text-zinc-200">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Send className="size-3.5 text-emerald-400" />
-                      WhatsApp
-                    </span>
-                  </td>
-                  <td className="px-2 py-3 font-semibold text-zinc-900 dark:text-white">
-                    {whatsappCount}
-                  </td>
-                  <td className="px-2 py-3">
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                      {whatsappRate}%
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-2 py-3 text-zinc-700 dark:text-zinc-200">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Percent className="size-3.5 text-violet-500" />
-                      Taux d&apos;appels
-                    </span>
-                  </td>
-                  <td className="px-2 py-3 font-semibold text-zinc-900 dark:text-white">
-                    {completedContactsCount}/{assignedContactsCount}
-                  </td>
-                  <td className="px-2 py-3">
-                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
-                      {callRate}%
-                    </span>
-                  </td>
-                </tr>
+                {campaignRows.map((c) => (
+                  <tr
+                    key={c.assignmentId}
+                    className="border-b border-zinc-100 transition hover:bg-zinc-50 dark:border-white/5 dark:hover:bg-white/5"
+                  >
+                    <td className="px-3 py-3 font-medium text-zinc-800 dark:text-white">
+                      {c.firstName} {c.lastName ?? ''}
+                    </td>
+                    <td className="px-3 py-3 text-zinc-500 dark:text-zinc-400">
+                      {c.schoolName ?? '—'}
+                    </td>
+                    <td className="px-3 py-3 text-zinc-500 dark:text-zinc-400">{c.phonePrimary}</td>
+                    <td className="px-3 py-3">
+                      {c.status === 'completed' ? (
+                        <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                          Traité
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                          En attente
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <Link
+                        href={`/dashboard/agent/contacts/${c.ccId}`}
+                        className="text-xs text-[#244976] hover:underline dark:text-blue-300"
+                      >
+                        Voir →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

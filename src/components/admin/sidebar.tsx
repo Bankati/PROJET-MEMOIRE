@@ -110,6 +110,12 @@ export const AdminSidebar = (): React.JSX.Element => {
 
   const bottomNavItems: readonly NavItem[] = [
     {
+      id: 'messaging',
+      label: 'Messagerie',
+      href: '/dashboard/admin/messaging',
+      icon: <Megaphone className="size-[18px] shrink-0" />,
+    },
+    {
       id: 'messages',
       label: 'Messages',
       href: '/dashboard/admin/messages',
