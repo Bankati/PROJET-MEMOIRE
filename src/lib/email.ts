@@ -1,147 +1,53 @@
 import { Resend } from 'resend'
-
 import { env } from '@/lib/env'
 
-const buildOtpDigits = (otpCode: string): string =>
-  otpCode
-    .split('')
-    .map(
-      (digit) =>
-        `<td style="padding:0 5px;">
-          <table cellpadding="0" cellspacing="0">
-            <tr>
-              <td style="width:44px;height:56px;text-align:center;vertical-align:middle;font-size:28px;font-weight:bold;background:#f8fafc;border:2px solid #e2e8f0;border-radius:8px;color:#1e293b;font-family:Courier New,monospace;">
-                ${digit}
-              </td>
-            </tr>
-          </table>
-        </td>`
-    )
-    .join('')
-
-const buildEmailHtml = (otpCode: string): string => `
+const buildEmailHtml = (otpCode: string, name: string): string => `
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:24px;background:#f1f5f9;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Réinitialisation de mot de passe — LBS Call Center</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f0f4fa;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
     <tr>
       <td align="center">
-        <table width="480" cellpadding="0" cellspacing="0" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.12);">
-
-          <!-- En-tête sombre avec logo texte LBS -->
+        <table width="520" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;">
           <tr>
-            <td style="background:#0f1117;padding:18px 24px;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td>
-                    <img src="https://nhidybufbvkoreoafdgm.supabase.co/storage/v1/object/public/assets/lbs-logo.jpeg"
-                         alt="LBS" style="height:42px;display:block;border-radius:4px;" />
-                  </td>
-                  <td align="right" style="color:#4ade80;font-size:13px;white-space:nowrap;font-family:Arial,sans-serif;">
-                    <table cellpadding="0" cellspacing="0" style="display:inline-table;float:right;">
-                      <tr>
-                        <td style="width:8px;height:8px;background:#4ade80;border-radius:50%;vertical-align:middle;"></td>
-                        <td style="padding-left:6px;color:#4ade80;font-size:13px;vertical-align:middle;">Email sécurisé</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
+            <td style="background-color:#001b61;padding:24px 32px;">
+              <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700;">LBS Call Center</p>
+              <p style="margin:4px 0 0;color:rgba(255,255,255,0.6);font-size:12px;">SERVICES DE SÉCURITÉ</p>
             </td>
           </tr>
-
-          <!-- Corps blanc -->
           <tr>
-            <td style="background:#ffffff;padding:36px 32px 28px;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-
-                <!-- Icône cadenas -->
-                <tr>
-                  <td align="center" style="padding-bottom:24px;">
-                    <table cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="width:76px;height:76px;background:#1e2130;border-radius:50%;text-align:center;vertical-align:middle;font-size:34px;line-height:76px;">
-                          🔒
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-
-                <!-- Titre -->
-                <tr>
-                  <td align="center" style="padding-bottom:12px;">
-                    <span style="font-size:22px;font-weight:700;color:#0f1117;font-family:Arial,sans-serif;">Votre code de vérification</span>
-                  </td>
-                </tr>
-
-                <!-- Sous-titre -->
-                <tr>
-                  <td align="center" style="padding-bottom:28px;">
-                    <span style="font-size:14px;color:#6b7280;line-height:1.6;font-family:Arial,sans-serif;">
-                      Utilisez ce code à usage unique pour confirmer votre identité.<br>
-                      Il est valable pendant <strong style="color:#1a56db;">10 minutes</strong>.
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- Label CODE OTP -->
-                <tr>
-                  <td align="center" style="padding-bottom:14px;">
-                    <span style="font-size:11px;color:#9ca3af;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;">Code OTP</span>
-                  </td>
-                </tr>
-
-                <!-- Chiffres OTP -->
-                <tr>
-                  <td align="center" style="padding-bottom:22px;">
-                    <table cellpadding="0" cellspacing="0">
-                      <tr>${buildOtpDigits(otpCode)}</tr>
-                    </table>
-                  </td>
-                </tr>
-
-                <!-- Badge expiration -->
-                <tr>
-                  <td align="center" style="padding-bottom:28px;">
-                    <table cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="background:#fef3c7;border:1px solid #fcd34d;border-radius:999px;padding:8px 20px;">
-                          <span style="color:#d97706;font-size:13px;font-family:Arial,sans-serif;">&#9201; Expire dans 10 minutes</span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-
-                <!-- Encadré vert -->
-                <tr>
-                  <td style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:14px 16px;">
-                    <span style="font-size:13px;color:#166534;line-height:1.6;font-family:Arial,sans-serif;">
-                      &#10003; Ce code a été généré suite à votre demande de connexion sur <strong>LBS Call Center</strong>.
-                      Saisissez-le sur la page de vérification pour accéder à votre compte.
-                    </span>
-                  </td>
-                </tr>
-
-                <tr><td style="height:12px;"></td></tr>
-
-                <!-- Encadré orange avertissement -->
-                <tr>
-                  <td style="background:#fff7ed;border-left:4px solid #f97316;border-radius:0 8px 8px 0;padding:14px 16px;">
-                    <span style="font-size:13px;color:#9a3412;line-height:1.6;font-family:Arial,sans-serif;">
-                      &#9888; <strong>Ne partagez jamais ce code.</strong> Notre équipe ne vous demandera jamais votre OTP
-                      par téléphone ou par email. Si vous n'avez pas effectué cette demande, ignorez cet email et
-                      sécurisez votre compte.
-                    </span>
-                  </td>
-                </tr>
-
-              </table>
+            <td style="padding:32px;">
+              <p style="margin:0 0 16px;color:#000d32;font-size:16px;font-weight:600;">Réinitialisation de mot de passe</p>
+              <p style="margin:0 0 24px;color:#4b5563;font-size:14px;line-height:22px;">
+                Bonjour ${name},<br/><br/>
+                Vous avez demandé la réinitialisation de votre mot de passe. Voici votre code de vérification :
+              </p>
+              <div style="text-align:center;margin:24px 0;">
+                <span style="display:inline-block;background-color:#f0f4fa;border:2px solid #001b61;border-radius:12px;padding:16px 32px;font-size:32px;font-weight:700;letter-spacing:8px;color:#001b61;">
+                  ${otpCode}
+                </span>
+              </div>
+              <p style="margin:0 0 16px;color:#6b7280;font-size:13px;text-align:center;">
+                Ce code expire dans <strong>10 minutes</strong> et ne peut être utilisé qu'une seule fois.
+              </p>
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+              <p style="margin:0;color:#9ca3af;font-size:12px;">
+                Si vous n'êtes pas à l'origine de cette demande, ignorez cet email. Votre mot de passe actuel reste inchangé.
+              </p>
             </td>
           </tr>
-
+          <tr>
+            <td style="background-color:#f9fafb;padding:16px 32px;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;color:#9ca3af;font-size:11px;">
+                Cet email a été envoyé par LBS Call Center — plateforme interne.
+              </p>
+            </td>
+          </tr>
         </table>
       </td>
     </tr>
@@ -153,21 +59,24 @@ const buildEmailHtml = (otpCode: string): string => `
 export const sendPasswordResetOtp = async ({
   to,
   otpCode,
+  name,
 }: Readonly<{
   to: string
   otpCode: string
+  name: string
 }>): Promise<void> => {
   const resend = new Resend(env.RESEND_API_KEY)
   const recipient = env.RESEND_TEST_TO ?? to
+
   if (env.RESEND_TEST_TO) {
     console.log(`[Resend] Mode sandbox — redirection de ${to} vers ${recipient}`)
   }
 
   const { data, error } = await resend.emails.send({
-    from: 'onboarding@resend.dev',
+    from: 'LBS Call Center <contact@lbscallcenter.com>',
     to: recipient,
-    subject: 'Votre code de réinitialisation — LBS Call Center',
-    html: buildEmailHtml(otpCode),
+    subject: 'Réinitialisation de mot de passe — LBS Call Center',
+    html: buildEmailHtml(otpCode, name),
   })
 
   if (error) {
