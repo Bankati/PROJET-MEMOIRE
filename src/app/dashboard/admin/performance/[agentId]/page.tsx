@@ -92,7 +92,7 @@ const buildAreaPath = ({
   const line = `M ${pts.join(' L ')}`
   return {
     linePath: line,
-    areaPath: `${line} L ${pts[pts.length - 1]!.split(',')[0]},${h} L ${pts[0]!.split(',')[0]},${h} Z`,
+    areaPath: `${line} L ${(pts.at(-1) ?? '').split(',')[0]},${h} L ${(pts[0] ?? '').split(',')[0]},${h} Z`,
   }
 }
 

@@ -51,7 +51,7 @@ export const CampaignDialogForm = ({
   const isEdit = mode === 'edit' && campaign !== undefined
   const formAction = isEdit ? updateAction : createAction
 
-  const handleOpen = () => {
+  const handleOpen = (): void => {
     setStep(1)
     setIsPending(false)
     setTitleVal(campaign?.title ?? '')
@@ -62,7 +62,7 @@ export const CampaignDialogForm = ({
     setIsOpen(true)
   }
 
-  const handleClose = () => setIsOpen(false)
+  const handleClose = (): void => setIsOpen(false)
 
   const step1Valid = titleVal.trim().length > 0 && yearVal.trim().length > 0
 

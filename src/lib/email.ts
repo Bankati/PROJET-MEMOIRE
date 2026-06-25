@@ -69,7 +69,7 @@ export const sendPasswordResetOtp = async ({
   const recipient = env.RESEND_TEST_TO ?? to
 
   if (env.RESEND_TEST_TO) {
-    console.log(`[Resend] Mode sandbox — redirection de ${to} vers ${recipient}`)
+    console.info(`[Resend] Mode sandbox — redirection de ${to} vers ${recipient}`)
   }
 
   const { data, error } = await resend.emails.send({
@@ -84,5 +84,5 @@ export const sendPasswordResetOtp = async ({
     throw new Error(`Impossible d'envoyer l'email : ${error.message}`)
   }
 
-  console.log('[Resend] Email envoyé avec succès, id:', data?.id)
+  console.info('[Resend] Email envoyé avec succès, id:', data?.id)
 }

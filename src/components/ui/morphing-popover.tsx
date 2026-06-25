@@ -120,16 +120,18 @@ function MorphingPopoverTrigger({
     throw new Error('MorphingPopoverTrigger must be used within MorphingPopover')
   }
   if (asChild && isValidElement(children)) {
+    // motion.create() requires ForwardRefExoticComponent; children.type is the wider React.ElementType
     const MotionComponent = motion.create(
       children.type as React.ForwardRefExoticComponent<Record<string, unknown>>
     )
+    // React.ReactElement.props is typed as {} — assertion needed to access named properties
     const childProps = children.props as Record<string, unknown>
     return (
       <MotionComponent
         {...childProps}
         onClick={context.open}
         layoutId={`popover-trigger-${context.uniqueId}`}
-        className={childProps.className as string | undefined}
+        className={typeof childProps.className === 'string' ? childProps.className : undefined}
         key={context.uniqueId}
         aria-expanded={context.isOpen}
         aria-controls={`popover-content-${context.uniqueId}`}

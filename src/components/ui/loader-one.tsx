@@ -2,7 +2,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 
-const LoaderOne = () => {
+const LoaderOne = (): React.JSX.Element => {
   return (
     <div className="flex items-center justify-center gap-1">
       {[...Array(3)].map((_, i) => (

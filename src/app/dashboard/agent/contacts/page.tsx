@@ -97,7 +97,7 @@ export default async function AgentContactsPage({
     completed: contactsList.filter((c) => c.status === 'completed').length,
   }
 
-  const buildHref = (overrides: Record<string, string>) => {
+  const buildHref = (overrides: Record<string, string>): string => {
     const params = new URLSearchParams()
     const base = { status: statusFilter, q: searchQuery, school: schoolFilter, ...overrides }
     for (const [k, v] of Object.entries(base)) {
@@ -107,7 +107,7 @@ export default async function AgentContactsPage({
     return `/dashboard/agent/contacts${qs.length > 0 ? `?${qs}` : ''}`
   }
 
-  const statusBadge = (status: string) => {
+  const statusBadge = (status: string): React.JSX.Element => {
     if (status === 'completed')
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">

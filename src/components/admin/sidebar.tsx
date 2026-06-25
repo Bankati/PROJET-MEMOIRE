@@ -142,7 +142,7 @@ export const AdminSidebar = (): React.JSX.Element => {
     },
   ]
 
-  const renderNavItem = (item: NavItem) => {
+  const renderNavItem = (item: NavItem): React.JSX.Element => {
     const isActive = isActiveRoute({ pathname, href: item.href })
     const showBadge = (item.badge ?? 0) > 0
     return (

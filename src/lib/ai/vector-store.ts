@@ -44,7 +44,9 @@ export const searchSimilarChunks = async ({
     return []
   }
 
-  return (data as DocumentChunk[]) ?? []
+  if (!Array.isArray(data)) return []
+  // Supabase RPC returns untyped data; shape is guaranteed by the DB function contract
+  return data as DocumentChunk[]
 }
 
 export const storeChunks = async ({
@@ -76,7 +78,9 @@ export const listDocuments = async (): Promise<StoredDocument[]> => {
     return []
   }
 
-  return (data as StoredDocument[]) ?? []
+  if (!Array.isArray(data)) return []
+  // Supabase RPC returns untyped data; shape is guaranteed by the DB function contract
+  return data as StoredDocument[]
 }
 
 export const deleteDocument = async ({

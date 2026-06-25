@@ -209,10 +209,8 @@ export const CampaignEditPanel = ({
         ref={formRef}
         action={updateAction}
         onSubmit={(e) => {
-          const script =
-            (
-              formRef.current?.elements.namedItem('baseScript') as HTMLTextAreaElement | null
-            )?.value?.trim() ?? ''
+          const el = formRef.current?.elements.namedItem('baseScript')
+          const script = (el instanceof HTMLTextAreaElement ? el.value : undefined)?.trim() ?? ''
           if (script.length === 0) {
             e.preventDefault()
             setScriptError(true)

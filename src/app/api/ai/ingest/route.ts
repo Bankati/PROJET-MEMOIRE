@@ -63,7 +63,8 @@ export const POST = async (request: Request): Promise<Response> => {
   }
 
   const formData = await request.formData()
-  const file = formData.get('file') as File | null
+  const fileEntry = formData.get('file')
+  const file: File | null = fileEntry instanceof File ? fileEntry : null
 
   if (!file) {
     return NextResponse.json({ ok: false, error: 'Aucun fichier fourni.' }, { status: 400 })
@@ -86,11 +87,11 @@ export const POST = async (request: Request): Promise<Response> => {
   let rawText = ''
 
   if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { PDFParse } = (await import('pdf-parse')) as any
-    const parser = new PDFParse({ data: Buffer.from(arrayBuffer) }) as {
-      getText: () => Promise<{ text: string }>
-    }
+    type PdfParseInstance = { getText: () => Promise<{ text: string }> }
+    type PdfParseModule = { PDFParse: new (opts: { data: Buffer }) => PdfParseInstance }
+    // pdf-parse ships no TypeScript declarations; unknown→type assertion is the only approach
+    const { PDFParse } = (await import('pdf-parse')) as unknown as PdfParseModule
+    const parser: PdfParseInstance = new PDFParse({ data: Buffer.from(arrayBuffer) })
     const pdfData = await parser.getText()
     rawText = pdfData.text
   } else {

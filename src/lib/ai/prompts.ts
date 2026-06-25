@@ -17,14 +17,14 @@ type SubjectPrompt = Readonly<{
 }>
 
 const ALL_PROMPTS: readonly SubjectPrompt[] = [
-  scolaritePrompt as SubjectPrompt,
-  fraisPrompt as SubjectPrompt,
-  inscriptionPrompt as SubjectPrompt,
-  filieresPrompt as SubjectPrompt,
-  boursesPrompt as SubjectPrompt,
-  hebergementPrompt as SubjectPrompt,
-  debouchesPrompt as SubjectPrompt,
-  contactPrompt as SubjectPrompt,
+  scolaritePrompt,
+  fraisPrompt,
+  inscriptionPrompt,
+  filieresPrompt,
+  boursesPrompt,
+  hebergementPrompt,
+  debouchesPrompt,
+  contactPrompt,
 ]
 
 export const detectSubject = ({ query }: Readonly<{ query: string }>): SubjectPrompt => {
@@ -34,7 +34,7 @@ export const detectSubject = ({ query }: Readonly<{ query: string }>): SubjectPr
       return prompt
     }
   }
-  return defaultPrompt as SubjectPrompt
+  return defaultPrompt
 }
 
 export const buildSystemPrompt = ({

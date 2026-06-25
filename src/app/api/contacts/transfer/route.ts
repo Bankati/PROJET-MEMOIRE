@@ -13,17 +13,15 @@ type TransferBody = Readonly<{
 export const POST = async (request: Request): Promise<Response> => {
   const user = await requireRole({ allowedRoles: ['admin'] })
 
+  const isTransferBody = (v: unknown): v is TransferBody =>
+    typeof v === 'object' && v !== null && 'ccIds' in v && 'targetCampaignId' in v
+
   const bodyRaw: unknown = await request.json().catch(() => null)
-  if (
-    typeof bodyRaw !== 'object' ||
-    bodyRaw === null ||
-    !('ccIds' in bodyRaw) ||
-    !('targetCampaignId' in bodyRaw)
-  ) {
+  if (!isTransferBody(bodyRaw)) {
     return NextResponse.json({ ok: false, message: 'Paramètres invalides.' }, { status: 400 })
   }
 
-  const { ccIds, targetCampaignId } = bodyRaw as TransferBody
+  const { ccIds, targetCampaignId } = bodyRaw
 
   if (
     !Array.isArray(ccIds) ||

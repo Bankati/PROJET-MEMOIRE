@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { createPasswordResetOtp } from '@/lib/auth/auth-service'
+import { createPasswordResetOtp, findUserByEmail } from '@/lib/auth/auth-service'
 import { sendPasswordResetOtp } from '@/lib/email'
 
 type ForgotPayload = Readonly<{ email: string }>
@@ -16,9 +16,17 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json({ ok: false, message: 'Adresse e-mail invalide.' }, { status: 400 })
   }
   const payload: ForgotPayload = { email: payloadRaw.email }
-  const otpCode: string | null = await createPasswordResetOtp({ email: payload.email })
 
   // Si l'utilisateur n'existe pas, on répond de façon identique pour éviter l'énumération de comptes
+  const userRecord = await findUserByEmail({ email: payload.email })
+  if (userRecord === null) {
+    return NextResponse.json({
+      ok: true,
+      message: 'Si ce compte existe, un email a été envoyé.',
+    })
+  }
+
+  const otpCode: string | null = await createPasswordResetOtp({ email: payload.email })
   if (otpCode === null) {
     return NextResponse.json({
       ok: true,
@@ -27,7 +35,7 @@ export const POST = async (request: Request): Promise<Response> => {
   }
 
   try {
-    await sendPasswordResetOtp({ to: payload.email, otpCode })
+    await sendPasswordResetOtp({ to: payload.email, otpCode, name: userRecord.fullName })
   } catch (err) {
     console.error('[forgot-password] Erreur envoi email:', err)
     return NextResponse.json(
