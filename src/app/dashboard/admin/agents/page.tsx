@@ -131,30 +131,31 @@ export default async function AdminAgentsPage({
   const sp: SearchParams = (await searchParams) ?? {}
   const notice: string = readParam({ sp, key: 'notice' })
   const reactivateId: string = readParam({ sp, key: 'reactivate' })
-  const myAgents = await db
-    .select({
-      id: users.id,
-      fullName: users.fullName,
-      email: users.email,
-      status: users.status,
-      campaignAccessExpiresAt: users.campaignAccessExpiresAt,
-      createdAt: users.createdAt,
-    })
-    .from(users)
-    .where(and(eq(users.role, 'agent'), eq(users.managedByAdminId, user.id)))
-    .orderBy(desc(users.createdAt))
-  const myCampaigns = await db
-    .select({ id: campaigns.id, title: campaigns.title })
-    .from(campaigns)
-    .where(eq(campaigns.createdByAdminId, user.id))
-    .orderBy(desc(campaigns.createdAt))
-  const agentCallCounts =
-    myAgents.length > 0
-      ? await db
-          .select({ agentId: callResults.agentId, callCount: count(callResults.id) })
-          .from(callResults)
-          .groupBy(callResults.agentId)
-      : []
+  const [myAgents, myCampaigns, agentCallCounts] = await Promise.all([
+    db
+      .select({
+        id: users.id,
+        fullName: users.fullName,
+        email: users.email,
+        status: users.status,
+        campaignAccessExpiresAt: users.campaignAccessExpiresAt,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(and(eq(users.role, 'agent'), eq(users.managedByAdminId, user.id)))
+      .orderBy(desc(users.createdAt)),
+    db
+      .select({ id: campaigns.id, title: campaigns.title })
+      .from(campaigns)
+      .where(eq(campaigns.createdByAdminId, user.id))
+      .orderBy(desc(campaigns.createdAt)),
+    db
+      .select({ agentId: callResults.agentId, callCount: count(callResults.id) })
+      .from(callResults)
+      .innerJoin(users, eq(callResults.agentId, users.id))
+      .where(eq(users.managedByAdminId, user.id))
+      .groupBy(callResults.agentId),
+  ])
   const callCountMap: ReadonlyMap<string, number> = new Map(
     agentCallCounts.map((r) => [r.agentId, r.callCount])
   )

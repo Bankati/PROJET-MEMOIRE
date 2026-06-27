@@ -85,81 +85,114 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
   const fourteenDaysAgo: Date = new Date(now)
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14)
 
-  const assignedContactsResult: Array<{ value: number }> = await db
-    .select({ value: count(agentContactAssignments.id) })
-    .from(agentContactAssignments)
-    .where(eq(agentContactAssignments.agentId, user.id))
-  const assignedContactsCount: number = assignedContactsResult[0]?.value ?? 0
-
-  const pendingContactsResult: Array<{ value: number }> = await db
-    .select({ value: count(agentContactAssignments.id) })
-    .from(agentContactAssignments)
-    .where(
-      and(
-        eq(agentContactAssignments.agentId, user.id),
-        eq(agentContactAssignments.status, 'pending')
+  const [
+    assignedRes,
+    pendingRes,
+    completedRes,
+    totalCallsRes,
+    prevCallsRes,
+    falseNumbersRes,
+    whatsappRes,
+    dailyCallsResult,
+    currentCampaignArr,
+  ] = await Promise.all([
+    db
+      .select({ value: count(agentContactAssignments.id) })
+      .from(agentContactAssignments)
+      .where(eq(agentContactAssignments.agentId, user.id)),
+    db
+      .select({ value: count(agentContactAssignments.id) })
+      .from(agentContactAssignments)
+      .where(
+        and(
+          eq(agentContactAssignments.agentId, user.id),
+          eq(agentContactAssignments.status, 'pending')
+        )
+      ),
+    db
+      .select({ value: count(agentContactAssignments.id) })
+      .from(agentContactAssignments)
+      .where(
+        and(
+          eq(agentContactAssignments.agentId, user.id),
+          eq(agentContactAssignments.status, 'completed')
+        )
+      ),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(and(eq(callResults.agentId, user.id), gte(callResults.createdAt, sevenDaysAgo))),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(
+        and(
+          eq(callResults.agentId, user.id),
+          gte(callResults.createdAt, fourteenDaysAgo),
+          lte(callResults.createdAt, sevenDaysAgo)
+        )
+      ),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(
+        and(
+          eq(callResults.agentId, user.id),
+          eq(callResults.outcome, 'false_number'),
+          gte(callResults.createdAt, sevenDaysAgo)
+        )
+      ),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(
+        and(
+          eq(callResults.agentId, user.id),
+          eq(callResults.isWhatsappRedirected, true),
+          gte(callResults.createdAt, sevenDaysAgo)
+        )
+      ),
+    db
+      .select({
+        day: sql<string>`to_char(${callResults.createdAt}, 'YYYY-MM-DD')`,
+        value: count(callResults.id),
+      })
+      .from(callResults)
+      .where(and(eq(callResults.agentId, user.id), gte(callResults.createdAt, sevenDaysAgo)))
+      .groupBy(sql`to_char(${callResults.createdAt}, 'YYYY-MM-DD')`)
+      .orderBy(sql`to_char(${callResults.createdAt}, 'YYYY-MM-DD') asc`),
+    db
+      .selectDistinct({
+        id: campaigns.id,
+        title: campaigns.title,
+        createdAt: campaigns.createdAt,
+      })
+      .from(agentContactAssignments)
+      .innerJoin(
+        campaignContacts,
+        eq(agentContactAssignments.campaignContactId, campaignContacts.id)
       )
-    )
-  const pendingContactsCount: number = pendingContactsResult[0]?.value ?? 0
+      .innerJoin(campaigns, eq(campaignContacts.campaignId, campaigns.id))
+      .where(eq(agentContactAssignments.agentId, user.id))
+      .orderBy(desc(campaigns.createdAt))
+      .limit(1),
+  ])
 
-  const completedContactsResult: Array<{ value: number }> = await db
-    .select({ value: count(agentContactAssignments.id) })
-    .from(agentContactAssignments)
-    .where(
-      and(
-        eq(agentContactAssignments.agentId, user.id),
-        eq(agentContactAssignments.status, 'completed')
-      )
-    )
-  const completedContactsCount: number = completedContactsResult[0]?.value ?? 0
+  const assignedContactsCount: number = assignedRes[0]?.value ?? 0
+  const pendingContactsCount: number = pendingRes[0]?.value ?? 0
+  const completedContactsCount: number = completedRes[0]?.value ?? 0
+  const totalCallsCount: number = totalCallsRes[0]?.value ?? 0
+  const prevCallsCount: number = prevCallsRes[0]?.value ?? 0
+  const falseNumbersCount: number = falseNumbersRes[0]?.value ?? 0
+  const whatsappCount: number = whatsappRes[0]?.value ?? 0
+  const [currentCampaign] = currentCampaignArr
 
-  const totalCallsResult: Array<{ value: number }> = await db
-    .select({ value: count(callResults.id) })
-    .from(callResults)
-    .where(and(eq(callResults.agentId, user.id), gte(callResults.createdAt, sevenDaysAgo)))
-  const totalCallsCount: number = totalCallsResult[0]?.value ?? 0
-
-  const prevCallsResult: Array<{ value: number }> = await db
-    .select({ value: count(callResults.id) })
-    .from(callResults)
-    .where(
-      and(
-        eq(callResults.agentId, user.id),
-        gte(callResults.createdAt, fourteenDaysAgo),
-        lte(callResults.createdAt, sevenDaysAgo)
-      )
-    )
-  const prevCallsCount: number = prevCallsResult[0]?.value ?? 0
   const callsTrend: number =
     prevCallsCount === 0
       ? totalCallsCount > 0
         ? 100
         : 0
       : Math.round(((totalCallsCount - prevCallsCount) / prevCallsCount) * 100)
-
-  const falseNumbersResult: Array<{ value: number }> = await db
-    .select({ value: count(callResults.id) })
-    .from(callResults)
-    .where(
-      and(
-        eq(callResults.agentId, user.id),
-        eq(callResults.outcome, 'false_number'),
-        gte(callResults.createdAt, sevenDaysAgo)
-      )
-    )
-  const falseNumbersCount: number = falseNumbersResult[0]?.value ?? 0
-
-  const whatsappResult: Array<{ value: number }> = await db
-    .select({ value: count(callResults.id) })
-    .from(callResults)
-    .where(
-      and(
-        eq(callResults.agentId, user.id),
-        eq(callResults.isWhatsappRedirected, true),
-        gte(callResults.createdAt, sevenDaysAgo)
-      )
-    )
-  const whatsappCount: number = whatsappResult[0]?.value ?? 0
 
   const callRate: number =
     assignedContactsCount > 0
@@ -171,15 +204,6 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
   const whatsappRate: number =
     totalCallsCount === 0 ? 0 : Math.round((whatsappCount / totalCallsCount) * 100)
 
-  const dailyCallsResult: Array<{ day: string | null; value: number }> = await db
-    .select({
-      day: sql<string>`to_char(${callResults.createdAt}, 'YYYY-MM-DD')`,
-      value: count(callResults.id),
-    })
-    .from(callResults)
-    .where(and(eq(callResults.agentId, user.id), gte(callResults.createdAt, sevenDaysAgo)))
-    .groupBy(sql`to_char(${callResults.createdAt}, 'YYYY-MM-DD')`)
-    .orderBy(sql`to_char(${callResults.createdAt}, 'YYYY-MM-DD') asc`)
   const dailyMap: ReadonlyMap<string, number> = new Map(
     dailyCallsResult.filter((e) => typeof e.day === 'string').map((e) => [e.day as string, e.value])
   )
@@ -192,19 +216,6 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
     w: 500,
     h: 160,
   })
-
-  const [currentCampaign] = await db
-    .selectDistinct({
-      id: campaigns.id,
-      title: campaigns.title,
-      createdAt: campaigns.createdAt,
-    })
-    .from(agentContactAssignments)
-    .innerJoin(campaignContacts, eq(agentContactAssignments.campaignContactId, campaignContacts.id))
-    .innerJoin(campaigns, eq(campaignContacts.campaignId, campaigns.id))
-    .where(eq(agentContactAssignments.agentId, user.id))
-    .orderBy(desc(campaigns.createdAt))
-    .limit(1)
 
   const campaignRows = currentCampaign
     ? await db

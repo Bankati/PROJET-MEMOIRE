@@ -26,12 +26,15 @@ export const POST = async (request: Request): Promise<Response> => {
     })
   }
 
-  const otpCode: string | null = await createPasswordResetOtp({ email: payload.email })
-  if (otpCode === null) {
-    return NextResponse.json({
-      ok: true,
-      message: 'Si ce compte existe, un email a été envoyé.',
-    })
+  let otpCode: string
+  try {
+    otpCode = await createPasswordResetOtp({ userRecord })
+  } catch (err) {
+    console.error('[forgot-password] Erreur création OTP:', err)
+    return NextResponse.json(
+      { ok: false, message: 'Une erreur est survenue. Réessayez.' },
+      { status: 500 }
+    )
   }
 
   try {

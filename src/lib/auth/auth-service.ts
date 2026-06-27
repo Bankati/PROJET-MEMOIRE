@@ -51,14 +51,10 @@ export const createInitialSuperAdmin = async ({
 }
 
 export const createPasswordResetOtp = async ({
-  email,
+  userRecord,
 }: Readonly<{
-  email: string
-}>): Promise<string | null> => {
-  const userRecord: typeof users.$inferSelect | null = await findUserByEmail({ email })
-  if (userRecord === null) {
-    return null
-  }
+  userRecord: typeof users.$inferSelect
+}>): Promise<string> => {
   const code: string = createOtpCode()
   const codeHash: string = hashOtpCode({ code })
   const expiresAt: Date = createOtpExpiration()

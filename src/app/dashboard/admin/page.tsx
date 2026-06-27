@@ -26,34 +26,10 @@ import {
   users,
 } from '@/db/schema'
 import { AdminDashboardFilters } from '@/components/admin/dashboard-filters'
+import { extractCount, formatTimeAgo, readParam } from '@/lib/dashboard-utils'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 type CurvePoint = Readonly<{ label: string; calls: number }>
-type CampaignOption = Readonly<{ id: string; title: string }>
-type RecentAgent = Readonly<{ id: string; fullName: string; email: string; createdAt: Date }>
-
-const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): string => {
-  const raw: string | string[] | undefined = sp[key]
-  if (typeof raw === 'string') return raw
-  return Array.isArray(raw) ? (raw[0] ?? '') : ''
-}
-
-const extractCount = ({ value }: Readonly<{ value: number | string | null }>): number => {
-  if (typeof value === 'number') return value
-  if (typeof value === 'string') {
-    const n = Number(value)
-    return Number.isFinite(n) ? n : 0
-  }
-  return 0
-}
-
-const formatTimeAgo = ({ date }: Readonly<{ date: Date }>): string => {
-  const diff = Math.floor((Date.now() - date.getTime()) / 60000)
-  if (diff < 60) return `il y a ${Math.max(1, diff)} min`
-  const hours = Math.floor(diff / 60)
-  if (hours < 24) return `il y a ${hours}h`
-  return `il y a ${Math.floor(hours / 24)}j`
-}
 
 const buildCurvePoints = ({
   monthlyCalls,
@@ -117,6 +93,7 @@ const buildDefaultTo = (): string => new Date().toISOString().slice(0, 10)
 export default async function AdminDashboardPage({
   searchParams,
 }: Readonly<{ searchParams?: Promise<SearchParams> }>): Promise<React.JSX.Element> {
+  // ── Phase 1 : auth (bloquant — on a besoin de user.id pour toutes les requêtes) ──
   const user = await requireRole({ allowedRoles: ['admin'] })
   const sp: SearchParams = (await searchParams) ?? {}
   const campaignFilter = readParam({ sp, key: 'campaign' })
@@ -126,29 +103,79 @@ export default async function AdminDashboardPage({
   const dateFrom = new Date(dateFromStr)
   const dateTo = new Date(dateToStr + 'T23:59:59.999Z')
 
-  const campaignOptions: readonly CampaignOption[] = await db
-    .select({ id: campaigns.id, title: campaigns.title })
-    .from(campaigns)
-    .where(eq(campaigns.createdByAdminId, user.id))
-    .orderBy(desc(campaigns.createdAt))
+  // ── Phase 2 : requêtes indépendantes qui ne dépendent que de user.id ──
+  const [
+    campaignOptions,
+    myAgentsCount,
+    activeCampaignsCount,
+    myContactsCount,
+    recentAgents,
+    currentCampaignRow,
+  ] = await Promise.all([
+    db
+      .select({ id: campaigns.id, title: campaigns.title })
+      .from(campaigns)
+      .where(eq(campaigns.createdByAdminId, user.id))
+      .orderBy(desc(campaigns.createdAt)),
+
+    db
+      .select({ value: count(users.id) })
+      .from(users)
+      .where(
+        and(
+          eq(users.role, 'agent'),
+          eq(users.managedByAdminId, user.id),
+          eq(users.status, 'active')
+        )
+      )
+      .then((r) => r[0]?.value ?? 0),
+
+    db
+      .select({ value: count(campaigns.id) })
+      .from(campaigns)
+      .where(and(eq(campaigns.createdByAdminId, user.id), eq(campaigns.status, 'active')))
+      .then((r) => r[0]?.value ?? 0),
+
+    db
+      .select({ value: count(campaignContacts.id) })
+      .from(campaignContacts)
+      .where(
+        and(
+          eq(campaignContacts.importedByAdminId, user.id),
+          ...(campaignFilter.length > 0 ? [eq(campaignContacts.campaignId, campaignFilter)] : [])
+        )
+      )
+      .then((r) => r[0]?.value ?? 0),
+
+    db
+      .select({
+        id: users.id,
+        fullName: users.fullName,
+        email: users.email,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(and(eq(users.role, 'agent'), eq(users.managedByAdminId, user.id)))
+      .orderBy(desc(users.createdAt))
+      .limit(5),
+
+    db
+      .select({ id: campaigns.id, title: campaigns.title })
+      .from(campaigns)
+      .where(eq(campaigns.createdByAdminId, user.id))
+      .orderBy(
+        sql`case when ${campaigns.status} = 'active' then 0 else 1 end asc`,
+        desc(campaigns.createdAt)
+      )
+      .limit(1)
+      .then((r) => r[0]),
+  ])
+
   const adminCampaignIds = campaignOptions.map((c) => c.id)
   const hasCampaigns = adminCampaignIds.length > 0
+  const currentCampaign = currentCampaignRow
 
-  // Distinct schools from contacts in admin's campaigns
-  const schoolOptions = hasCampaigns
-    ? await db
-        .selectDistinct({ schoolName: contacts.schoolName })
-        .from(contacts)
-        .innerJoin(campaignContacts, eq(campaignContacts.contactId, contacts.id))
-        .where(
-          and(
-            inArray(campaignContacts.campaignId, adminCampaignIds),
-            sql`${contacts.schoolName} is not null`
-          )
-        )
-        .orderBy(contacts.schoolName)
-    : []
-
+  // ── Conditions construites après Phase 2 ──
   const callConditions: ReturnType<typeof and>[] = [
     gte(callResults.createdAt, dateFrom),
     lte(callResults.createdAt, dateTo),
@@ -161,131 +188,8 @@ export default async function AdminDashboardPage({
   if (schoolFilter.length > 0) {
     callConditions.push(eq(contacts.schoolName, schoolFilter))
   }
-
   const callWhereClause = and(...callConditions)
   const needsContactsJoin = schoolFilter.length > 0
-
-  // When school filter active, join contacts table
-  const totalCallsCount = hasCampaigns
-    ? schoolFilter.length > 0
-      ? ((
-          await db
-            .select({ value: count(callResults.id) })
-            .from(callResults)
-            .innerJoin(contacts, eq(callResults.contactId, contacts.id))
-            .where(callWhereClause)
-        )[0]?.value ?? 0)
-      : ((
-          await db
-            .select({ value: count(callResults.id) })
-            .from(callResults)
-            .where(callWhereClause)
-        )[0]?.value ?? 0)
-    : 0
-
-  const [falseNumbersCount, whatsappCount, notInterestedCount] = hasCampaigns
-    ? await Promise.all([
-        needsContactsJoin
-          ? db
-              .select({ value: count(callResults.id) })
-              .from(callResults)
-              .innerJoin(contacts, eq(callResults.contactId, contacts.id))
-              .where(and(callWhereClause, eq(callResults.outcome, 'false_number')))
-              .then((r) => r[0]?.value ?? 0)
-          : db
-              .select({ value: count(callResults.id) })
-              .from(callResults)
-              .where(and(callWhereClause, eq(callResults.outcome, 'false_number')))
-              .then((r) => r[0]?.value ?? 0),
-        needsContactsJoin
-          ? db
-              .select({ value: count(callResults.id) })
-              .from(callResults)
-              .innerJoin(contacts, eq(callResults.contactId, contacts.id))
-              .where(and(callWhereClause, eq(callResults.isWhatsappRedirected, true)))
-              .then((r) => r[0]?.value ?? 0)
-          : db
-              .select({ value: count(callResults.id) })
-              .from(callResults)
-              .where(and(callWhereClause, eq(callResults.isWhatsappRedirected, true)))
-              .then((r) => r[0]?.value ?? 0),
-        needsContactsJoin
-          ? db
-              .select({ value: count(callResults.id) })
-              .from(callResults)
-              .innerJoin(contacts, eq(callResults.contactId, contacts.id))
-              .where(and(callWhereClause, eq(callResults.outcome, 'not_interested')))
-              .then((r) => r[0]?.value ?? 0)
-          : db
-              .select({ value: count(callResults.id) })
-              .from(callResults)
-              .where(and(callWhereClause, eq(callResults.outcome, 'not_interested')))
-              .then((r) => r[0]?.value ?? 0),
-      ])
-    : [0, 0, 0]
-
-  const falseRate =
-    totalCallsCount === 0 ? 0 : Math.round((falseNumbersCount / totalCallsCount) * 100)
-  const whatsappRate =
-    totalCallsCount === 0 ? 0 : Math.round((whatsappCount / totalCallsCount) * 100)
-  const notInterestedRate =
-    totalCallsCount === 0 ? 0 : Math.round((notInterestedCount / totalCallsCount) * 100)
-
-  // Taux d'appels effectués vs contacts à appeler
-  const assignedContactsCount = hasCampaigns
-    ? ((
-        await db
-          .select({ value: count(agentContactAssignments.id) })
-          .from(agentContactAssignments)
-          .innerJoin(
-            campaignContacts,
-            eq(agentContactAssignments.campaignContactId, campaignContacts.id)
-          )
-          .where(
-            campaignFilter.length > 0
-              ? eq(campaignContacts.campaignId, campaignFilter)
-              : inArray(campaignContacts.campaignId, adminCampaignIds as string[])
-          )
-      )[0]?.value ?? 0)
-    : 0
-  const callCompletionRate =
-    assignedContactsCount === 0
-      ? 0
-      : Math.min(100, Math.round((totalCallsCount / assignedContactsCount) * 100))
-
-  const myAgentsCount =
-    (
-      await db
-        .select({ value: count(users.id) })
-        .from(users)
-        .where(
-          and(
-            eq(users.role, 'agent'),
-            eq(users.managedByAdminId, user.id),
-            eq(users.status, 'active')
-          )
-        )
-    )[0]?.value ?? 0
-  const activeCampaignsCount =
-    (
-      await db
-        .select({ value: count(campaigns.id) })
-        .from(campaigns)
-        .where(and(eq(campaigns.createdByAdminId, user.id), eq(campaigns.status, 'active')))
-    )[0]?.value ?? 0
-
-  const myContactsConditions: ReturnType<typeof and>[] = [
-    eq(campaignContacts.importedByAdminId, user.id),
-  ]
-  if (campaignFilter.length > 0)
-    myContactsConditions.push(eq(campaignContacts.campaignId, campaignFilter))
-  const myContactsCount =
-    (
-      await db
-        .select({ value: count(campaignContacts.id) })
-        .from(campaignContacts)
-        .where(and(...myContactsConditions))
-    )[0]?.value ?? 0
 
   const rangeDays = Math.max(1, Math.ceil((dateTo.getTime() - dateFrom.getTime()) / 86400000))
   const prevDateFrom = new Date(dateFrom.getTime() - rangeDays * 86400000)
@@ -298,14 +202,221 @@ export default async function AdminDashboardPage({
   } else if (hasCampaigns) {
     prevConditions.push(inArray(callResults.campaignId, adminCampaignIds as string[]))
   }
-  const prevCallsCount = hasCampaigns
-    ? ((
-        await db
+
+  // ── Phase 3 : toutes les requêtes dépendantes en parallèle ──
+  const [
+    schoolOptions,
+    totalCallsCount,
+    [falseNumbersCount, whatsappCount, notInterestedCount],
+    assignedContactsCount,
+    prevCallsCount,
+    monthlyCallsResult,
+    topAgents,
+    monthlyByOutcome,
+    campaignRows,
+  ] = await Promise.all([
+    // schoolOptions
+    hasCampaigns
+      ? db
+          .selectDistinct({ schoolName: contacts.schoolName })
+          .from(contacts)
+          .innerJoin(campaignContacts, eq(campaignContacts.contactId, contacts.id))
+          .where(
+            and(
+              inArray(campaignContacts.campaignId, adminCampaignIds),
+              sql`${contacts.schoolName} is not null`
+            )
+          )
+          .orderBy(contacts.schoolName)
+      : Promise.resolve([]),
+
+    // totalCallsCount
+    hasCampaigns
+      ? needsContactsJoin
+        ? db
+            .select({ value: count(callResults.id) })
+            .from(callResults)
+            .innerJoin(contacts, eq(callResults.contactId, contacts.id))
+            .where(callWhereClause)
+            .then((r) => r[0]?.value ?? 0)
+        : db
+            .select({ value: count(callResults.id) })
+            .from(callResults)
+            .where(callWhereClause)
+            .then((r) => r[0]?.value ?? 0)
+      : Promise.resolve(0),
+
+    // [falseNumbersCount, whatsappCount, notInterestedCount]
+    hasCampaigns
+      ? Promise.all([
+          needsContactsJoin
+            ? db
+                .select({ value: count(callResults.id) })
+                .from(callResults)
+                .innerJoin(contacts, eq(callResults.contactId, contacts.id))
+                .where(and(callWhereClause, eq(callResults.outcome, 'false_number')))
+                .then((r) => r[0]?.value ?? 0)
+            : db
+                .select({ value: count(callResults.id) })
+                .from(callResults)
+                .where(and(callWhereClause, eq(callResults.outcome, 'false_number')))
+                .then((r) => r[0]?.value ?? 0),
+          needsContactsJoin
+            ? db
+                .select({ value: count(callResults.id) })
+                .from(callResults)
+                .innerJoin(contacts, eq(callResults.contactId, contacts.id))
+                .where(and(callWhereClause, eq(callResults.isWhatsappRedirected, true)))
+                .then((r) => r[0]?.value ?? 0)
+            : db
+                .select({ value: count(callResults.id) })
+                .from(callResults)
+                .where(and(callWhereClause, eq(callResults.isWhatsappRedirected, true)))
+                .then((r) => r[0]?.value ?? 0),
+          needsContactsJoin
+            ? db
+                .select({ value: count(callResults.id) })
+                .from(callResults)
+                .innerJoin(contacts, eq(callResults.contactId, contacts.id))
+                .where(and(callWhereClause, eq(callResults.outcome, 'not_interested')))
+                .then((r) => r[0]?.value ?? 0)
+            : db
+                .select({ value: count(callResults.id) })
+                .from(callResults)
+                .where(and(callWhereClause, eq(callResults.outcome, 'not_interested')))
+                .then((r) => r[0]?.value ?? 0),
+        ])
+      : Promise.resolve([0, 0, 0] as [number, number, number]),
+
+    // assignedContactsCount
+    hasCampaigns
+      ? db
+          .select({ value: count(agentContactAssignments.id) })
+          .from(agentContactAssignments)
+          .innerJoin(
+            campaignContacts,
+            eq(agentContactAssignments.campaignContactId, campaignContacts.id)
+          )
+          .where(
+            campaignFilter.length > 0
+              ? eq(campaignContacts.campaignId, campaignFilter)
+              : inArray(campaignContacts.campaignId, adminCampaignIds as string[])
+          )
+          .then((r) => r[0]?.value ?? 0)
+      : Promise.resolve(0),
+
+    // prevCallsCount
+    hasCampaigns
+      ? db
           .select({ value: count(callResults.id) })
           .from(callResults)
           .where(and(...prevConditions))
-      )[0]?.value ?? 0)
-    : 0
+          .then((r) => r[0]?.value ?? 0)
+      : Promise.resolve(0),
+
+    // monthlyCallsResult
+    hasCampaigns
+      ? needsContactsJoin
+        ? db
+            .select({
+              month: sql<string>`to_char(date_trunc('month', ${callResults.createdAt}), 'YYYY-MM')`,
+              value: count(callResults.id),
+            })
+            .from(callResults)
+            .innerJoin(contacts, eq(callResults.contactId, contacts.id))
+            .where(callWhereClause)
+            .groupBy(sql`date_trunc('month', ${callResults.createdAt})`)
+            .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`)
+        : db
+            .select({
+              month: sql<string>`to_char(date_trunc('month', ${callResults.createdAt}), 'YYYY-MM')`,
+              value: count(callResults.id),
+            })
+            .from(callResults)
+            .where(callWhereClause)
+            .groupBy(sql`date_trunc('month', ${callResults.createdAt})`)
+            .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`)
+      : Promise.resolve([]),
+
+    // topAgents
+    hasCampaigns
+      ? db
+          .select({
+            agentId: callResults.agentId,
+            agentName: users.fullName,
+            totalCalls: count(callResults.id),
+            whatsappCalls: sql<number>`count(case when ${callResults.isWhatsappRedirected} then 1 end)`,
+          })
+          .from(callResults)
+          .innerJoin(users, eq(callResults.agentId, users.id))
+          .where(
+            and(
+              inArray(callResults.campaignId, adminCampaignIds as string[]),
+              gte(callResults.createdAt, dateFrom),
+              lte(callResults.createdAt, dateTo)
+            )
+          )
+          .groupBy(callResults.agentId, users.fullName)
+          .orderBy(desc(count(callResults.id)))
+          .limit(5)
+      : Promise.resolve([]),
+
+    // monthlyByOutcome
+    hasCampaigns
+      ? db
+          .select({
+            month: sql<string>`to_char(date_trunc('month', ${callResults.createdAt}), 'YYYY-MM')`,
+            outcome: callResults.outcome,
+            isWhatsapp: callResults.isWhatsappRedirected,
+            value: count(callResults.id),
+          })
+          .from(callResults)
+          .where(callWhereClause)
+          .groupBy(
+            sql`date_trunc('month', ${callResults.createdAt})`,
+            callResults.outcome,
+            callResults.isWhatsappRedirected
+          )
+          .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`)
+      : Promise.resolve([]),
+
+    // campaignRows
+    currentCampaign
+      ? db
+          .select({
+            ccId: campaignContacts.id,
+            firstName: contacts.firstName,
+            lastName: contacts.lastName,
+            phonePrimary: contacts.phonePrimary,
+            schoolName: contacts.schoolName,
+            assignmentStatus: agentContactAssignments.status,
+            agentName: users.fullName,
+          })
+          .from(campaignContacts)
+          .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
+          .leftJoin(
+            agentContactAssignments,
+            eq(agentContactAssignments.campaignContactId, campaignContacts.id)
+          )
+          .leftJoin(users, eq(agentContactAssignments.agentId, users.id))
+          .where(eq(campaignContacts.campaignId, currentCampaign.id))
+          .orderBy(asc(campaignContacts.createdAt))
+          .limit(8)
+      : Promise.resolve([]),
+  ])
+
+  const falseRate =
+    totalCallsCount === 0 ? 0 : Math.round((falseNumbersCount / totalCallsCount) * 100)
+  const whatsappRate =
+    totalCallsCount === 0 ? 0 : Math.round((whatsappCount / totalCallsCount) * 100)
+  const notInterestedRate =
+    totalCallsCount === 0 ? 0 : Math.round((notInterestedCount / totalCallsCount) * 100)
+
+  const callCompletionRate =
+    assignedContactsCount === 0
+      ? 0
+      : Math.min(100, Math.round((totalCallsCount / assignedContactsCount) * 100))
+
   const callsTrend =
     prevCallsCount === 0
       ? totalCallsCount > 0
@@ -313,85 +424,12 @@ export default async function AdminDashboardPage({
         : 0
       : Math.round(((totalCallsCount - prevCallsCount) / prevCallsCount) * 100)
 
-  const monthlyCallsBase = db
-    .select({
-      month: sql<string>`to_char(date_trunc('month', ${callResults.createdAt}), 'YYYY-MM')`,
-      value: count(callResults.id),
-    })
-    .from(callResults)
-  const monthlyCallsResult = hasCampaigns
-    ? needsContactsJoin
-      ? await monthlyCallsBase
-          .innerJoin(contacts, eq(callResults.contactId, contacts.id))
-          .where(callWhereClause)
-          .groupBy(sql`date_trunc('month', ${callResults.createdAt})`)
-          .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`)
-      : await monthlyCallsBase
-          .where(callWhereClause)
-          .groupBy(sql`date_trunc('month', ${callResults.createdAt})`)
-          .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`)
-    : []
-
   const monthlyMap: ReadonlyMap<string, number> = new Map(
     monthlyCallsResult
       .filter((e) => typeof e.month === 'string')
       .map((e) => [e.month as string, e.value])
   )
   const curvePoints = buildCurvePoints({ monthlyCalls: monthlyMap, from: dateFrom, to: dateTo })
-
-  const recentAgents: readonly RecentAgent[] = await db
-    .select({
-      id: users.id,
-      fullName: users.fullName,
-      email: users.email,
-      createdAt: users.createdAt,
-    })
-    .from(users)
-    .where(and(eq(users.role, 'agent'), eq(users.managedByAdminId, user.id)))
-    .orderBy(desc(users.createdAt))
-    .limit(5)
-
-  // Top agents by calls
-  const topAgents = hasCampaigns
-    ? await db
-        .select({
-          agentId: callResults.agentId,
-          agentName: users.fullName,
-          totalCalls: count(callResults.id),
-          whatsappCalls: sql<number>`count(case when ${callResults.isWhatsappRedirected} then 1 end)`,
-        })
-        .from(callResults)
-        .innerJoin(users, eq(callResults.agentId, users.id))
-        .where(
-          and(
-            inArray(callResults.campaignId, adminCampaignIds as string[]),
-            gte(callResults.createdAt, dateFrom),
-            lte(callResults.createdAt, dateTo)
-          )
-        )
-        .groupBy(callResults.agentId, users.fullName)
-        .orderBy(desc(count(callResults.id)))
-        .limit(5)
-    : []
-
-  // Monthly breakdown by outcome for multi-series chart
-  const monthlyByOutcome = hasCampaigns
-    ? await db
-        .select({
-          month: sql<string>`to_char(date_trunc('month', ${callResults.createdAt}), 'YYYY-MM')`,
-          outcome: callResults.outcome,
-          isWhatsapp: callResults.isWhatsappRedirected,
-          value: count(callResults.id),
-        })
-        .from(callResults)
-        .where(callWhereClause)
-        .groupBy(
-          sql`date_trunc('month', ${callResults.createdAt})`,
-          callResults.outcome,
-          callResults.isWhatsappRedirected
-        )
-        .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`)
-    : []
 
   // Build per-outcome monthly maps
   const monthlyFalseMap = new Map<string, number>()
@@ -443,40 +481,6 @@ export default async function AdminDashboardPage({
     w: 500,
     h: 140,
   })
-
-  // Campagne en cours — la plus récente active, sinon la plus récente tout court
-  const [currentCampaign] = await db
-    .select({ id: campaigns.id, title: campaigns.title })
-    .from(campaigns)
-    .where(eq(campaigns.createdByAdminId, user.id))
-    .orderBy(
-      sql`case when ${campaigns.status} = 'active' then 0 else 1 end asc`,
-      desc(campaigns.createdAt)
-    )
-    .limit(1)
-
-  const campaignRows = currentCampaign
-    ? await db
-        .select({
-          ccId: campaignContacts.id,
-          firstName: contacts.firstName,
-          lastName: contacts.lastName,
-          phonePrimary: contacts.phonePrimary,
-          schoolName: contacts.schoolName,
-          assignmentStatus: agentContactAssignments.status,
-          agentName: users.fullName,
-        })
-        .from(campaignContacts)
-        .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
-        .leftJoin(
-          agentContactAssignments,
-          eq(agentContactAssignments.campaignContactId, campaignContacts.id)
-        )
-        .leftJoin(users, eq(agentContactAssignments.agentId, users.id))
-        .where(eq(campaignContacts.campaignId, currentCampaign.id))
-        .orderBy(asc(campaignContacts.createdAt))
-        .limit(8)
-    : []
 
   const statCards = [
     {

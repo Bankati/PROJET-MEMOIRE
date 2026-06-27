@@ -1,9 +1,13 @@
 /**
  * Helpers serveur pour récupérer la session utilisateur via Auth.js.
  */
+import { cache } from 'react'
 import { redirect } from 'next/navigation'
 
 import { auth } from '@/lib/auth'
+
+// Deduplicate auth() calls within a single server-render cycle
+const getSession = cache(async () => auth())
 
 type AuthRole = 'super_admin' | 'admin' | 'agent'
 type ServerAuthUser = Readonly<{
@@ -15,7 +19,7 @@ type ServerAuthUser = Readonly<{
 }>
 
 export const getCurrentUser = async (): Promise<ServerAuthUser | null> => {
-  const session = await auth()
+  const session = await getSession()
   if (!session?.user) {
     return null
   }

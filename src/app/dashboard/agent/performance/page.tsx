@@ -5,14 +5,9 @@ import { BarChart3, Calendar, Clock, Phone, Send } from 'lucide-react'
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { callResults, campaigns, contacts } from '@/db/schema'
+import { formatDuration, readParam } from '@/lib/dashboard-utils'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
-
-const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): string => {
-  const raw: string | string[] | undefined = sp[key]
-  if (typeof raw === 'string') return raw
-  return Array.isArray(raw) ? (raw[0] ?? '') : ''
-}
 
 const OUTCOME_LABELS: Readonly<Record<string, string>> = {
   interested: 'Intéressé',
@@ -34,14 +29,6 @@ const OUTCOME_STYLES: Readonly<Record<string, string>> = {
   other: 'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-400',
 }
 
-const formatDuration = (seconds: number): string => {
-  if (seconds === 0) return '—'
-  if (seconds < 60) return `${seconds}s`
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return s > 0 ? `${m}m ${s}s` : `${m}m`
-}
-
 export default async function AgentPerformancePage({
   searchParams,
 }: Readonly<{ searchParams?: Promise<SearchParams> }>): Promise<React.JSX.Element> {
@@ -49,38 +36,39 @@ export default async function AgentPerformancePage({
   const sp: SearchParams = (await searchParams) ?? {}
   const campaignFilter = readParam({ sp, key: 'campaign' })
 
-  const agentCampaigns = await db
-    .selectDistinct({ id: campaigns.id, title: campaigns.title, createdAt: campaigns.createdAt })
-    .from(callResults)
-    .innerJoin(campaigns, eq(callResults.campaignId, campaigns.id))
-    .where(eq(callResults.agentId, user.id))
-    .orderBy(desc(campaigns.createdAt))
-
-  const calls = await db
-    .select({
-      id: callResults.id,
-      outcome: callResults.outcome,
-      durationSeconds: callResults.durationSeconds,
-      notes: callResults.notes,
-      isWhatsappRedirected: callResults.isWhatsappRedirected,
-      createdAt: callResults.createdAt,
-      contactFirstName: contacts.firstName,
-      contactLastName: contacts.lastName,
-      contactPhone: contacts.phonePrimary,
-      contactSchool: contacts.schoolName,
-      campaignTitle: campaigns.title,
-    })
-    .from(callResults)
-    .innerJoin(contacts, eq(callResults.contactId, contacts.id))
-    .innerJoin(campaigns, eq(callResults.campaignId, campaigns.id))
-    .where(
-      and(
-        eq(callResults.agentId, user.id),
-        campaignFilter.length > 0 ? eq(callResults.campaignId, campaignFilter) : undefined
+  const [agentCampaigns, calls] = await Promise.all([
+    db
+      .selectDistinct({ id: campaigns.id, title: campaigns.title, createdAt: campaigns.createdAt })
+      .from(callResults)
+      .innerJoin(campaigns, eq(callResults.campaignId, campaigns.id))
+      .where(eq(callResults.agentId, user.id))
+      .orderBy(desc(campaigns.createdAt)),
+    db
+      .select({
+        id: callResults.id,
+        outcome: callResults.outcome,
+        durationSeconds: callResults.durationSeconds,
+        notes: callResults.notes,
+        isWhatsappRedirected: callResults.isWhatsappRedirected,
+        createdAt: callResults.createdAt,
+        contactFirstName: contacts.firstName,
+        contactLastName: contacts.lastName,
+        contactPhone: contacts.phonePrimary,
+        contactSchool: contacts.schoolName,
+        campaignTitle: campaigns.title,
+      })
+      .from(callResults)
+      .innerJoin(contacts, eq(callResults.contactId, contacts.id))
+      .innerJoin(campaigns, eq(callResults.campaignId, campaigns.id))
+      .where(
+        and(
+          eq(callResults.agentId, user.id),
+          campaignFilter.length > 0 ? eq(callResults.campaignId, campaignFilter) : undefined
+        )
       )
-    )
-    .orderBy(desc(callResults.createdAt))
-    .limit(200)
+      .orderBy(desc(callResults.createdAt))
+      .limit(200),
+  ])
 
   return (
     <div className="space-y-6">
@@ -199,7 +187,7 @@ export default async function AgentPerformancePage({
               <div className="mt-3 flex flex-wrap gap-4 text-xs text-zinc-400 dark:text-zinc-500">
                 <span className="flex items-center gap-1">
                   <Clock className="size-3" />
-                  {formatDuration(call.durationSeconds)}
+                  {formatDuration({ seconds: call.durationSeconds ?? 0 })}
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="size-3" />

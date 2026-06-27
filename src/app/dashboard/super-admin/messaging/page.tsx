@@ -58,25 +58,26 @@ export default async function MessagingPage({
   const notice: string = readParam({ searchParams: resolvedParams, key: 'notice' })
   const isSuccess: boolean = readParam({ searchParams: resolvedParams, key: 'success' }) === 'true'
 
-  const activeAdminsResult: Array<{ value: number }> = await db
-    .select({ value: count(users.id) })
-    .from(users)
-    .where(and(eq(users.role, 'admin'), eq(users.status, 'active')))
+  const [activeAdminsResult, history] = await Promise.all([
+    db
+      .select({ value: count(users.id) })
+      .from(users)
+      .where(and(eq(users.role, 'admin'), eq(users.status, 'active'))),
+    db
+      .select({
+        id: broadcastMessages.id,
+        message: broadcastMessages.message,
+        recipientCount: broadcastMessages.recipientCount,
+        createdAt: broadcastMessages.createdAt,
+        senderName: users.fullName,
+      })
+      .from(broadcastMessages)
+      .innerJoin(users, eq(broadcastMessages.sentByUserId, users.id))
+      .where(eq(broadcastMessages.recipientRole, 'admin'))
+      .orderBy(desc(broadcastMessages.createdAt))
+      .limit(50),
+  ])
   const activeAdminsCount: number = activeAdminsResult[0]?.value ?? 0
-
-  const history = await db
-    .select({
-      id: broadcastMessages.id,
-      message: broadcastMessages.message,
-      recipientCount: broadcastMessages.recipientCount,
-      createdAt: broadcastMessages.createdAt,
-      senderName: users.fullName,
-    })
-    .from(broadcastMessages)
-    .innerJoin(users, eq(broadcastMessages.sentByUserId, users.id))
-    .where(eq(broadcastMessages.recipientRole, 'admin'))
-    .orderBy(desc(broadcastMessages.createdAt))
-    .limit(50)
 
   void superAdmin
 

@@ -114,27 +114,28 @@ export default async function AdminCampaignsPage({
   const notice = readParam({ sp, key: 'notice' })
   const editId = readParam({ sp, key: 'edit' })
 
-  const myCampaigns = await db
-    .select({
-      id: campaigns.id,
-      title: campaigns.title,
-      year: campaigns.year,
-      status: campaigns.status,
-      visibility: campaigns.visibility,
-      baseScript: campaigns.baseScript,
-      details: campaigns.details,
-      pdfUrl: campaigns.pdfUrl,
-      createdAt: campaigns.createdAt,
-      createdByAdminId: campaigns.createdByAdminId,
-    })
-    .from(campaigns)
-    .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
-    .orderBy(desc(campaigns.createdAt))
-
-  const contactCountsResult = await db
-    .select({ campaignId: campaignContacts.campaignId, contactCount: count(campaignContacts.id) })
-    .from(campaignContacts)
-    .groupBy(campaignContacts.campaignId)
+  const [myCampaigns, contactCountsResult] = await Promise.all([
+    db
+      .select({
+        id: campaigns.id,
+        title: campaigns.title,
+        year: campaigns.year,
+        status: campaigns.status,
+        visibility: campaigns.visibility,
+        baseScript: campaigns.baseScript,
+        details: campaigns.details,
+        pdfUrl: campaigns.pdfUrl,
+        createdAt: campaigns.createdAt,
+        createdByAdminId: campaigns.createdByAdminId,
+      })
+      .from(campaigns)
+      .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+      .orderBy(desc(campaigns.createdAt)),
+    db
+      .select({ campaignId: campaignContacts.campaignId, contactCount: count(campaignContacts.id) })
+      .from(campaignContacts)
+      .groupBy(campaignContacts.campaignId),
+  ])
   const contactCountMap = new Map(contactCountsResult.map((r) => [r.campaignId, r.contactCount]))
 
   const editCampaign = editId.length > 0 ? myCampaigns.find((c) => c.id === editId) : undefined
