@@ -1,10 +1,7 @@
 'use client'
-/**
- * Formulaire de demande OTP.
- * Après génération réussie, redirige vers la page de saisie OTP avec l'email pré-rempli.
- */
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { Loader2, Mail, Send } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 
@@ -20,6 +17,7 @@ export const ForgotPasswordForm = (): React.JSX.Element => {
   const [feedback, setFeedback] = useState<string>('')
   const [otpCode, setOtpCode] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault()
     setIsSubmitting(true)
@@ -47,41 +45,57 @@ export const ForgotPasswordForm = (): React.JSX.Element => {
       }, 2000)
     }
   }
+
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
-      <div className="space-y-2 text-left">
-        <label htmlFor="email" className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+      <div className="space-y-1.5">
+        <label
+          htmlFor="email"
+          className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400"
+        >
           E-mail du compte
         </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="vous@etablissement.fr"
-          value={email}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>): void =>
-            setEmail(event.target.value)
-          }
-          className="ring-lbs-blue/0 focus:border-lbs-blue/50 focus:ring-lbs-blue/20 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 transition outline-none placeholder:text-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500"
-          required
-        />
+        <div className="relative">
+          <Mail className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="vous@etablissement.fr"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-4 pl-10 text-sm text-gray-900 transition outline-none placeholder:text-gray-400 focus:border-[#244976] focus:bg-white focus:ring-2 focus:ring-[#244976]/15 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:bg-white/[0.08]"
+            required
+          />
+        </div>
       </div>
+
       {feedback ? (
-        <p className="rounded-lg border border-emerald-300/40 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-300">
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300">
           {feedback}
         </p>
       ) : null}
+
       {otpCode ? (
-        <p className="border-lbs-blue/35 bg-lbs-blue/8 text-lbs-blue dark:border-lbs-blue/35 dark:bg-lbs-blue/18 rounded-lg border px-3 py-2 text-sm dark:text-blue-200">
-          OTP de démonstration: <span className="font-semibold">{otpCode}</span>
-          <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">
-            Redirection vers la saisie du code...
-          </span>
-        </p>
+        <div className="rounded-xl border border-[#244976]/25 bg-[#244976]/8 px-4 py-3 text-sm text-[#244976] dark:border-blue-400/25 dark:bg-blue-400/10 dark:text-blue-300">
+          <p>
+            OTP de démonstration : <span className="font-bold">{otpCode}</span>
+          </p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Redirection en cours...</p>
+        </div>
       ) : null}
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Envoi...' : 'Générer un OTP (3 min)'}
+
+      <Button type="submit" className="h-11 w-full" disabled={isSubmitting}>
+        {isSubmitting ? (
+          <>
+            <Loader2 className="size-4 animate-spin" /> Envoi...
+          </>
+        ) : (
+          <>
+            <Send className="size-4" /> Générer un OTP (3 min)
+          </>
+        )}
       </Button>
     </form>
   )

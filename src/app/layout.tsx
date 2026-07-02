@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
 import { SessionProvider } from '@/components/providers/session-provider'
 
-const inter = Inter({
+const plusJakartaSans = Plus_Jakarta_Sans({
   variable: '--font-sans',
   subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -26,7 +28,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+    <html
+      lang="fr"
+      className={`${plusJakartaSans.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -35,7 +41,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className="flex min-h-full flex-col bg-white text-zinc-950 dark:bg-black dark:text-zinc-50"
+        className="flex min-h-full flex-col bg-white text-gray-900 dark:bg-[#0b1120] dark:text-gray-50"
         suppressHydrationWarning
       >
         <SessionProvider>{children}</SessionProvider>
