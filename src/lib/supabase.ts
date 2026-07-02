@@ -38,13 +38,22 @@ export const AVATAR_BUCKET = 'profils_images'
 export const RAG_DOCUMENTS_BUCKET = 'rag_documents'
 
 /**
+ * Storage bucket name for campaign script PDFs.
+ */
+export const CAMPAIGN_SCRIPTS_BUCKET = 'campaign_scripts'
+
+/**
  * Upload a profile avatar to Supabase Storage.
  * Returns the public URL of the uploaded image, or null on failure.
  */
-const ensureBucket = async (supabase: SupabaseClient, bucketName: string): Promise<void> => {
+const ensureBucket = async (
+  supabase: SupabaseClient,
+  bucketName: string,
+  fileSizeLimit: number = 5 * 1024 * 1024
+): Promise<void> => {
   const { error } = await supabase.storage.createBucket(bucketName, {
     public: true,
-    fileSizeLimit: 5 * 1024 * 1024,
+    fileSizeLimit,
   })
   // Ignore "already exists" error
   if (error && !error.message.toLowerCase().includes('already exists')) {
@@ -145,6 +154,51 @@ export const uploadRagDocument = async ({
   }
   const { data: publicUrlData } = supabase.storage.from(RAG_DOCUMENTS_BUCKET).getPublicUrl(filePath)
   return { publicUrl: publicUrlData.publicUrl, storagePath: filePath }
+}
+
+/**
+ * Upload a campaign script PDF to Supabase Storage.
+ * Returns the public URL of the uploaded file, or null on failure.
+ */
+export const uploadCampaignScript = async ({
+  campaignId,
+  fileBuffer,
+  contentType,
+}: Readonly<{
+  campaignId: string
+  fileBuffer: Buffer
+  contentType: string
+}>): Promise<string | null> => {
+  const supabase = getSupabaseClient()
+  if (!supabase) {
+    console.warn('Supabase not configured, campaign script upload skipped.')
+    return null
+  }
+  const filePath = `${campaignId}/script_${Date.now()}.pdf`
+
+  let { error } = await supabase.storage
+    .from(CAMPAIGN_SCRIPTS_BUCKET)
+    .upload(filePath, fileBuffer, { contentType, upsert: true })
+
+  if (
+    error?.message?.toLowerCase().includes('bucket not found') ||
+    error?.message?.toLowerCase().includes('not found')
+  ) {
+    await ensureBucket(supabase, CAMPAIGN_SCRIPTS_BUCKET, 10 * 1024 * 1024)
+    const retry = await supabase.storage
+      .from(CAMPAIGN_SCRIPTS_BUCKET)
+      .upload(filePath, fileBuffer, { contentType, upsert: true })
+    error = retry.error
+  }
+
+  if (error) {
+    console.error('Campaign script upload error:', error.message)
+    return null
+  }
+  const { data: publicUrlData } = supabase.storage
+    .from(CAMPAIGN_SCRIPTS_BUCKET)
+    .getPublicUrl(filePath)
+  return publicUrlData.publicUrl
 }
 
 /**

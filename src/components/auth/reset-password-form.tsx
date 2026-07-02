@@ -11,8 +11,6 @@ import { CheckCircle2, KeyRound, Loader2, Lock, ShieldCheck } from 'lucide-react
 import Image from 'next/image'
 import Link from 'next/link'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-
 type ResetResponse = Readonly<{
   ok: boolean
   message?: string
@@ -194,44 +192,40 @@ export const ResetPasswordForm = (): React.JSX.Element => {
     description: string,
     children: React.ReactNode
   ): React.JSX.Element => (
-    <div className="relative flex min-h-screen flex-col bg-[#f5f6f8] dark:bg-zinc-950">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="bg-lbs-blue/15 absolute top-0 -left-20 h-72 w-72 rounded-full blur-3xl" />
-        <div className="bg-lbs-red/10 absolute right-0 bottom-0 h-96 w-96 rounded-full blur-3xl" />
-      </div>
-      <header className="relative z-10 border-b border-zinc-200/80 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/60">
-        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/LBS%20LOGO.jpeg"
-              alt="Lomé Business School"
-              width={44}
-              height={44}
-              className="rounded-lg border border-zinc-200/70 object-cover dark:border-zinc-700"
-              priority
-            />
-          </Link>
+    <div className="flex min-h-screen items-center justify-center bg-[#f4f7fe] px-5 py-12 dark:bg-[#0b1120]">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="mb-6 flex items-center justify-center gap-3">
+          <Image
+            src="/LBS%20LOGO.jpeg"
+            alt="Lomé Business School"
+            width={40}
+            height={40}
+            className="rounded-xl border border-gray-200 object-cover dark:border-white/10"
+            priority
+          />
+          <span className="text-base font-bold text-gray-900 dark:text-white">LBS Call Center</span>
         </div>
-      </header>
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
-        <Card className="w-full max-w-md border-zinc-200/80 shadow-xl shadow-zinc-900/10 dark:border-zinc-800 dark:bg-zinc-900/80">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-semibold tracking-tight">{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {children}
-            <p className="mt-5 text-center text-xs text-zinc-500 dark:text-zinc-400">
-              <Link
-                href="/login"
-                className="text-lbs-blue font-medium hover:underline dark:text-blue-300"
-              >
-                Retour à la connexion
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </main>
+
+        {/* Card */}
+        <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm dark:border-white/[0.08] dark:bg-[#1e2535]">
+          <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">{title}</h1>
+          <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">{description}</p>
+          <div className="mt-6">{children}</div>
+          <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
+            <Link
+              href="/login"
+              className="font-semibold text-[#244976] hover:underline dark:text-blue-300"
+            >
+              Retour à la connexion
+            </Link>
+          </p>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-600">
+          © {new Date().getFullYear()} LBS Call Center
+        </p>
+      </div>
     </div>
   )
 
@@ -245,7 +239,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
             <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
           </div>
         </div>
-        <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-center text-sm text-gray-600 dark:text-gray-400">
           Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.
         </p>
         <button
@@ -270,12 +264,12 @@ export const ResetPasswordForm = (): React.JSX.Element => {
         <div className="space-y-2">
           <label
             htmlFor="newPassword"
-            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            className="text-sm font-medium text-gray-600 dark:text-gray-300"
           >
             Nouveau mot de passe
           </label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
+            <Lock className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
             <input
               id="newPassword"
               type="password"
@@ -285,7 +279,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
                 setFeedback('')
               }}
               placeholder="Minimum 6 caractères"
-              className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 pr-4 pl-10 text-sm text-zinc-900 transition outline-none focus:bg-white focus:ring-2 dark:border-white/15 dark:bg-white/5 dark:text-white dark:focus:bg-white/10"
+              className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pr-4 pl-10 text-sm text-gray-900 transition outline-none focus:bg-white focus:ring-2 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:focus:bg-white/[0.08]"
               required
               minLength={6}
             />
@@ -294,12 +288,12 @@ export const ResetPasswordForm = (): React.JSX.Element => {
         <div className="space-y-2">
           <label
             htmlFor="confirmPassword"
-            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            className="text-sm font-medium text-gray-600 dark:text-gray-300"
           >
             Confirmer le mot de passe
           </label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
+            <Lock className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
             <input
               id="confirmPassword"
               type="password"
@@ -309,7 +303,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
                 setFeedback('')
               }}
               placeholder="Répétez le mot de passe"
-              className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 pr-4 pl-10 text-sm text-zinc-900 transition outline-none focus:bg-white focus:ring-2 dark:border-white/15 dark:bg-white/5 dark:text-white dark:focus:bg-white/10"
+              className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pr-4 pl-10 text-sm text-gray-900 transition outline-none focus:bg-white focus:ring-2 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:focus:bg-white/[0.08]"
               required
               minLength={6}
             />
@@ -345,7 +339,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
             setStep('otp')
             setFeedback('')
           }}
-          className="w-full text-center text-sm text-zinc-500 transition hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white"
+          className="w-full text-center text-sm text-gray-500 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
         >
           ← Modifier le code OTP
         </button>
@@ -360,7 +354,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
       : 'Entrez le code envoyé à votre adresse e-mail.',
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
           Code de vérification
         </label>
         <div className="flex justify-center gap-2">
@@ -379,11 +373,11 @@ export const ResetPasswordForm = (): React.JSX.Element => {
               onPaste={handleOtpPaste}
               disabled={isSubmitting}
               autoFocus={index === 0}
-              className="focus:border-lbs-blue focus:ring-lbs-blue/20 size-12 rounded-xl border border-zinc-200 bg-zinc-50 text-center text-lg font-semibold text-zinc-900 transition outline-none focus:bg-white focus:ring-2 disabled:opacity-50 dark:border-white/15 dark:bg-white/5 dark:text-white dark:focus:bg-white/10"
+              className="focus:border-lbs-blue focus:ring-lbs-blue/20 size-12 rounded-xl border border-gray-200 bg-gray-50 text-center text-lg font-semibold text-gray-900 transition outline-none focus:bg-white focus:ring-2 disabled:opacity-50 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:focus:bg-white/[0.08]"
             />
           ))}
         </div>
-        <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400">
           {countdown > 0 ? (
             <>
               Code valide pendant{' '}
@@ -421,12 +415,12 @@ export const ResetPasswordForm = (): React.JSX.Element => {
         {isSubmitting ? 'Vérification...' : 'Vérifier le code'}
       </button>
       <div className="text-center">
-        <span className="text-sm text-zinc-500 dark:text-zinc-400">Pas reçu le code ? </span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">Pas reçu le code ? </span>
         <button
           type="button"
           onClick={handleResendOtp}
           disabled={!canResend || isSubmitting}
-          className="text-lbs-blue text-sm font-medium transition hover:underline disabled:text-zinc-400 disabled:no-underline dark:text-blue-300 dark:disabled:text-zinc-500"
+          className="text-lbs-blue text-sm font-medium transition hover:underline disabled:text-gray-400 disabled:no-underline dark:text-blue-300 dark:disabled:text-gray-500"
         >
           Renvoyer
         </button>

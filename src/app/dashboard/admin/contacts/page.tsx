@@ -305,16 +305,17 @@ export default async function AdminContactsPage({
       .orderBy(users.fullName),
   ])
   const myCampaignIds = myCampaigns.map((c) => c.id)
+  const schoolOptionsCampaignIds = campaignFilter.length > 0 ? [campaignFilter] : myCampaignIds
 
   const schoolOptions =
-    myCampaignIds.length > 0
+    schoolOptionsCampaignIds.length > 0
       ? await db
           .selectDistinct({ schoolName: contacts.schoolName })
           .from(contacts)
           .innerJoin(campaignContacts, eq(campaignContacts.contactId, contacts.id))
           .where(
             and(
-              inArray(campaignContacts.campaignId, myCampaignIds),
+              inArray(campaignContacts.campaignId, schoolOptionsCampaignIds),
               sql`${contacts.schoolName} is not null`
             )
           )

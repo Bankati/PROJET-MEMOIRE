@@ -101,13 +101,12 @@ export default async function AdminAgentPerformanceDetailPage({
   const campaignFilter = readParam({ sp, key: 'campaign' })
 
   // agentUser + myCampaigns en parallèle (les deux n'ont aucune dépendance entre eux)
+  // Un admin peut consulter les statistiques de n'importe quel agent, indépendamment du rattachement.
   const [[agentUser], myCampaigns] = await Promise.all([
     db
       .select({ id: users.id, fullName: users.fullName, email: users.email })
       .from(users)
-      .where(
-        and(eq(users.id, agentId), eq(users.managedByAdminId, admin.id), eq(users.role, 'agent'))
-      )
+      .where(and(eq(users.id, agentId), eq(users.role, 'agent')))
       .limit(1),
     db
       .select({ id: campaigns.id, title: campaigns.title })

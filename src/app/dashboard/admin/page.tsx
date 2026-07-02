@@ -389,6 +389,7 @@ export default async function AdminDashboardPage({
             lastName: contacts.lastName,
             phonePrimary: contacts.phonePrimary,
             schoolName: contacts.schoolName,
+            assignmentId: agentContactAssignments.id,
             assignmentStatus: agentContactAssignments.status,
             agentName: users.fullName,
           })
@@ -404,6 +405,28 @@ export default async function AdminDashboardPage({
           .limit(8)
       : Promise.resolve([]),
   ])
+
+  // Dernier commentaire (callResults.notes) pour chaque contact traité affiché dans campaignRows
+  const treatedAssignmentIds = campaignRows
+    .map((c) => c.assignmentId)
+    .filter((id): id is string => id !== null)
+  const latestCallNotes =
+    treatedAssignmentIds.length > 0
+      ? await db
+          .select({
+            assignmentId: callResults.assignmentId,
+            notes: callResults.notes,
+          })
+          .from(callResults)
+          .where(inArray(callResults.assignmentId, treatedAssignmentIds))
+          .orderBy(desc(callResults.createdAt))
+      : []
+  const latestNoteByAssignment = new Map<string, string | null>()
+  for (const r of latestCallNotes) {
+    if (!latestNoteByAssignment.has(r.assignmentId)) {
+      latestNoteByAssignment.set(r.assignmentId, r.notes)
+    }
+  }
 
   const falseRate =
     totalCallsCount === 0 ? 0 : Math.round((falseNumbersCount / totalCallsCount) * 100)
@@ -972,6 +995,7 @@ export default async function AdminDashboardPage({
                   <th className="px-3 py-2">Téléphone</th>
                   <th className="px-3 py-2">Agent</th>
                   <th className="px-3 py-2">Statut</th>
+                  <th className="px-3 py-2">Commentaire</th>
                 </tr>
               </thead>
               <tbody>
@@ -1005,6 +1029,15 @@ export default async function AdminDashboardPage({
                         <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:bg-white/10 dark:text-zinc-400">
                           Non assigné
                         </span>
+                      )}
+                    </td>
+                    <td className="max-w-[220px] truncate px-3 py-3 text-zinc-500 dark:text-zinc-400">
+                      {c.assignmentId && latestNoteByAssignment.get(c.assignmentId) ? (
+                        <span title={latestNoteByAssignment.get(c.assignmentId) ?? ''}>
+                          {latestNoteByAssignment.get(c.assignmentId)}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-300 dark:text-zinc-600">—</span>
                       )}
                     </td>
                   </tr>

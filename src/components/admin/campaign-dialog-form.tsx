@@ -362,21 +362,38 @@ export const CampaignDialogForm = ({
               />
             </div>
 
-            {/* URL PDF */}
+            {/* Script PDF */}
             <div className="space-y-1.5">
               <Label htmlFor="dialog-pdf">
-                Document PDF{' '}
+                Script PDF{' '}
                 <span className="text-[11px] font-normal text-zinc-400">(optionnel)</span>
               </Label>
-              <Input
+              {isEdit && campaign?.pdfUrl ? (
+                <a
+                  href={campaign.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lbs-blue mb-1.5 block truncate text-xs underline dark:text-blue-300"
+                >
+                  Voir le PDF actuel
+                </a>
+              ) : null}
+              {isEdit ? (
+                <input type="hidden" name="currentPdfUrl" value={campaign?.pdfUrl ?? ''} />
+              ) : null}
+              <input
                 id="dialog-pdf"
-                name="pdfUrl"
-                type="url"
-                defaultValue={campaign?.pdfUrl ?? ''}
-                placeholder="https://exemple.com/brochure.pdf"
+                name="pdfFile"
+                type="file"
+                accept="application/pdf"
+                className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-600 focus:ring-2 focus:outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white dark:file:bg-white/10 dark:file:text-zinc-300"
               />
               <p className="text-[11px] text-zinc-400">
-                Accessible par les agents depuis l&apos;onglet Docs pendant l&apos;appel.
+                PDF uniquement, 10 Mo max. Accessible par les agents depuis l&apos;onglet Docs
+                pendant l&apos;appel.
+                {isEdit && campaign?.pdfUrl
+                  ? ' Laissez vide pour conserver le fichier actuel.'
+                  : ''}
               </p>
             </div>
           </div>
