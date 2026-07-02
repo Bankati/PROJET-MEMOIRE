@@ -9,9 +9,15 @@ type SetupPayload = Readonly<{
   email: string
   fullName: string
   password: string
+  secret: string
 }>
 
 export const POST = async (request: Request): Promise<Response> => {
+  const setupSecret = process.env.SETUP_SECRET
+  if (!setupSecret) {
+    return NextResponse.json({ ok: false, message: 'SETUP_SECRET non configuré.' }, { status: 503 })
+  }
+
   const payloadRaw: unknown = await request.json().catch(() => null)
   if (
     typeof payloadRaw !== 'object' ||
@@ -19,16 +25,24 @@ export const POST = async (request: Request): Promise<Response> => {
     !('email' in payloadRaw) ||
     !('fullName' in payloadRaw) ||
     !('password' in payloadRaw) ||
+    !('secret' in payloadRaw) ||
     typeof payloadRaw.email !== 'string' ||
     typeof payloadRaw.fullName !== 'string' ||
-    typeof payloadRaw.password !== 'string'
+    typeof payloadRaw.password !== 'string' ||
+    typeof payloadRaw.secret !== 'string'
   ) {
     return NextResponse.json({ ok: false, message: 'Payload invalide.' }, { status: 400 })
   }
+
+  if (payloadRaw.secret !== setupSecret) {
+    return NextResponse.json({ ok: false, message: 'Secret invalide.' }, { status: 403 })
+  }
+
   const payload: SetupPayload = {
     email: payloadRaw.email,
     fullName: payloadRaw.fullName,
     password: payloadRaw.password,
+    secret: payloadRaw.secret,
   }
   const isCreated: boolean = await createInitialSuperAdmin(payload)
   if (!isCreated) {

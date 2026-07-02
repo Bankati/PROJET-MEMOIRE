@@ -15,23 +15,9 @@ import {
   campaigns,
   users,
 } from '@/db/schema'
+import { extractCount, readParam } from '@/lib/dashboard-utils'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
-
-const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): string => {
-  const raw: string | string[] | undefined = sp[key]
-  if (typeof raw === 'string') return raw
-  return Array.isArray(raw) ? (raw[0] ?? '') : ''
-}
-
-const extractCount = ({ value }: Readonly<{ value: number | string | null }>): number => {
-  if (typeof value === 'number') return value
-  if (typeof value === 'string') {
-    const n = Number(value)
-    return Number.isFinite(n) ? n : 0
-  }
-  return 0
-}
 
 const buildDefaultFrom = (): string => {
   const d = new Date()
@@ -52,17 +38,21 @@ export default async function AdminPerformancePage({
   const dateFrom = new Date(dateFromStr)
   const dateTo = new Date(dateToStr + 'T23:59:59.999Z')
 
-  const myCampaigns = await db
-    .select({ id: campaigns.id, title: campaigns.title })
-    .from(campaigns)
-    .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
-    .orderBy(desc(campaigns.createdAt))
+  // Phase 2: myCampaigns + allAgents en parallèle (indépendants)
+  // Les statistiques agents sont visibles par tout admin, indépendamment du rattachement (managedByAdminId).
+  const [myCampaigns, allAgents] = await Promise.all([
+    db
+      .select({ id: campaigns.id, title: campaigns.title })
+      .from(campaigns)
+      .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+      .orderBy(desc(campaigns.createdAt)),
+    db
+      .select({ id: users.id, fullName: users.fullName })
+      .from(users)
+      .where(eq(users.role, 'agent'))
+      .orderBy(users.fullName),
+  ])
   const myCampaignIds = myCampaigns.map((c) => c.id)
-
-  const myAgents = await db
-    .select({ id: users.id, fullName: users.fullName })
-    .from(users)
-    .where(and(eq(users.role, 'agent'), eq(users.managedByAdminId, user.id)))
 
   const hasCampaigns = myCampaignIds.length > 0
   const callConditions: ReturnType<typeof and>[] = [
@@ -77,38 +67,85 @@ export default async function AdminPerformancePage({
   if (agentFilter.length > 0) callConditions.push(eq(callResults.agentId, agentFilter))
   const callWhereClause = and(...callConditions)
 
-  const totalCallsCount = hasCampaigns
-    ? ((
-        await db
+  // Phase 3: Toutes les requêtes dépendantes de myCampaignIds en parallèle
+  const phase3 = hasCampaigns
+    ? await Promise.all([
+        db
           .select({ value: count(callResults.id) })
           .from(callResults)
           .where(callWhereClause)
-      )[0]?.value ?? 0)
-    : 0
-  const falseNumbersCount = hasCampaigns
-    ? ((
-        await db
+          .then((r) => r[0]?.value ?? 0),
+        db
           .select({ value: count(callResults.id) })
           .from(callResults)
           .where(and(callWhereClause, eq(callResults.outcome, 'false_number')))
-      )[0]?.value ?? 0)
-    : 0
-  const whatsappCount = hasCampaigns
-    ? ((
-        await db
+          .then((r) => r[0]?.value ?? 0),
+        db
           .select({ value: count(callResults.id) })
           .from(callResults)
           .where(and(callWhereClause, eq(callResults.isWhatsappRedirected, true)))
-      )[0]?.value ?? 0)
-    : 0
-  const interestedCount = hasCampaigns
-    ? ((
-        await db
+          .then((r) => r[0]?.value ?? 0),
+        db
           .select({ value: count(callResults.id) })
           .from(callResults)
           .where(and(callWhereClause, eq(callResults.outcome, 'interested')))
-      )[0]?.value ?? 0)
-    : 0
+          .then((r) => r[0]?.value ?? 0),
+        db
+          .select({
+            agentId: callResults.agentId,
+            agentName: users.fullName,
+            totalCalls: count(callResults.id),
+            whatsappCalls: sql<number>`count(case when ${callResults.isWhatsappRedirected} then 1 end)`,
+          })
+          .from(callResults)
+          .innerJoin(users, eq(callResults.agentId, users.id))
+          .where(callWhereClause)
+          .groupBy(callResults.agentId, users.fullName)
+          .orderBy(desc(count(callResults.id))),
+        db
+          .select({
+            agentId: agentContactAssignments.agentId,
+            assignedCount: count(agentContactAssignments.id),
+          })
+          .from(agentContactAssignments)
+          .innerJoin(
+            campaignContacts,
+            eq(agentContactAssignments.campaignContactId, campaignContacts.id)
+          )
+          .where(inArray(campaignContacts.campaignId, myCampaignIds))
+          .groupBy(agentContactAssignments.agentId),
+        db
+          .select({
+            campaignId: callResults.campaignId,
+            campaignTitle: campaigns.title,
+            totalCalls: count(callResults.id),
+          })
+          .from(callResults)
+          .innerJoin(campaigns, eq(callResults.campaignId, campaigns.id))
+          .where(callWhereClause)
+          .groupBy(callResults.campaignId, campaigns.title)
+          .orderBy(desc(count(callResults.id))),
+        db
+          .select({
+            campaignId: campaignContacts.campaignId,
+            totalContacts: count(campaignContacts.id),
+          })
+          .from(campaignContacts)
+          .where(inArray(campaignContacts.campaignId, myCampaignIds))
+          .groupBy(campaignContacts.campaignId),
+      ])
+    : null
+
+  const [
+    totalCallsCount = 0,
+    falseNumbersCount = 0,
+    whatsappCount = 0,
+    interestedCount = 0,
+    agentPerformance = [],
+    agentAssignedCounts = [],
+    campaignPerformance = [],
+    campaignContactCounts = [],
+  ] = phase3 ?? []
 
   const falseRate =
     totalCallsCount === 0 ? 0 : Math.round((falseNumbersCount / totalCallsCount) * 100)
@@ -117,66 +154,7 @@ export default async function AdminPerformancePage({
   const interestedRate =
     totalCallsCount === 0 ? 0 : Math.round((interestedCount / totalCallsCount) * 100)
 
-  // Agent performance: contacts WhatsApp count + calls called vs assigned
-  const agentPerformance = hasCampaigns
-    ? await db
-        .select({
-          agentId: callResults.agentId,
-          agentName: users.fullName,
-          totalCalls: count(callResults.id),
-          whatsappCalls: sql<number>`count(case when ${callResults.isWhatsappRedirected} then 1 end)`,
-        })
-        .from(callResults)
-        .innerJoin(users, eq(callResults.agentId, users.id))
-        .where(callWhereClause)
-        .groupBy(callResults.agentId, users.fullName)
-        .orderBy(desc(count(callResults.id)))
-    : []
-
-  // Assigned contacts count per agent for progress calculation
-  const agentAssignedCounts = hasCampaigns
-    ? await db
-        .select({
-          agentId: agentContactAssignments.agentId,
-          assignedCount: count(agentContactAssignments.id),
-        })
-        .from(agentContactAssignments)
-        .innerJoin(
-          campaignContacts,
-          eq(agentContactAssignments.campaignContactId, campaignContacts.id)
-        )
-        .where(inArray(campaignContacts.campaignId, myCampaignIds))
-        .groupBy(agentContactAssignments.agentId)
-    : []
-
   const assignedMap = new Map(agentAssignedCounts.map((a) => [a.agentId, a.assignedCount]))
-
-  // Campaign performance: total contacts in campaign
-  const campaignPerformance = hasCampaigns
-    ? await db
-        .select({
-          campaignId: callResults.campaignId,
-          campaignTitle: campaigns.title,
-          totalCalls: count(callResults.id),
-        })
-        .from(callResults)
-        .innerJoin(campaigns, eq(callResults.campaignId, campaigns.id))
-        .where(callWhereClause)
-        .groupBy(callResults.campaignId, campaigns.title)
-        .orderBy(desc(count(callResults.id)))
-    : []
-
-  const campaignContactCounts = hasCampaigns
-    ? await db
-        .select({
-          campaignId: campaignContacts.campaignId,
-          totalContacts: count(campaignContacts.id),
-        })
-        .from(campaignContacts)
-        .where(inArray(campaignContacts.campaignId, myCampaignIds))
-        .groupBy(campaignContacts.campaignId)
-    : []
-
   const contactCountMap = new Map(campaignContactCounts.map((c) => [c.campaignId, c.totalContacts]))
 
   return (
@@ -218,7 +196,7 @@ export default async function AdminPerformancePage({
               className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
             >
               <option value="">Tous</option>
-              {myAgents.map((a) => (
+              {allAgents.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.fullName}
                 </option>

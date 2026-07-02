@@ -29,7 +29,7 @@ const envSchema = z.object({
   RESEND_TEST_TO: z.string().email().optional(),
 })
 
-const buildEnv = () => {
+const buildEnv = (): z.infer<typeof envSchema> => {
   if (process.env.SKIP_ENV_VALIDATION === '1') {
     return envSchema.parse({
       DATABASE_URL: process.env.DATABASE_URL ?? 'placeholder',

@@ -14,16 +14,14 @@ export const metadata: Metadata = {
 
 export default function ResetPasswordPage(): React.JSX.Element {
   return (
-    <div className="min-h-screen bg-[#f5f6f8] dark:bg-zinc-950">
-      <Suspense
-        fallback={
-          <div className="flex min-h-screen items-center justify-center">
-            <p className="text-sm text-zinc-400">Chargement...</p>
-          </div>
-        }
-      >
-        <ResetPasswordForm />
-      </Suspense>
-    </div>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#f4f7fe] dark:bg-[#0b1120]">
+          <p className="text-sm text-gray-400">Chargement...</p>
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   )
 }

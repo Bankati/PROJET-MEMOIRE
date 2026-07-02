@@ -98,6 +98,7 @@ export default async function ProspectsPage(): Promise<React.JSX.Element> {
       ORDER BY COALESCE(cr.created_at, cc.created_at) DESC
       LIMIT 500
     `)
+    // db.execute() with raw SQL returns untyped rows; type matches the SELECT columns above
     prospects = rawRows as unknown as ProspectRow[]
   }
 

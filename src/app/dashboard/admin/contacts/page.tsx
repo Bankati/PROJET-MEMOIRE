@@ -286,30 +286,36 @@ export default async function AdminContactsPage({
   const campaignFilter = readParam({ sp, key: 'campaign' })
 
   /* Campagnes accessibles : les propres campagnes de l'admin + les campagnes publiques des autres */
-  const myCampaigns = await db
-    .select({ id: campaigns.id, title: campaigns.title })
-    .from(campaigns)
-    .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
-    .orderBy(desc(campaigns.createdAt))
+  const [myCampaigns, myAgents] = await Promise.all([
+    db
+      .select({ id: campaigns.id, title: campaigns.title })
+      .from(campaigns)
+      .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+      .orderBy(desc(campaigns.createdAt)),
+    db
+      .select({ id: users.id, fullName: users.fullName })
+      .from(users)
+      .where(
+        and(
+          eq(users.managedByAdminId, user.id),
+          eq(users.role, 'agent'),
+          eq(users.status, 'active')
+        )
+      )
+      .orderBy(users.fullName),
+  ])
   const myCampaignIds = myCampaigns.map((c) => c.id)
-
-  const myAgents = await db
-    .select({ id: users.id, fullName: users.fullName })
-    .from(users)
-    .where(
-      and(eq(users.managedByAdminId, user.id), eq(users.role, 'agent'), eq(users.status, 'active'))
-    )
-    .orderBy(users.fullName)
+  const schoolOptionsCampaignIds = campaignFilter.length > 0 ? [campaignFilter] : myCampaignIds
 
   const schoolOptions =
-    myCampaignIds.length > 0
+    schoolOptionsCampaignIds.length > 0
       ? await db
           .selectDistinct({ schoolName: contacts.schoolName })
           .from(contacts)
           .innerJoin(campaignContacts, eq(campaignContacts.contactId, contacts.id))
           .where(
             and(
-              inArray(campaignContacts.campaignId, myCampaignIds),
+              inArray(campaignContacts.campaignId, schoolOptionsCampaignIds),
               sql`${contacts.schoolName} is not null`
             )
           )

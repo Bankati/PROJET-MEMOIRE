@@ -18,34 +18,10 @@ import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { campaigns, callResults, users } from '@/db/schema'
 import { AnalyticsFilters } from '@/components/super-admin/analytics-filters'
+import { extractCount, formatDuration, readParam } from '@/lib/dashboard-utils'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 type CurvePoint = Readonly<{ label: string; calls: number; campaigns: number }>
-type CampaignOption = Readonly<{ id: string; title: string }>
-
-const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): string => {
-  const raw: string | string[] | undefined = sp[key]
-  if (typeof raw === 'string') {
-    return raw
-  }
-  return Array.isArray(raw) ? (raw[0] ?? '') : ''
-}
-const extractCount = ({ value }: Readonly<{ value: number | string | null }>): number => {
-  if (typeof value === 'number') {
-    return value
-  }
-  if (typeof value === 'string') {
-    const n: number = Number(value)
-    return Number.isFinite(n) ? n : 0
-  }
-  return 0
-}
-const formatDuration = ({ seconds }: Readonly<{ seconds: number }>): string => {
-  const r: number = Math.max(0, Math.round(seconds))
-  const m: number = Math.floor(r / 60)
-  const s: number = r % 60
-  return m === 0 ? `${s}s` : `${m}m ${s}s`
-}
 const buildDefaultDateFrom = (): string => {
   const d: Date = new Date()
   d.setMonth(d.getMonth() - 6)
@@ -117,10 +93,7 @@ export default async function AnalyticsPage({
   const dateToStr: string = readParam({ sp, key: 'to' }) || buildDefaultDateTo()
   const dateFrom: Date = new Date(dateFromStr)
   const dateTo: Date = new Date(dateToStr + 'T23:59:59.999Z')
-  const campaignOptions: readonly CampaignOption[] = await db
-    .select({ id: campaigns.id, title: campaigns.title })
-    .from(campaigns)
-    .orderBy(campaigns.title)
+  // Calcul synchrone des WHERE avant les requêtes parallèles
   const callConditions: ReturnType<typeof and>[] = [
     gte(callResults.createdAt, dateFrom),
     lte(callResults.createdAt, dateTo),
@@ -137,57 +110,6 @@ export default async function AnalyticsPage({
     campaignConditions.push(eq(campaigns.id, campaignFilter))
   }
   const campWhere = and(...campaignConditions)
-  const totalCalls: number =
-    (
-      await db
-        .select({ value: count(callResults.id) })
-        .from(callResults)
-        .where(callWhere)
-    )[0]?.value ?? 0
-  const falseNumbers: number =
-    (
-      await db
-        .select({ value: count(callResults.id) })
-        .from(callResults)
-        .where(and(callWhere, eq(callResults.outcome, 'false_number')))
-    )[0]?.value ?? 0
-  const whatsappCount: number =
-    (
-      await db
-        .select({ value: count(callResults.id) })
-        .from(callResults)
-        .where(and(callWhere, eq(callResults.isWhatsappRedirected, true)))
-    )[0]?.value ?? 0
-  const avgDurationResult: Array<{ value: number | string | null }> = await db
-    .select({
-      value: sql<number>`coalesce(round(avg(${callResults.durationSeconds})::numeric, 0), 0)`,
-    })
-    .from(callResults)
-    .where(callWhere)
-  const avgDuration: number = extractCount({ value: avgDurationResult[0]?.value ?? 0 })
-  const totalAdmins: number =
-    (
-      await db
-        .select({ value: count(users.id) })
-        .from(users)
-        .where(eq(users.role, 'admin'))
-    )[0]?.value ?? 0
-  const totalAgents: number =
-    (
-      await db
-        .select({ value: count(users.id) })
-        .from(users)
-        .where(eq(users.role, 'agent'))
-    )[0]?.value ?? 0
-  const filteredCampaigns: number =
-    (
-      await db
-        .select({ value: count(campaigns.id) })
-        .from(campaigns)
-        .where(campWhere)
-    )[0]?.value ?? 0
-  const falseRate: number = totalCalls === 0 ? 0 : Math.round((falseNumbers / totalCalls) * 100)
-  const whatsappRate: number = totalCalls === 0 ? 0 : Math.round((whatsappCount / totalCalls) * 100)
   const rangeDays: number = Math.max(
     1,
     Math.ceil((dateTo.getTime() - dateFrom.getTime()) / 86400000)
@@ -200,37 +122,96 @@ export default async function AnalyticsPage({
   if (campaignFilter.length > 0) {
     prevConditions.push(eq(callResults.campaignId, campaignFilter))
   }
-  const prevCalls: number =
-    (
-      await db
-        .select({ value: count(callResults.id) })
-        .from(callResults)
-        .where(and(...prevConditions))
-    )[0]?.value ?? 0
+
+  // 11 requêtes en parallèle
+  const [
+    campaignOptions,
+    totalCallsRes,
+    falseNumbersRes,
+    whatsappCountRes,
+    avgDurationResult,
+    totalAdminsRes,
+    totalAgentsRes,
+    filteredCampaignsRes,
+    prevCallsRes,
+    monthlyCallsResult,
+    monthlyCampaignsResult,
+  ] = await Promise.all([
+    db
+      .select({ id: campaigns.id, title: campaigns.title })
+      .from(campaigns)
+      .orderBy(campaigns.title),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(callWhere),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(and(callWhere, eq(callResults.outcome, 'false_number'))),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(and(callWhere, eq(callResults.isWhatsappRedirected, true))),
+    db
+      .select({
+        value: sql<number>`coalesce(round(avg(${callResults.durationSeconds})::numeric, 0), 0)`,
+      })
+      .from(callResults)
+      .where(callWhere),
+    db
+      .select({ value: count(users.id) })
+      .from(users)
+      .where(eq(users.role, 'admin')),
+    db
+      .select({ value: count(users.id) })
+      .from(users)
+      .where(eq(users.role, 'agent')),
+    db
+      .select({ value: count(campaigns.id) })
+      .from(campaigns)
+      .where(campWhere),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(and(...prevConditions)),
+    db
+      .select({
+        month: sql<string>`to_char(date_trunc('month', ${callResults.createdAt}), 'YYYY-MM')`,
+        value: count(callResults.id),
+      })
+      .from(callResults)
+      .where(callWhere)
+      .groupBy(sql`date_trunc('month', ${callResults.createdAt})`)
+      .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`),
+    db
+      .select({
+        month: sql<string>`to_char(date_trunc('month', ${campaigns.createdAt}), 'YYYY-MM')`,
+        value: count(campaigns.id),
+      })
+      .from(campaigns)
+      .where(campWhere)
+      .groupBy(sql`date_trunc('month', ${campaigns.createdAt})`)
+      .orderBy(sql`date_trunc('month', ${campaigns.createdAt}) asc`),
+  ])
+
+  const totalCalls: number = totalCallsRes[0]?.value ?? 0
+  const falseNumbers: number = falseNumbersRes[0]?.value ?? 0
+  const whatsappCount: number = whatsappCountRes[0]?.value ?? 0
+  const avgDuration: number = extractCount({ value: avgDurationResult[0]?.value ?? 0 })
+  const totalAdmins: number = totalAdminsRes[0]?.value ?? 0
+  const totalAgents: number = totalAgentsRes[0]?.value ?? 0
+  const filteredCampaigns: number = filteredCampaignsRes[0]?.value ?? 0
+  const prevCalls: number = prevCallsRes[0]?.value ?? 0
+
+  const falseRate: number = totalCalls === 0 ? 0 : Math.round((falseNumbers / totalCalls) * 100)
+  const whatsappRate: number = totalCalls === 0 ? 0 : Math.round((whatsappCount / totalCalls) * 100)
   const callsTrend: number =
     prevCalls === 0
       ? totalCalls > 0
         ? 100
         : 0
       : Math.round(((totalCalls - prevCalls) / prevCalls) * 100)
-  const monthlyCallsResult: Array<{ month: string | null; value: number }> = await db
-    .select({
-      month: sql<string>`to_char(date_trunc('month', ${callResults.createdAt}), 'YYYY-MM')`,
-      value: count(callResults.id),
-    })
-    .from(callResults)
-    .where(callWhere)
-    .groupBy(sql`date_trunc('month', ${callResults.createdAt})`)
-    .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`)
-  const monthlyCampaignsResult: Array<{ month: string | null; value: number }> = await db
-    .select({
-      month: sql<string>`to_char(date_trunc('month', ${campaigns.createdAt}), 'YYYY-MM')`,
-      value: count(campaigns.id),
-    })
-    .from(campaigns)
-    .where(campWhere)
-    .groupBy(sql`date_trunc('month', ${campaigns.createdAt})`)
-    .orderBy(sql`date_trunc('month', ${campaigns.createdAt}) asc`)
   const callsMap: ReadonlyMap<string, number> = new Map(
     monthlyCallsResult
       .filter((e) => typeof e.month === 'string')

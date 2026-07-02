@@ -54,30 +54,31 @@ export default async function AdminMessagingPage({
   const notice: string = readParam({ searchParams: resolvedParams, key: 'notice' })
   const isSuccess: boolean = readParam({ searchParams: resolvedParams, key: 'success' }) === 'true'
 
-  const [agentRow] = await db
-    .select({ value: count(users.id) })
-    .from(users)
-    .where(and(eq(users.role, 'agent'), eq(users.status, 'active')))
-  const activeAgentsCount: number = agentRow?.value ?? 0
-
-  const history = await db
-    .select({
-      id: broadcastMessages.id,
-      message: broadcastMessages.message,
-      recipientCount: broadcastMessages.recipientCount,
-      createdAt: broadcastMessages.createdAt,
-      senderName: users.fullName,
-    })
-    .from(broadcastMessages)
-    .innerJoin(users, eq(broadcastMessages.sentByUserId, users.id))
-    .where(
-      and(
-        eq(broadcastMessages.sentByUserId, admin.id),
-        eq(broadcastMessages.recipientRole, 'agent')
+  const [[agentRow], history] = await Promise.all([
+    db
+      .select({ value: count(users.id) })
+      .from(users)
+      .where(and(eq(users.role, 'agent'), eq(users.status, 'active'))),
+    db
+      .select({
+        id: broadcastMessages.id,
+        message: broadcastMessages.message,
+        recipientCount: broadcastMessages.recipientCount,
+        createdAt: broadcastMessages.createdAt,
+        senderName: users.fullName,
+      })
+      .from(broadcastMessages)
+      .innerJoin(users, eq(broadcastMessages.sentByUserId, users.id))
+      .where(
+        and(
+          eq(broadcastMessages.sentByUserId, admin.id),
+          eq(broadcastMessages.recipientRole, 'agent')
+        )
       )
-    )
-    .orderBy(desc(broadcastMessages.createdAt))
-    .limit(50)
+      .orderBy(desc(broadcastMessages.createdAt))
+      .limit(50),
+  ])
+  const activeAgentsCount: number = agentRow?.value ?? 0
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">

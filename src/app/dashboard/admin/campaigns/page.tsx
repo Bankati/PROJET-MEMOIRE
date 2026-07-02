@@ -11,6 +11,34 @@ import { db } from '@/lib/db'
 import { campaigns, campaignContacts } from '@/db/schema'
 import { CampaignDialogForm } from '@/components/admin/campaign-dialog-form'
 import { CampaignEditPanel } from '@/components/admin/campaign-edit-panel'
+import { uploadCampaignScript } from '@/lib/supabase'
+
+const PDF_MAX_SIZE_BYTES = 10 * 1024 * 1024 // 10 Mo
+
+const resolvePdfUrl = async ({
+  formData,
+  campaignId,
+  currentPdfUrl,
+}: Readonly<{
+  formData: FormData
+  campaignId: string
+  currentPdfUrl: string | null
+}>): Promise<string | null> => {
+  const file = formData.get('pdfFile')
+  if (!(file instanceof File) || file.size === 0) {
+    return currentPdfUrl
+  }
+  if (file.type !== 'application/pdf' || file.size > PDF_MAX_SIZE_BYTES) {
+    return currentPdfUrl
+  }
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const uploadedUrl = await uploadCampaignScript({
+    campaignId,
+    fileBuffer: buffer,
+    contentType: file.type,
+  })
+  return uploadedUrl ?? currentPdfUrl
+}
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 
@@ -45,20 +73,27 @@ async function createCampaign(formData: FormData): Promise<void> {
   const details: string = (formData.get('details') as string | null) ?? ''
   const visibilityRaw = (formData.get('visibility') as string | null) ?? 'private'
   const visibility = visibilityRaw === 'public' ? 'public' : 'private'
-  const pdfUrl: string = (formData.get('pdfUrl') as string | null) ?? ''
   if (title.trim().length === 0 || baseScript.trim().length === 0) {
     redirect('/dashboard/admin/campaigns?notice=missing_fields')
   }
-  await db.insert(campaigns).values({
-    title: title.trim(),
-    year,
-    baseScript: baseScript.trim(),
-    details: details.trim().length > 0 ? details.trim() : null,
-    pdfUrl: pdfUrl.trim().length > 0 ? pdfUrl.trim() : null,
-    status: 'draft',
-    visibility,
-    createdByAdminId: user.id,
-  })
+  const [created] = await db
+    .insert(campaigns)
+    .values({
+      title: title.trim(),
+      year,
+      baseScript: baseScript.trim(),
+      details: details.trim().length > 0 ? details.trim() : null,
+      pdfUrl: null,
+      status: 'draft',
+      visibility,
+      createdByAdminId: user.id,
+    })
+    .returning({ id: campaigns.id })
+
+  const pdfUrl = await resolvePdfUrl({ formData, campaignId: created.id, currentPdfUrl: null })
+  if (pdfUrl) {
+    await db.update(campaigns).set({ pdfUrl }).where(eq(campaigns.id, created.id))
+  }
   redirect('/dashboard/admin/campaigns?notice=created')
 }
 
@@ -70,13 +105,18 @@ async function updateCampaign(formData: FormData): Promise<void> {
   const year = Number(formData.get('year') ?? new Date().getFullYear())
   const baseScript = (formData.get('baseScript') as string | null) ?? ''
   const details = (formData.get('details') as string | null) ?? ''
-  const pdfUrl = (formData.get('pdfUrl') as string | null) ?? ''
+  const currentPdfUrlRaw = (formData.get('currentPdfUrl') as string | null) ?? ''
   const status = (formData.get('status') as string | null) ?? 'draft'
   const visibilityRaw = (formData.get('visibility') as string | null) ?? 'private'
   const visibility = visibilityRaw === 'public' ? 'public' : 'private'
   if (campaignId.length === 0 || title.trim().length === 0) {
     redirect('/dashboard/admin/campaigns?notice=missing_fields')
   }
+  const pdfUrl = await resolvePdfUrl({
+    formData,
+    campaignId,
+    currentPdfUrl: currentPdfUrlRaw.trim().length > 0 ? currentPdfUrlRaw.trim() : null,
+  })
   await db
     .update(campaigns)
     .set({
@@ -84,7 +124,7 @@ async function updateCampaign(formData: FormData): Promise<void> {
       year,
       baseScript: baseScript.trim(),
       details: details.trim().length > 0 ? details.trim() : null,
-      pdfUrl: pdfUrl.trim().length > 0 ? pdfUrl.trim() : null,
+      pdfUrl,
       status: status as 'draft' | 'active' | 'paused' | 'completed' | 'archived',
       visibility,
       updatedAt: new Date(),
@@ -114,27 +154,28 @@ export default async function AdminCampaignsPage({
   const notice = readParam({ sp, key: 'notice' })
   const editId = readParam({ sp, key: 'edit' })
 
-  const myCampaigns = await db
-    .select({
-      id: campaigns.id,
-      title: campaigns.title,
-      year: campaigns.year,
-      status: campaigns.status,
-      visibility: campaigns.visibility,
-      baseScript: campaigns.baseScript,
-      details: campaigns.details,
-      pdfUrl: campaigns.pdfUrl,
-      createdAt: campaigns.createdAt,
-      createdByAdminId: campaigns.createdByAdminId,
-    })
-    .from(campaigns)
-    .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
-    .orderBy(desc(campaigns.createdAt))
-
-  const contactCountsResult = await db
-    .select({ campaignId: campaignContacts.campaignId, contactCount: count(campaignContacts.id) })
-    .from(campaignContacts)
-    .groupBy(campaignContacts.campaignId)
+  const [myCampaigns, contactCountsResult] = await Promise.all([
+    db
+      .select({
+        id: campaigns.id,
+        title: campaigns.title,
+        year: campaigns.year,
+        status: campaigns.status,
+        visibility: campaigns.visibility,
+        baseScript: campaigns.baseScript,
+        details: campaigns.details,
+        pdfUrl: campaigns.pdfUrl,
+        createdAt: campaigns.createdAt,
+        createdByAdminId: campaigns.createdByAdminId,
+      })
+      .from(campaigns)
+      .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+      .orderBy(desc(campaigns.createdAt)),
+    db
+      .select({ campaignId: campaignContacts.campaignId, contactCount: count(campaignContacts.id) })
+      .from(campaignContacts)
+      .groupBy(campaignContacts.campaignId),
+  ])
   const contactCountMap = new Map(contactCountsResult.map((r) => [r.campaignId, r.contactCount]))
 
   const editCampaign = editId.length > 0 ? myCampaigns.find((c) => c.id === editId) : undefined

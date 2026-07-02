@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { Moon, Sun } from 'lucide-react'
 
-interface ThemeSwitchProps {
+type ThemeSwitchProps = {
   className?: string
 }
 

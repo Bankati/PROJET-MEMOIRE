@@ -15,44 +15,30 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react'
-import { and, count, desc, eq, gte, lte, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { campaigns, callResults, campaignContacts, users } from '@/db/schema'
 import { DashboardFilters } from '@/components/super-admin/dashboard-filters'
 import { CampaignDetailsModal } from '@/components/super-admin/campaign-details-modal'
+import { extractCount, formatDuration, formatTimeAgo, readParam } from '@/lib/dashboard-utils'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 type CurvePoint = Readonly<{ label: string; calls: number }>
-type CampaignOption = Readonly<{ id: string; title: string }>
-
-const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): string => {
-  const raw: string | string[] | undefined = sp[key]
-  if (typeof raw === 'string') return raw
-  return Array.isArray(raw) ? (raw[0] ?? '') : ''
-}
-const extractCount = ({ value }: Readonly<{ value: number | string | null }>): number => {
-  if (typeof value === 'number') return value
-  if (typeof value === 'string') {
-    const n = Number(value)
-    return Number.isFinite(n) ? n : 0
-  }
-  return 0
-}
-const formatDuration = ({ seconds }: Readonly<{ seconds: number }>): string => {
-  const r = Math.max(0, Math.round(seconds))
-  const m = Math.floor(r / 60)
-  const s = r % 60
-  return m === 0 ? `${s}s` : `${m}m ${s}s`
-}
-const formatTimeAgo = ({ date }: Readonly<{ date: Date }>): string => {
-  const diff = Math.floor((Date.now() - date.getTime()) / 60000)
-  if (diff < 60) return `il y a ${Math.max(1, diff)} min`
-  const hours = Math.floor(diff / 60)
-  if (hours < 24) return `il y a ${hours}h`
-  return `il y a ${Math.floor(hours / 24)}j`
-}
+type CampaignTableRow = Readonly<{
+  id: string
+  title: string
+  adminName: string
+  totalContacts: number
+  totalCalls: number
+  whatsappConversions: number
+  falseNumbers: number
+  interestedCount: number
+  topAgents: ReadonlyArray<
+    Readonly<{ agentName: string; totalCalls: number; whatsappCount: number }>
+  >
+}>
 const buildCurvePoints = ({
   monthlyCalls,
   from,
@@ -120,79 +106,13 @@ export default async function SuperAdminDashboardPage({
   const dateFrom = new Date(dateFromStr)
   const dateTo = new Date(dateToStr + 'T23:59:59.999Z')
 
-  const campaignOptions: readonly CampaignOption[] = await db
-    .select({ id: campaigns.id, title: campaigns.title })
-    .from(campaigns)
-    .orderBy(desc(campaigns.createdAt))
-
+  // Pure computation — no DB calls needed
   const callConditions: ReturnType<typeof and>[] = [
     gte(callResults.createdAt, dateFrom),
     lte(callResults.createdAt, dateTo),
   ]
   if (campaignFilter.length > 0) callConditions.push(eq(callResults.campaignId, campaignFilter))
   const callWhereClause = and(...callConditions)
-
-  const [activeAdminsCount, activeAgentsCount, activeCampaignsCount] = await Promise.all([
-    db
-      .select({ value: count(users.id) })
-      .from(users)
-      .where(and(eq(users.role, 'admin'), eq(users.status, 'active')))
-      .then((r) => r[0]?.value ?? 0),
-    db
-      .select({ value: count(users.id) })
-      .from(users)
-      .where(and(eq(users.role, 'agent'), eq(users.status, 'active')))
-      .then((r) => r[0]?.value ?? 0),
-    db
-      .select({ value: count(campaigns.id) })
-      .from(campaigns)
-      .where(eq(campaigns.status, 'active'))
-      .then((r) => r[0]?.value ?? 0),
-  ])
-
-  const totalCallsCount =
-    (
-      await db
-        .select({ value: count(callResults.id) })
-        .from(callResults)
-        .where(callWhereClause)
-    )[0]?.value ?? 0
-  const falseNumbersCount =
-    (
-      await db
-        .select({ value: count(callResults.id) })
-        .from(callResults)
-        .where(and(callWhereClause, eq(callResults.outcome, 'false_number')))
-    )[0]?.value ?? 0
-  const whatsappCount =
-    (
-      await db
-        .select({ value: count(callResults.id) })
-        .from(callResults)
-        .where(and(callWhereClause, eq(callResults.isWhatsappRedirected, true)))
-    )[0]?.value ?? 0
-  const interestedCount =
-    (
-      await db
-        .select({ value: count(callResults.id) })
-        .from(callResults)
-        .where(and(callWhereClause, eq(callResults.outcome, 'interested')))
-    )[0]?.value ?? 0
-
-  const avgDurationResult = await db
-    .select({
-      value: sql<number>`coalesce(round(avg(${callResults.durationSeconds})::numeric, 0), 0)`,
-    })
-    .from(callResults)
-    .where(callWhereClause)
-  const avgDuration = extractCount({ value: avgDurationResult[0]?.value ?? 0 })
-
-  const falseRate =
-    totalCallsCount === 0 ? 0 : Math.round((falseNumbersCount / totalCallsCount) * 100)
-  const whatsappRate =
-    totalCallsCount === 0 ? 0 : Math.round((whatsappCount / totalCallsCount) * 100)
-  const interestedRate =
-    totalCallsCount === 0 ? 0 : Math.round((interestedCount / totalCallsCount) * 100)
 
   const rangeDays = Math.max(1, Math.ceil((dateTo.getTime() - dateFrom.getTime()) / 86400000))
   const prevDateFrom = new Date(dateFrom.getTime() - rangeDays * 86400000)
@@ -201,29 +121,119 @@ export default async function SuperAdminDashboardPage({
     lte(callResults.createdAt, dateFrom),
   ]
   if (campaignFilter.length > 0) prevConditions.push(eq(callResults.campaignId, campaignFilter))
-  const prevCallsCount =
-    (
-      await db
-        .select({ value: count(callResults.id) })
-        .from(callResults)
-        .where(and(...prevConditions))
-    )[0]?.value ?? 0
+
+  // Phase 2: All independent DB queries in one parallel round-trip
+  const [
+    campaignOptions,
+    [activeAdminsCount, activeAgentsCount, activeCampaignsCount],
+    totalCallsCount,
+    falseNumbersCount,
+    whatsappCount,
+    interestedCount,
+    avgDurationRaw,
+    prevCallsCount,
+    monthlyCallsResult,
+    recentAdmins,
+    allCampaigns,
+  ] = await Promise.all([
+    db
+      .select({ id: campaigns.id, title: campaigns.title })
+      .from(campaigns)
+      .orderBy(desc(campaigns.createdAt)),
+    Promise.all([
+      db
+        .select({ value: count(users.id) })
+        .from(users)
+        .where(and(eq(users.role, 'admin'), eq(users.status, 'active')))
+        .then((r) => r[0]?.value ?? 0),
+      db
+        .select({ value: count(users.id) })
+        .from(users)
+        .where(and(eq(users.role, 'agent'), eq(users.status, 'active')))
+        .then((r) => r[0]?.value ?? 0),
+      db
+        .select({ value: count(campaigns.id) })
+        .from(campaigns)
+        .where(eq(campaigns.status, 'active'))
+        .then((r) => r[0]?.value ?? 0),
+    ]),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(callWhereClause)
+      .then((r) => r[0]?.value ?? 0),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(and(callWhereClause, eq(callResults.outcome, 'false_number')))
+      .then((r) => r[0]?.value ?? 0),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(and(callWhereClause, eq(callResults.isWhatsappRedirected, true)))
+      .then((r) => r[0]?.value ?? 0),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(and(callWhereClause, eq(callResults.outcome, 'interested')))
+      .then((r) => r[0]?.value ?? 0),
+    db
+      .select({
+        value: sql<number>`coalesce(round(avg(${callResults.durationSeconds})::numeric, 0), 0)`,
+      })
+      .from(callResults)
+      .where(callWhereClause),
+    db
+      .select({ value: count(callResults.id) })
+      .from(callResults)
+      .where(and(...prevConditions))
+      .then((r) => r[0]?.value ?? 0),
+    db
+      .select({
+        month: sql<string>`to_char(date_trunc('month', ${callResults.createdAt}), 'YYYY-MM')`,
+        value: count(callResults.id),
+      })
+      .from(callResults)
+      .where(callWhereClause)
+      .groupBy(sql`date_trunc('month', ${callResults.createdAt})`)
+      .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`),
+    db
+      .select({
+        id: users.id,
+        fullName: users.fullName,
+        email: users.email,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.role, 'admin'))
+      .orderBy(desc(users.createdAt))
+      .limit(5),
+    db
+      .select({
+        id: campaigns.id,
+        title: campaigns.title,
+        adminId: campaigns.createdByAdminId,
+        adminName: users.fullName,
+      })
+      .from(campaigns)
+      .innerJoin(users, eq(campaigns.createdByAdminId, users.id))
+      .orderBy(desc(campaigns.createdAt))
+      .limit(20),
+  ])
+
+  const avgDuration = extractCount({ value: avgDurationRaw[0]?.value ?? 0 })
+  const falseRate =
+    totalCallsCount === 0 ? 0 : Math.round((falseNumbersCount / totalCallsCount) * 100)
+  const whatsappRate =
+    totalCallsCount === 0 ? 0 : Math.round((whatsappCount / totalCallsCount) * 100)
+  const interestedRate =
+    totalCallsCount === 0 ? 0 : Math.round((interestedCount / totalCallsCount) * 100)
   const callsTrend =
     prevCallsCount === 0
       ? totalCallsCount > 0
         ? 100
         : 0
       : Math.round(((totalCallsCount - prevCallsCount) / prevCallsCount) * 100)
-
-  const monthlyCallsResult = await db
-    .select({
-      month: sql<string>`to_char(date_trunc('month', ${callResults.createdAt}), 'YYYY-MM')`,
-      value: count(callResults.id),
-    })
-    .from(callResults)
-    .where(callWhereClause)
-    .groupBy(sql`date_trunc('month', ${callResults.createdAt})`)
-    .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`)
 
   const monthlyMap: ReadonlyMap<string, number> = new Map(
     monthlyCallsResult
@@ -240,91 +250,104 @@ export default async function SuperAdminDashboardPage({
     h: 160,
   })
 
-  const recentAdmins = await db
-    .select({
-      id: users.id,
-      fullName: users.fullName,
-      email: users.email,
-      createdAt: users.createdAt,
-    })
-    .from(users)
-    .where(eq(users.role, 'admin'))
-    .orderBy(desc(users.createdAt))
-    .limit(5)
+  // Phase 3: Eliminate N+1 — 6 GROUP BY queries replace up to 120 per-campaign round-trips
+  const allCampaignIds = allCampaigns.map((c) => c.id)
+  let campaignTableData: readonly CampaignTableRow[] = []
 
-  // Campaigns table data
-  const allCampaigns = await db
-    .select({
-      id: campaigns.id,
-      title: campaigns.title,
-      adminId: campaigns.createdByAdminId,
-      adminName: users.fullName,
-    })
-    .from(campaigns)
-    .innerJoin(users, eq(campaigns.createdByAdminId, users.id))
-    .orderBy(desc(campaigns.createdAt))
-    .limit(20)
-
-  const campaignTableData = await Promise.all(
-    allCampaigns.map(async (camp) => {
-      const [totalContacts, totalCalls, whatsappConv, falseNums, interested] = await Promise.all([
-        db
-          .select({ value: count(campaignContacts.id) })
-          .from(campaignContacts)
-          .where(eq(campaignContacts.campaignId, camp.id))
-          .then((r) => r[0]?.value ?? 0),
-        db
-          .select({ value: count(callResults.id) })
-          .from(callResults)
-          .where(eq(callResults.campaignId, camp.id))
-          .then((r) => r[0]?.value ?? 0),
-        db
-          .select({ value: count(callResults.id) })
-          .from(callResults)
-          .where(
-            and(eq(callResults.campaignId, camp.id), eq(callResults.isWhatsappRedirected, true))
+  if (allCampaignIds.length > 0) {
+    const [
+      contactsGrouped,
+      callsGrouped,
+      whatsappGrouped,
+      falseGrouped,
+      interestedGrouped,
+      agentsGrouped,
+    ] = await Promise.all([
+      db
+        .select({ campaignId: campaignContacts.campaignId, value: count(campaignContacts.id) })
+        .from(campaignContacts)
+        .where(inArray(campaignContacts.campaignId, allCampaignIds))
+        .groupBy(campaignContacts.campaignId),
+      db
+        .select({ campaignId: callResults.campaignId, value: count(callResults.id) })
+        .from(callResults)
+        .where(inArray(callResults.campaignId, allCampaignIds))
+        .groupBy(callResults.campaignId),
+      db
+        .select({ campaignId: callResults.campaignId, value: count(callResults.id) })
+        .from(callResults)
+        .where(
+          and(
+            inArray(callResults.campaignId, allCampaignIds),
+            eq(callResults.isWhatsappRedirected, true)
           )
-          .then((r) => r[0]?.value ?? 0),
-        db
-          .select({ value: count(callResults.id) })
-          .from(callResults)
-          .where(and(eq(callResults.campaignId, camp.id), eq(callResults.outcome, 'false_number')))
-          .then((r) => r[0]?.value ?? 0),
-        db
-          .select({ value: count(callResults.id) })
-          .from(callResults)
-          .where(and(eq(callResults.campaignId, camp.id), eq(callResults.outcome, 'interested')))
-          .then((r) => r[0]?.value ?? 0),
-      ])
-      const topAgents = await db
+        )
+        .groupBy(callResults.campaignId),
+      db
+        .select({ campaignId: callResults.campaignId, value: count(callResults.id) })
+        .from(callResults)
+        .where(
+          and(
+            inArray(callResults.campaignId, allCampaignIds),
+            eq(callResults.outcome, 'false_number')
+          )
+        )
+        .groupBy(callResults.campaignId),
+      db
+        .select({ campaignId: callResults.campaignId, value: count(callResults.id) })
+        .from(callResults)
+        .where(
+          and(
+            inArray(callResults.campaignId, allCampaignIds),
+            eq(callResults.outcome, 'interested')
+          )
+        )
+        .groupBy(callResults.campaignId),
+      db
         .select({
+          campaignId: callResults.campaignId,
           agentName: users.fullName,
           totalCalls: count(callResults.id),
           whatsappCount: sql<number>`count(case when ${callResults.isWhatsappRedirected} then 1 end)`,
         })
         .from(callResults)
         .innerJoin(users, eq(callResults.agentId, users.id))
-        .where(eq(callResults.campaignId, camp.id))
-        .groupBy(users.fullName)
-        .orderBy(desc(count(callResults.id)))
-        .limit(5)
-      return {
-        id: camp.id,
-        title: camp.title,
-        adminName: camp.adminName,
-        totalContacts,
-        totalCalls,
-        whatsappConversions: whatsappConv,
-        falseNumbers: falseNums,
-        interestedCount: interested,
-        topAgents: topAgents.map((a) => ({
-          agentName: a.agentName,
-          totalCalls: a.totalCalls,
-          whatsappCount: extractCount({ value: a.whatsappCount }),
-        })),
-      }
-    })
-  )
+        .where(inArray(callResults.campaignId, allCampaignIds))
+        .groupBy(callResults.campaignId, users.fullName)
+        .orderBy(callResults.campaignId, desc(count(callResults.id))),
+    ])
+
+    const contactsMap = new Map(contactsGrouped.map((r) => [r.campaignId, r.value]))
+    const callsMap = new Map(callsGrouped.map((r) => [r.campaignId, r.value]))
+    const whatsappMap = new Map(whatsappGrouped.map((r) => [r.campaignId, r.value]))
+    const falseMap = new Map(falseGrouped.map((r) => [r.campaignId, r.value]))
+    const interestedMap = new Map(interestedGrouped.map((r) => [r.campaignId, r.value]))
+    const agentsMap = new Map<
+      string,
+      { agentName: string; totalCalls: number; whatsappCount: number }[]
+    >()
+    for (const agent of agentsGrouped) {
+      const existing = agentsMap.get(agent.campaignId) ?? []
+      existing.push({
+        agentName: agent.agentName,
+        totalCalls: agent.totalCalls,
+        whatsappCount: extractCount({ value: agent.whatsappCount }),
+      })
+      agentsMap.set(agent.campaignId, existing)
+    }
+
+    campaignTableData = allCampaigns.map((camp) => ({
+      id: camp.id,
+      title: camp.title,
+      adminName: camp.adminName,
+      totalContacts: contactsMap.get(camp.id) ?? 0,
+      totalCalls: callsMap.get(camp.id) ?? 0,
+      whatsappConversions: whatsappMap.get(camp.id) ?? 0,
+      falseNumbers: falseMap.get(camp.id) ?? 0,
+      interestedCount: interestedMap.get(camp.id) ?? 0,
+      topAgents: (agentsMap.get(camp.id) ?? []).slice(0, 5),
+    }))
+  }
 
   const selectedCampaignTitle =
     campaignFilter.length > 0

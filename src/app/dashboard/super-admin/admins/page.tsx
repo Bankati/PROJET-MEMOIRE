@@ -35,12 +35,15 @@ const readFormValue = ({
 const isUserStatus = (v: string): v is UserStatus => {
   return v === 'active' || v === 'inactive' || v === 'expired'
 }
-const buildNoticeUrl = ({ notice, mode }: Readonly<{ notice: string; mode?: string }>): string => {
+const buildNoticeUrl = ({
+  notice,
+  mode,
+  noticeType,
+}: Readonly<{ notice: string; mode?: string; noticeType?: 'success' | 'error' }>): string => {
   const params: URLSearchParams = new URLSearchParams()
   params.set('notice', notice)
-  if (mode) {
-    params.set('mode', mode)
-  }
+  if (mode) params.set('mode', mode)
+  if (noticeType === 'error') params.set('noticeType', 'error')
   return `/dashboard/super-admin/admins?${params.toString()}`
 }
 const readParam = ({
@@ -71,6 +74,7 @@ const createAdminAction = async (formData: FormData): Promise<void> => {
       buildNoticeUrl({
         notice: 'Informations invalides. Nom (3+), email, mot de passe (8+) requis.',
         mode: 'create',
+        noticeType: 'error',
       })
     )
   }
@@ -81,7 +85,11 @@ const createAdminAction = async (formData: FormData): Promise<void> => {
     .limit(1)
   if (existing.length > 0) {
     redirect(
-      buildNoticeUrl({ notice: 'Cet email est déjà associé à un compte existant.', mode: 'create' })
+      buildNoticeUrl({
+        notice: 'Cet email est déjà associé à un compte existant.',
+        mode: 'create',
+        noticeType: 'error',
+      })
     )
   }
   const passwordHash: string = hashPassword({ password })
@@ -108,7 +116,9 @@ const updateAdminAction = async (formData: FormData): Promise<void> => {
     email.length < 5 ||
     !isUserStatus(statusValue)
   ) {
-    redirect(buildNoticeUrl({ notice: 'Informations de modification invalides.' }))
+    redirect(
+      buildNoticeUrl({ notice: 'Informations de modification invalides.', noticeType: 'error' })
+    )
   }
   const duplicate: Array<{ id: string }> = await db
     .select({ id: users.id })
@@ -116,7 +126,12 @@ const updateAdminAction = async (formData: FormData): Promise<void> => {
     .where(and(eq(users.email, email), ne(users.id, adminId)))
     .limit(1)
   if (duplicate.length > 0) {
-    redirect(buildNoticeUrl({ notice: 'Cet email est déjà utilisé par un autre compte.' }))
+    redirect(
+      buildNoticeUrl({
+        notice: 'Cet email est déjà utilisé par un autre compte.',
+        noticeType: 'error',
+      })
+    )
   }
   await db
     .update(users)
@@ -131,7 +146,11 @@ const reassignCampaignsAction = async (formData: FormData): Promise<void> => {
   const toAdminId: string = readFormValue({ formData, key: 'toAdminId' })
   if (fromAdminId.length === 0 || toAdminId.length === 0 || fromAdminId === toAdminId) {
     redirect(
-      buildNoticeUrl({ notice: 'Paramètres invalides pour la réattribution.', mode: 'reassign' })
+      buildNoticeUrl({
+        notice: 'Paramètres invalides pour la réattribution.',
+        mode: 'reassign',
+        noticeType: 'error',
+      })
     )
   }
   await db
@@ -150,7 +169,9 @@ const deleteAdminAction = async (formData: FormData): Promise<void> => {
   const superAdmin = await requireRole({ allowedRoles: ['super_admin'] })
   const adminId: string = readFormValue({ formData, key: 'adminId' })
   if (adminId.length === 0 || adminId === superAdmin.id) {
-    redirect(buildNoticeUrl({ notice: 'Suppression impossible pour ce compte.' }))
+    redirect(
+      buildNoticeUrl({ notice: 'Suppression impossible pour ce compte.', noticeType: 'error' })
+    )
   }
   const linkedCampaigns: Array<{ value: number }> = await db
     .select({ value: count(campaigns.id) })
@@ -160,6 +181,7 @@ const deleteAdminAction = async (formData: FormData): Promise<void> => {
     redirect(
       buildNoticeUrl({
         notice: 'Cet administrateur gère des campagnes. Réattribuez-les avant suppression.',
+        noticeType: 'error',
       })
     )
   }
@@ -179,26 +201,29 @@ export default async function AdminsPage({
   await requireRole({ allowedRoles: ['super_admin'] })
   const resolvedParams: SearchParams = (await searchParams) ?? {}
   const notice: string = readParam({ searchParams: resolvedParams, key: 'notice' })
+  const noticeType: string = readParam({ searchParams: resolvedParams, key: 'noticeType' })
   const mode: string = readParam({ searchParams: resolvedParams, key: 'mode' })
   const editId: string = readParam({ searchParams: resolvedParams, key: 'edit' })
   const reassignId: string = readParam({ searchParams: resolvedParams, key: 'reassign' })
-  const adminRecords = await db
-    .select({
-      id: users.id,
-      fullName: users.fullName,
-      email: users.email,
-      status: users.status,
-      createdAt: users.createdAt,
-    })
-    .from(users)
-    .where(eq(users.role, 'admin'))
-  const campaignCounts = await db
-    .select({
-      adminId: campaigns.createdByAdminId,
-      value: count(campaigns.id),
-    })
-    .from(campaigns)
-    .groupBy(campaigns.createdByAdminId)
+  const [adminRecords, campaignCounts] = await Promise.all([
+    db
+      .select({
+        id: users.id,
+        fullName: users.fullName,
+        email: users.email,
+        status: users.status,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.role, 'admin')),
+    db
+      .select({
+        adminId: campaigns.createdByAdminId,
+        value: count(campaigns.id),
+      })
+      .from(campaigns)
+      .groupBy(campaigns.createdByAdminId),
+  ])
   const campaignMap: ReadonlyMap<string, number> = new Map(
     campaignCounts.map((e) => [e.adminId, e.value])
   )
@@ -236,7 +261,13 @@ export default async function AdminsPage({
         ) : null}
       </div>
       {notice.length > 0 ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+        <div
+          className={`rounded-xl border px-4 py-3 text-sm ${
+            noticeType === 'error'
+              ? 'border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200'
+              : 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200'
+          }`}
+        >
           {notice}
         </div>
       ) : null}

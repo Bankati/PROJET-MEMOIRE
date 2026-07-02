@@ -1,7 +1,3 @@
-/**
- * shadcn/ui - Card
- * Used for features grid, testimonials, and tech stack cards.
- */
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
@@ -10,7 +6,9 @@ function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        'group hover:shadow-lbs-blue/10 rounded-2xl border border-zinc-200/70 bg-white/70 shadow-sm shadow-zinc-900/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800/70 dark:bg-zinc-950/55 dark:hover:shadow-black/40',
+        'rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-200',
+        'hover:-translate-y-0.5 hover:shadow-md',
+        'dark:border-white/[0.08] dark:bg-[#1e2535]',
         className
       )}
       {...props}
@@ -25,14 +23,17 @@ function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement
 function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn('text-base leading-none font-semibold tracking-tight', className)}
+      className={cn(
+        'text-base leading-none font-semibold tracking-tight text-gray-900 dark:text-white',
+        className
+      )}
       {...props}
     />
   )
 }
 
 function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn('text-sm text-zinc-600 dark:text-zinc-400', className)} {...props} />
+  return <p className={cn('text-sm text-gray-500 dark:text-gray-400', className)} {...props} />
 }
 
 function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

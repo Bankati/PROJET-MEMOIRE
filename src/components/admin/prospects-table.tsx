@@ -62,6 +62,20 @@ type TransferResult = {
   message: string
 }
 
+type ApiTransferResult = TransferResult & { ok: boolean }
+
+const isApiTransferResult = (v: unknown): v is ApiTransferResult => {
+  if (typeof v !== 'object' || v === null) return false
+  // Record<string,unknown> needed to access properties of a narrowed `object`
+  const obj = v as Record<string, unknown>
+  return (
+    typeof obj.ok === 'boolean' &&
+    typeof obj.transferred === 'number' &&
+    typeof obj.skipped === 'number' &&
+    typeof obj.message === 'string'
+  )
+}
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 type Props = Readonly<{
@@ -161,9 +175,13 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ccIds: [...selected], targetCampaignId }),
       })
-      const data = (await res.json()) as TransferResult & { ok: boolean }
-      setTransferResult(data)
-      if (data.ok) {
+      const json: unknown = await res.json()
+      if (!isApiTransferResult(json)) {
+        setTransferResult({ transferred: 0, skipped: 0, message: 'Réponse invalide du serveur.' })
+        return
+      }
+      setTransferResult(json)
+      if (json.ok) {
         clearSelection()
       }
     } catch {
@@ -173,20 +191,22 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
     }
   }, [targetCampaignId, selected, clearSelection])
 
-  const openTransfer = () => {
+  const openTransfer = (): void => {
     setTransferResult(null)
     setTargetCampaignId('')
     setTransferOpen(true)
   }
 
-  const closeTransfer = () => {
+  const closeTransfer = (): void => {
     setTransferOpen(false)
     setTransferResult(null)
   }
 
   // ── Unicité des agents présents dans les données ────────────────────────────
   const agentNames = useMemo(() => {
-    const names = new Set(prospects.map((p) => p.lastAgentName).filter(Boolean) as string[])
+    const names = new Set(
+      prospects.map((p) => p.lastAgentName).filter((x): x is string => x !== null)
+    )
     return [...names].sort()
   }, [prospects])
 

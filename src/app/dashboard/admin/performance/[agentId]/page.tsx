@@ -23,17 +23,12 @@ import {
   contacts,
   users,
 } from '@/db/schema'
+import { formatDuration, readParam } from '@/lib/dashboard-utils'
 
 type Params = Readonly<{ agentId: string }>
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): string => {
-  const raw: string | string[] | undefined = sp[key]
-  if (typeof raw === 'string') return raw
-  return Array.isArray(raw) ? (raw[0] ?? '') : ''
-}
 
 const OUTCOME_LABELS: Readonly<Record<string, string>> = {
   interested: 'Intéressé',
@@ -65,14 +60,6 @@ const OUTCOME_COLORS: Readonly<Record<string, string>> = {
   other: '#a1a1aa',
 }
 
-const formatDuration = (seconds: number): string => {
-  if (seconds === 0) return '—'
-  if (seconds < 60) return `${seconds}s`
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return s > 0 ? `${m}m ${s}s` : `${m}m`
-}
-
 const buildAreaPath = ({
   values,
   maxValue,
@@ -92,7 +79,7 @@ const buildAreaPath = ({
   const line = `M ${pts.join(' L ')}`
   return {
     linePath: line,
-    areaPath: `${line} L ${pts[pts.length - 1]!.split(',')[0]},${h} L ${pts[0]!.split(',')[0]},${h} Z`,
+    areaPath: `${line} L ${(pts.at(-1) ?? '').split(',')[0]},${h} L ${(pts[0] ?? '').split(',')[0]},${h} Z`,
   }
 }
 
@@ -113,23 +100,24 @@ export default async function AdminAgentPerformanceDetailPage({
   const sp: SearchParams = (await searchParams) ?? {}
   const campaignFilter = readParam({ sp, key: 'campaign' })
 
-  const [agentUser] = await db
-    .select({ id: users.id, fullName: users.fullName, email: users.email })
-    .from(users)
-    .where(
-      and(eq(users.id, agentId), eq(users.managedByAdminId, admin.id), eq(users.role, 'agent'))
-    )
-    .limit(1)
+  // agentUser + myCampaigns en parallèle (les deux n'ont aucune dépendance entre eux)
+  // Un admin peut consulter les statistiques de n'importe quel agent, indépendamment du rattachement.
+  const [[agentUser], myCampaigns] = await Promise.all([
+    db
+      .select({ id: users.id, fullName: users.fullName, email: users.email })
+      .from(users)
+      .where(and(eq(users.id, agentId), eq(users.role, 'agent')))
+      .limit(1),
+    db
+      .select({ id: campaigns.id, title: campaigns.title })
+      .from(campaigns)
+      .where(or(eq(campaigns.createdByAdminId, admin.id), eq(campaigns.visibility, 'public')))
+      .orderBy(desc(campaigns.createdAt)),
+  ])
 
   if (!agentUser) {
     redirect('/dashboard/admin/performance')
   }
-
-  const myCampaigns = await db
-    .select({ id: campaigns.id, title: campaigns.title })
-    .from(campaigns)
-    .where(or(eq(campaigns.createdByAdminId, admin.id), eq(campaigns.visibility, 'public')))
-    .orderBy(desc(campaigns.createdAt))
 
   const myCampaignIds = myCampaigns.map((c) => c.id)
 
@@ -218,12 +206,7 @@ export default async function AdminAgentPerformanceDetailPage({
       })
       .from(callResults)
       .innerJoin(campaigns, eq(callResults.campaignId, campaigns.id))
-      .where(
-        and(
-          eq(callResults.agentId, agentId),
-          myCampaignIds.length > 0 ? inArray(callResults.campaignId, myCampaignIds) : undefined
-        )
-      )
+      .where(baseWhere)
       .groupBy(callResults.campaignId, campaigns.title)
       .orderBy(desc(count(callResults.id))),
     // Liste détaillée
@@ -666,7 +649,7 @@ export default async function AdminAgentPerformanceDetailPage({
               <div className="mt-3 flex flex-wrap gap-4 text-xs text-zinc-400 dark:text-zinc-500">
                 <span className="flex items-center gap-1">
                   <Clock className="size-3" />
-                  {formatDuration(call.durationSeconds)}
+                  {formatDuration({ seconds: call.durationSeconds ?? 0 })}
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="size-3" />

@@ -151,59 +151,65 @@ export default async function AgentContactDetailPage({
   const user = await requireRole({ allowedRoles: ['agent'] })
   const { id } = await params
 
-  const assignment = await db
-    .select({
-      assignmentId: agentContactAssignments.id,
-      ccId: agentContactAssignments.campaignContactId,
-      status: agentContactAssignments.status,
-      assignedAt: agentContactAssignments.assignedAt,
-      contactId: contacts.id,
-      firstName: contacts.firstName,
-      lastName: contacts.lastName,
-      phonePrimary: contacts.phonePrimary,
-      phoneSecondary: contacts.phoneSecondary,
-      email: contacts.email,
-      schoolName: contacts.schoolName,
-      desiredProgram: contacts.desiredProgram,
-      city: contacts.city,
-      campaignId: campaigns.id,
-      campaignTitle: campaigns.title,
-      campaignScript: campaigns.baseScript,
-      campaignDetails: campaigns.details,
-      pdfUrl: campaigns.pdfUrl,
-    })
-    .from(agentContactAssignments)
-    .innerJoin(campaignContacts, eq(agentContactAssignments.campaignContactId, campaignContacts.id))
-    .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
-    .innerJoin(campaigns, eq(campaignContacts.campaignId, campaigns.id))
-    .where(
-      and(
-        eq(agentContactAssignments.campaignContactId, id),
-        eq(agentContactAssignments.agentId, user.id)
+  // Round 1 — requêtes indépendantes en parallèle
+  const [assignmentArr, extraDataArr] = await Promise.all([
+    db
+      .select({
+        assignmentId: agentContactAssignments.id,
+        ccId: agentContactAssignments.campaignContactId,
+        status: agentContactAssignments.status,
+        assignedAt: agentContactAssignments.assignedAt,
+        contactId: contacts.id,
+        firstName: contacts.firstName,
+        lastName: contacts.lastName,
+        phonePrimary: contacts.phonePrimary,
+        phoneSecondary: contacts.phoneSecondary,
+        email: contacts.email,
+        schoolName: contacts.schoolName,
+        desiredProgram: contacts.desiredProgram,
+        city: contacts.city,
+        campaignId: campaigns.id,
+        campaignTitle: campaigns.title,
+        campaignScript: campaigns.baseScript,
+        campaignDetails: campaigns.details,
+        pdfUrl: campaigns.pdfUrl,
+      })
+      .from(agentContactAssignments)
+      .innerJoin(
+        campaignContacts,
+        eq(agentContactAssignments.campaignContactId, campaignContacts.id)
       )
-    )
-    .limit(1)
+      .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
+      .innerJoin(campaigns, eq(campaignContacts.campaignId, campaigns.id))
+      .where(
+        and(
+          eq(agentContactAssignments.campaignContactId, id),
+          eq(agentContactAssignments.agentId, user.id)
+        )
+      )
+      .limit(1),
+    // Récupération séparée des champs jsonb/enum pour éviter les erreurs Drizzle
+    db
+      .select({
+        metadataText: sql<string | null>`cast(${contacts.metadata} as text)`,
+        ccNotes: campaignContacts.notes,
+      })
+      .from(campaignContacts)
+      .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
+      .innerJoin(
+        agentContactAssignments,
+        eq(agentContactAssignments.campaignContactId, campaignContacts.id)
+      )
+      .where(and(eq(campaignContacts.id, id), eq(agentContactAssignments.agentId, user.id)))
+      .limit(1),
+  ])
 
-  if (assignment.length === 0) notFound()
+  if (assignmentArr.length === 0) notFound()
 
-  const contact = assignment[0]
+  const contact = assignmentArr[0]
   const contactName = `${contact.firstName} ${contact.lastName ?? ''}`.trim()
   const isCompleted = contact.status === 'completed'
-
-  // Récupération séparée des champs jsonb/enum pour éviter les erreurs Drizzle
-  const [extraData] = await db
-    .select({
-      metadataText: sql<string | null>`cast(${contacts.metadata} as text)`,
-      ccNotes: campaignContacts.notes,
-    })
-    .from(campaignContacts)
-    .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
-    .innerJoin(
-      agentContactAssignments,
-      eq(agentContactAssignments.campaignContactId, campaignContacts.id)
-    )
-    .where(and(eq(campaignContacts.id, id), eq(agentContactAssignments.agentId, user.id)))
-    .limit(1)
+  const [extraData] = extraDataArr
 
   const contactMetadata: Record<string, unknown> = extraData?.metadataText
     ? JSON.parse(extraData.metadataText)
@@ -217,79 +223,70 @@ export default async function AgentContactDetailPage({
     .replace(/\{ville\}/gi, contact.city ?? 'votre ville')
     .replace(/\{filière\}/gi, contact.desiredProgram ?? 'votre filière souhaitée')
 
-  // Progress for this agent in this campaign
-  const progressResult = await db
-    .select({
-      total: count(agentContactAssignments.id),
-      completed: sql<number>`count(case when ${agentContactAssignments.status} = 'completed' then 1 end)`,
-    })
-    .from(agentContactAssignments)
-    .innerJoin(campaignContacts, eq(agentContactAssignments.campaignContactId, campaignContacts.id))
-    .where(
-      and(
-        eq(agentContactAssignments.agentId, user.id),
-        eq(campaignContacts.campaignId, contact.campaignId)
+  // Round 2 — requêtes dépendant du contact, en parallèle
+  const [progressResult, queueContacts, existingResultArr] = await Promise.all([
+    db
+      .select({
+        total: count(agentContactAssignments.id),
+        completed: sql<number>`count(case when ${agentContactAssignments.status} = 'completed' then 1 end)`,
+      })
+      .from(agentContactAssignments)
+      .innerJoin(
+        campaignContacts,
+        eq(agentContactAssignments.campaignContactId, campaignContacts.id)
       )
-    )
+      .where(
+        and(
+          eq(agentContactAssignments.agentId, user.id),
+          eq(campaignContacts.campaignId, contact.campaignId)
+        )
+      ),
+    db
+      .select({
+        ccId: agentContactAssignments.campaignContactId,
+        firstName: contacts.firstName,
+        lastName: contacts.lastName,
+        schoolName: contacts.schoolName,
+      })
+      .from(agentContactAssignments)
+      .innerJoin(
+        campaignContacts,
+        eq(agentContactAssignments.campaignContactId, campaignContacts.id)
+      )
+      .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
+      .where(
+        and(
+          eq(agentContactAssignments.agentId, user.id),
+          eq(campaignContacts.campaignId, contact.campaignId),
+          eq(agentContactAssignments.status, 'pending'),
+          ne(agentContactAssignments.campaignContactId, id)
+        )
+      )
+      .limit(5),
+    isCompleted
+      ? db
+          .select({
+            id: callResults.id,
+            agentId: callResults.agentId,
+            outcome: callResults.outcome,
+            notes: callResults.notes,
+            durationSeconds: callResults.durationSeconds,
+            isWhatsappRedirected: callResults.isWhatsappRedirected,
+            createdAt: callResults.createdAt,
+            updatedAt: callResults.updatedAt,
+          })
+          .from(callResults)
+          .where(eq(callResults.assignmentId, contact.assignmentId))
+          .limit(1)
+      : Promise.resolve([]),
+  ])
 
   const progress = progressResult[0] ?? { total: 0, completed: 0 }
   const totalNum = typeof progress.total === 'number' ? progress.total : Number(progress.total)
   const completedNum =
     typeof progress.completed === 'number' ? progress.completed : Number(progress.completed)
   const progressPct = totalNum === 0 ? 0 : Math.round((completedNum / totalNum) * 100)
-
-  // Next contacts in queue
-  const queueContacts = await db
-    .select({
-      ccId: agentContactAssignments.campaignContactId,
-      firstName: contacts.firstName,
-      lastName: contacts.lastName,
-      schoolName: contacts.schoolName,
-    })
-    .from(agentContactAssignments)
-    .innerJoin(campaignContacts, eq(agentContactAssignments.campaignContactId, campaignContacts.id))
-    .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
-    .where(
-      and(
-        eq(agentContactAssignments.agentId, user.id),
-        eq(campaignContacts.campaignId, contact.campaignId),
-        eq(agentContactAssignments.status, 'pending'),
-        ne(agentContactAssignments.campaignContactId, id)
-      )
-    )
-    .limit(5)
-
-  // Fetch existing call result when assignment is completed
-  let existingResult:
-    | {
-        id: string
-        agentId: string
-        outcome: string
-        notes: string | null
-        durationSeconds: number
-        isWhatsappRedirected: boolean
-        createdAt: Date
-        updatedAt: Date | null
-      }
-    | undefined
-
-  if (isCompleted) {
-    const [row] = await db
-      .select({
-        id: callResults.id,
-        agentId: callResults.agentId,
-        outcome: callResults.outcome,
-        notes: callResults.notes,
-        durationSeconds: callResults.durationSeconds,
-        isWhatsappRedirected: callResults.isWhatsappRedirected,
-        createdAt: callResults.createdAt,
-        updatedAt: callResults.updatedAt,
-      })
-      .from(callResults)
-      .where(eq(callResults.assignmentId, contact.assignmentId))
-      .limit(1)
-    existingResult = row
-  }
+  const existingResult = existingResultArr[0]
 
   const canEdit =
     !!existingResult &&

@@ -9,34 +9,9 @@ import { and, count, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm'
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { callResults, campaigns } from '@/db/schema'
+import { extractCount, formatDuration, readParam } from '@/lib/dashboard-utils'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
-
-const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): string => {
-  const raw: string | string[] | undefined = sp[key]
-  if (typeof raw === 'string') {
-    return raw
-  }
-  return Array.isArray(raw) ? (raw[0] ?? '') : ''
-}
-
-const extractCount = ({ value }: Readonly<{ value: number | string | null }>): number => {
-  if (typeof value === 'number') {
-    return value
-  }
-  if (typeof value === 'string') {
-    const n: number = Number(value)
-    return Number.isFinite(n) ? n : 0
-  }
-  return 0
-}
-
-const formatDuration = ({ seconds }: Readonly<{ seconds: number }>): string => {
-  const r: number = Math.max(0, Math.round(seconds))
-  const m: number = Math.floor(r / 60)
-  const s: number = r % 60
-  return m === 0 ? `${s}s` : `${m}m ${s}s`
-}
 
 const buildDefaultFrom = (): string => {
   const d: Date = new Date()
