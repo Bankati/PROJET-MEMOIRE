@@ -389,18 +389,28 @@ export const CampaignEditPanel = ({
                   <FileText className="size-3.5 text-amber-600 dark:text-amber-300" />
                 </div>
                 <span className="text-xs font-semibold tracking-wide text-zinc-400 uppercase dark:text-zinc-500">
-                  Document PDF
+                  Script PDF
                 </span>
               </div>
+              {campaign.pdfUrl ? (
+                <a
+                  href={campaign.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lbs-blue mb-2 block truncate text-xs underline dark:text-blue-300"
+                >
+                  Voir le PDF actuel
+                </a>
+              ) : null}
+              <input type="hidden" name="currentPdfUrl" value={campaign.pdfUrl ?? ''} />
               <input
-                name="pdfUrl"
-                type="url"
-                defaultValue={campaign.pdfUrl ?? ''}
-                placeholder="https://exemple.com/brochure.pdf"
-                className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                name="pdfFile"
+                type="file"
+                accept="application/pdf"
+                className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-800 transition outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-600 focus:ring-2 dark:border-white/10 dark:bg-white/5 dark:text-white dark:file:bg-white/10 dark:file:text-zinc-300"
               />
               <p className="mt-1.5 text-[11px] text-zinc-400">
-                Accessible par les agents pendant l&apos;appel.
+                PDF uniquement, 10 Mo max. Laissez vide pour conserver le fichier actuel.
               </p>
             </div>
           </div>

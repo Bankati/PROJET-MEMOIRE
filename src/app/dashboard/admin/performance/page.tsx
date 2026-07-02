@@ -38,8 +38,9 @@ export default async function AdminPerformancePage({
   const dateFrom = new Date(dateFromStr)
   const dateTo = new Date(dateToStr + 'T23:59:59.999Z')
 
-  // Phase 2: myCampaigns + myAgents en parallèle (indépendants)
-  const [myCampaigns, myAgents] = await Promise.all([
+  // Phase 2: myCampaigns + allAgents en parallèle (indépendants)
+  // Les statistiques agents sont visibles par tout admin, indépendamment du rattachement (managedByAdminId).
+  const [myCampaigns, allAgents] = await Promise.all([
     db
       .select({ id: campaigns.id, title: campaigns.title })
       .from(campaigns)
@@ -48,7 +49,8 @@ export default async function AdminPerformancePage({
     db
       .select({ id: users.id, fullName: users.fullName })
       .from(users)
-      .where(and(eq(users.role, 'agent'), eq(users.managedByAdminId, user.id))),
+      .where(eq(users.role, 'agent'))
+      .orderBy(users.fullName),
   ])
   const myCampaignIds = myCampaigns.map((c) => c.id)
 
@@ -194,7 +196,7 @@ export default async function AdminPerformancePage({
               className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
             >
               <option value="">Tous</option>
-              {myAgents.map((a) => (
+              {allAgents.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.fullName}
                 </option>
