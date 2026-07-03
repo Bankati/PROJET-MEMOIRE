@@ -44,7 +44,7 @@ export default async function AdminMessagesPage(): Promise<React.JSX.Element> {
       </div>
 
       {messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-200 bg-white py-16 text-center dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-200 bg-white py-16 text-center dark:border-white/10">
           <div className="grid size-14 place-items-center rounded-2xl bg-zinc-100 dark:bg-white/10">
             <MessageSquare className="size-7 text-zinc-400 dark:text-zinc-500" />
           </div>
@@ -62,7 +62,7 @@ export default async function AdminMessagesPage(): Promise<React.JSX.Element> {
             return (
               <div
                 key={msg.id}
-                className={`relative rounded-2xl border bg-white p-5 shadow-sm transition dark:bg-[#1a2332] ${
+                className={`dark:bg-lbs-surface-dark relative rounded-2xl border bg-white p-5 shadow-sm transition ${
                   isRecent
                     ? 'border-lbs-blue/30 dark:border-blue-400/20'
                     : 'border-zinc-200/70 dark:border-white/10'
@@ -76,7 +76,7 @@ export default async function AdminMessagesPage(): Promise<React.JSX.Element> {
                 ) : null}
 
                 <div className="mb-3 flex items-center gap-3">
-                  <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#244976] to-[#21416C] shadow-sm">
+                  <div className="from-lbs-blue to-lbs-blue-2 grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br shadow-sm">
                     <Megaphone className="size-4 text-white" />
                   </div>
                   <div>

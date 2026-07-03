@@ -20,6 +20,15 @@ const config: Config = {
         'lbs-blue-2': '#21416C',
         'lbs-red': '#800000',
 
+        /**
+         * Surfaces sombres inventées au fil des pages dashboard (copier-coller de
+         * valeurs hex brutes). Centralisées ici pour éviter la dérive silencieuse
+         * entre plusieurs teintes de "carte en dark mode" quasi identiques.
+         */
+        'lbs-surface-dark': '#1a2332',
+        'lbs-surface-dark-2': '#0f1729',
+        'lbs-surface-dark-3': '#1e2535',
+
         // Brand palette (roles can map to these tokens)
         lbs: {
           blue: {

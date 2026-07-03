@@ -113,7 +113,7 @@ export const BulkAssignContacts = ({
             <button
               type="button"
               onClick={() => setShowAssignModal(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+              className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
             >
               <UserPlus className="size-4" />
               Attribuer
@@ -131,14 +131,14 @@ export const BulkAssignContacts = ({
       ) : null}
 
       {contacts.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-8 text-center shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-8 text-center shadow-sm dark:border-white/10">
           <ContactIcon className="mx-auto mb-3 size-12 text-zinc-300 dark:text-zinc-600" />
           <p className="text-zinc-500 dark:text-zinc-400">
             Aucun contact trouvé. Importez ou ajoutez des contacts.
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
@@ -243,7 +243,7 @@ export const BulkAssignContacts = ({
 
       {showAssignModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark w-full max-w-md rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-2xl dark:border-white/10">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-800 dark:text-white">
                 <Users className="text-lbs-blue size-5" />
@@ -266,7 +266,7 @@ export const BulkAssignContacts = ({
                 <select
                   name="agentId"
                   required
-                  className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                  className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
                 >
                   <option value="">Sélectionner un destinataire</option>
                   <optgroup label="Moi-même (Admin)">
@@ -302,7 +302,7 @@ export const BulkAssignContacts = ({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:opacity-50"
+                  className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <Loader2 className="size-4 animate-spin" />

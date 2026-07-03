@@ -116,20 +116,20 @@ export const RagManager = (): React.JSX.Element => {
           className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 transition-colors ${
             uploadState.status === 'uploading'
               ? 'cursor-not-allowed border-zinc-300 bg-zinc-50 dark:border-white/10 dark:bg-white/5'
-              : 'border-zinc-300 bg-zinc-50 hover:border-[#244976] hover:bg-blue-50/30 dark:border-white/10 dark:bg-white/5 dark:hover:border-blue-400'
+              : 'hover:border-lbs-blue border-zinc-300 bg-zinc-50 hover:bg-blue-50/30 dark:border-white/10 dark:bg-white/5 dark:hover:border-blue-400'
           }`}
         >
           {uploadState.status === 'uploading' ? (
             <>
-              <Loader2 className="size-8 animate-spin text-[#244976] dark:text-blue-400" />
+              <Loader2 className="text-lbs-blue size-8 animate-spin dark:text-blue-400" />
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 Traitement en cours — génération des embeddings...
               </p>
             </>
           ) : (
             <>
-              <div className="grid size-12 place-items-center rounded-xl bg-[#244976]/10 dark:bg-blue-400/10">
-                <Upload className="size-6 text-[#244976] dark:text-blue-400" />
+              <div className="bg-lbs-blue/10 grid size-12 place-items-center rounded-xl dark:bg-blue-400/10">
+                <Upload className="text-lbs-blue size-6 dark:text-blue-400" />
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -202,8 +202,8 @@ export const RagManager = (): React.JSX.Element => {
                 key={doc.document_name}
                 className="flex items-center gap-3 rounded-xl border border-zinc-200/70 bg-white px-4 py-3 dark:border-white/10 dark:bg-white/5"
               >
-                <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#244976]/10 dark:bg-blue-400/10">
-                  <FileText className="size-4 text-[#244976] dark:text-blue-400" />
+                <div className="bg-lbs-blue/10 grid size-8 shrink-0 place-items-center rounded-lg dark:bg-blue-400/10">
+                  <FileText className="text-lbs-blue size-4 dark:text-blue-400" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-zinc-800 dark:text-white">

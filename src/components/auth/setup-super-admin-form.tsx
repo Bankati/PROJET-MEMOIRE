@@ -11,7 +11,7 @@ type SetupResponse = Readonly<{
 }>
 
 const inputClass =
-  'w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-4 pl-10 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#244976] focus:bg-white focus:ring-2 focus:ring-[#244976]/15 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:bg-white/[0.08]'
+  'w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-4 pl-10 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-lbs-blue focus:bg-white focus:ring-2 focus:ring-lbs-blue/15 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:bg-white/[0.08]'
 
 const labelClass = 'text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400'
 

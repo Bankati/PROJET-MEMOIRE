@@ -8,11 +8,11 @@ import { ArrowRightLeft, Pencil, Plus, Trash2, UserCog } from 'lucide-react'
 
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
-import { campaigns, users } from '@/db/schema'
+import { campaigns, users, userStatusEnum } from '@/db/schema'
+import type { UserStatus } from '@/db/schema'
 import { hashPassword } from '@/lib/auth/password'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
-type UserStatus = 'active' | 'inactive' | 'expired'
 type AdminRow = Readonly<{
   id: string
   fullName: string
@@ -32,9 +32,8 @@ const readFormValue = ({
   const val: FormDataEntryValue | null = formData.get(key)
   return typeof val === 'string' ? val.trim() : ''
 }
-const isUserStatus = (v: string): v is UserStatus => {
-  return v === 'active' || v === 'inactive' || v === 'expired'
-}
+const isUserStatus = (v: string): v is UserStatus =>
+  (userStatusEnum.enumValues as readonly string[]).includes(v)
 const buildNoticeUrl = ({
   notice,
   mode,
@@ -93,14 +92,24 @@ const createAdminAction = async (formData: FormData): Promise<void> => {
     )
   }
   const passwordHash: string = hashPassword({ password })
-  await db.insert(users).values({
-    email,
-    fullName,
-    passwordHash,
-    role: 'admin',
-    status: 'active',
-    createdByUserId: superAdmin.id,
-  })
+  try {
+    await db.insert(users).values({
+      email,
+      fullName,
+      passwordHash,
+      role: 'admin',
+      status: 'active',
+      createdByUserId: superAdmin.id,
+    })
+  } catch {
+    redirect(
+      buildNoticeUrl({
+        notice: "Échec de la création de l'administrateur.",
+        mode: 'create',
+        noticeType: 'error',
+      })
+    )
+  }
   redirect(buildNoticeUrl({ notice: `Administrateur "${fullName}" créé avec succès.` }))
 }
 const updateAdminAction = async (formData: FormData): Promise<void> => {
@@ -133,10 +142,19 @@ const updateAdminAction = async (formData: FormData): Promise<void> => {
       })
     )
   }
-  await db
-    .update(users)
-    .set({ fullName, email, status: statusValue, updatedAt: new Date() })
-    .where(and(eq(users.id, adminId), eq(users.role, 'admin')))
+  try {
+    await db
+      .update(users)
+      .set({ fullName, email, status: statusValue, updatedAt: new Date() })
+      .where(and(eq(users.id, adminId), eq(users.role, 'admin')))
+  } catch {
+    redirect(
+      buildNoticeUrl({
+        notice: "Échec de la mise à jour de l'administrateur.",
+        noticeType: 'error',
+      })
+    )
+  }
   redirect(buildNoticeUrl({ notice: `Administrateur "${fullName}" mis à jour.` }))
 }
 const reassignCampaignsAction = async (formData: FormData): Promise<void> => {
@@ -153,10 +171,20 @@ const reassignCampaignsAction = async (formData: FormData): Promise<void> => {
       })
     )
   }
-  await db
-    .update(campaigns)
-    .set({ createdByAdminId: toAdminId, updatedAt: new Date() })
-    .where(eq(campaigns.createdByAdminId, fromAdminId))
+  try {
+    await db
+      .update(campaigns)
+      .set({ createdByAdminId: toAdminId, updatedAt: new Date() })
+      .where(eq(campaigns.createdByAdminId, fromAdminId))
+  } catch {
+    redirect(
+      buildNoticeUrl({
+        notice: 'Échec de la réattribution des campagnes.',
+        mode: 'reassign',
+        noticeType: 'error',
+      })
+    )
+  }
   redirect(
     buildNoticeUrl({
       notice: "Campagnes réattribuées. Vous pouvez maintenant supprimer l'administrateur.",
@@ -185,11 +213,20 @@ const deleteAdminAction = async (formData: FormData): Promise<void> => {
       })
     )
   }
-  await db
-    .update(users)
-    .set({ managedByAdminId: null, updatedAt: new Date() })
-    .where(eq(users.managedByAdminId, adminId))
-  await db.delete(users).where(and(eq(users.id, adminId), eq(users.role, 'admin')))
+  try {
+    await db
+      .update(users)
+      .set({ managedByAdminId: null, updatedAt: new Date() })
+      .where(eq(users.managedByAdminId, adminId))
+    await db.delete(users).where(and(eq(users.id, adminId), eq(users.role, 'admin')))
+  } catch {
+    redirect(
+      buildNoticeUrl({
+        notice: "Échec de la suppression de l'administrateur.",
+        noticeType: 'error',
+      })
+    )
+  }
   redirect(buildNoticeUrl({ notice: 'Compte administrateur supprimé.' }))
 }
 
@@ -253,7 +290,7 @@ export default async function AdminsPage({
         {mode !== 'create' ? (
           <a
             href="/dashboard/super-admin/admins?mode=create"
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+            className="from-lbs-blue to-lbs-blue-2 inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
           >
             <Plus className="size-4" />
             Créer un administrateur
@@ -272,7 +309,7 @@ export default async function AdminsPage({
         </div>
       ) : null}
       {mode === 'create' ? (
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-zinc-800 dark:text-white">
             <UserCog className="text-lbs-blue size-5" />
             Nouveau compte administrateur
@@ -335,7 +372,7 @@ export default async function AdminsPage({
             <div className="flex items-end gap-3 md:col-span-3">
               <button
                 type="submit"
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 text-sm font-medium text-white transition hover:brightness-110"
+                className="from-lbs-blue to-lbs-blue-2 inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r px-5 text-sm font-medium text-white transition hover:brightness-110"
               >
                 <Plus className="size-4" />
                 Créer le compte
@@ -479,7 +516,7 @@ export default async function AdminsPage({
       {/* Mobile cards */}
       <div className="space-y-3 sm:hidden">
         {adminRows.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10">
             <UserCog className="mx-auto mb-2 size-8 text-zinc-300" />
             <p className="text-sm text-zinc-400">Aucun administrateur créé pour le moment.</p>
           </div>
@@ -487,7 +524,7 @@ export default async function AdminsPage({
           adminRows.map((row) => (
             <div
               key={row.id}
-              className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+              className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -552,7 +589,7 @@ export default async function AdminsPage({
       </div>
 
       {/* Desktop table */}
-      <div className="hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>

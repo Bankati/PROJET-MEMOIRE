@@ -4,28 +4,10 @@ import { useState, useMemo, useCallback } from 'react'
 import { ArrowRightLeft, Check, ChevronDown, Filter, Loader2, Search, X } from 'lucide-react'
 
 import type { ProspectRow, CampaignOption, AgentOption } from '@/app/dashboard/admin/prospects/page'
+import type { CallOutcome } from '@/db/schema'
+import { CALL_OUTCOME_LABELS, CALL_OUTCOME_BADGE_STYLES } from '@/lib/status-styles'
 
 // ─── Libellés & couleurs des statuts ──────────────────────────────────────────
-
-const OUTCOME_LABELS: Record<string, string> = {
-  interested: 'Intéressé',
-  not_interested: 'Pas intéressé',
-  callback: 'Rappel nécessaire',
-  no_answer: 'Pas de réponse',
-  false_number: 'Faux numéro',
-  whatsapp_follow_up: 'Suivi WhatsApp',
-  other: 'Autre',
-}
-
-const OUTCOME_COLORS: Record<string, string> = {
-  interested: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-  not_interested: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
-  callback: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-  no_answer: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-700/50 dark:text-zinc-400',
-  false_number: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
-  whatsapp_follow_up: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-  other: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-700/50 dark:text-zinc-400',
-}
 
 const SOURCE_LABELS: Record<string, string> = {
   excel_import: 'Import Excel',
@@ -256,7 +238,7 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
               className="focus:ring-lbs-blue appearance-none rounded-lg border border-zinc-200 bg-zinc-50 py-2 pr-8 pl-3 text-sm text-zinc-700 focus:ring-2 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
             >
               <option value="">Tous les statuts</option>
-              {Object.entries(OUTCOME_LABELS).map(([key, label]) => (
+              {Object.entries(CALL_OUTCOME_LABELS).map(([key, label]) => (
                 <option key={key} value={key}>
                   {label}
                 </option>
@@ -426,9 +408,9 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
                       <td className="px-4 py-3">
                         {outcomeKey ? (
                           <span
-                            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${OUTCOME_COLORS[outcomeKey] ?? 'bg-zinc-100 text-zinc-500'}`}
+                            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${CALL_OUTCOME_BADGE_STYLES[outcomeKey as CallOutcome] ?? 'bg-zinc-100 text-zinc-500'}`}
                           >
-                            {OUTCOME_LABELS[outcomeKey] ?? outcomeKey}
+                            {CALL_OUTCOME_LABELS[outcomeKey as CallOutcome] ?? outcomeKey}
                           </span>
                         ) : (
                           <span className="text-xs text-zinc-400 italic">Jamais appelé</span>

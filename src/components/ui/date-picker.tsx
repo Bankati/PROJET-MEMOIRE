@@ -34,7 +34,7 @@ export const LbsDatePicker = ({
       <DatePicker.Label className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
         {label}
       </DatePicker.Label>
-      <DatePicker.Control className="focus-within:border-lbs-blue focus-within:ring-lbs-blue/20 flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm transition focus-within:ring-2 dark:border-white/10 dark:bg-[#1a2332]">
+      <DatePicker.Control className="focus-within:border-lbs-blue focus-within:ring-lbs-blue/20 dark:bg-lbs-surface-dark flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm transition focus-within:ring-2 dark:border-white/10">
         <DatePicker.Input
           name={name}
           className="flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
@@ -59,7 +59,7 @@ export const LbsDatePicker = ({
       ) : null}
       <Portal>
         <DatePicker.Positioner>
-          <DatePicker.Content className="z-50 mt-2 w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-[#1a2332]">
+          <DatePicker.Content className="dark:bg-lbs-surface-dark z-50 mt-2 w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-3 shadow-xl dark:border-white/10">
             <div className="mb-3 flex gap-2">
               <DatePicker.YearSelect className="flex-1 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-800 outline-none dark:border-white/10 dark:bg-white/5 dark:text-zinc-100" />
               <DatePicker.MonthSelect className="flex-1 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-800 outline-none dark:border-white/10 dark:bg-white/5 dark:text-zinc-100" />

@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { users } from '@/db/schema'
-import { uploadAvatar } from '@/lib/supabase'
+import { uploadAvatar, deleteAvatar } from '@/lib/supabase'
 
 const ALLOWED_TYPES: ReadonlySet<string> = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const MAX_SIZE_BYTES: number = 2 * 1024 * 1024 // 2 MB
@@ -61,10 +61,19 @@ export const POST = async (request: Request): Promise<Response> => {
     )
   }
 
-  await db
-    .update(users)
-    .set({ avatarUrl, updatedAt: new Date() })
-    .where(eq(users.id, session.user.id))
+  try {
+    await db
+      .update(users)
+      .set({ avatarUrl, updatedAt: new Date() })
+      .where(eq(users.id, session.user.id))
+  } catch {
+    // Nettoie le fichier orphelin en storage puisque la DB n'a pas pu être mise à jour.
+    await deleteAvatar({ userId: session.user.id })
+    return NextResponse.json(
+      { ok: false, message: "Échec de l'enregistrement de la photo de profil." },
+      { status: 500 }
+    )
+  }
 
   return NextResponse.json({ ok: true, avatarUrl })
 }

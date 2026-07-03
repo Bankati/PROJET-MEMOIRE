@@ -52,7 +52,7 @@ export const DashboardFilters = ({
       className={
         hero
           ? 'rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm'
-          : 'rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]'
+          : 'dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10'
       }
       suppressHydrationWarning
     >
@@ -82,8 +82,8 @@ export const DashboardFilters = ({
             suppressHydrationWarning
             className={
               hero
-                ? 'inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-[#244976] shadow-sm transition hover:bg-white/90'
-                : 'inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-sm font-medium text-white shadow-sm transition hover:brightness-110'
+                ? 'text-lbs-blue inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold shadow-sm transition hover:bg-white/90'
+                : 'from-lbs-blue to-lbs-blue-2 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r text-sm font-medium text-white shadow-sm transition hover:brightness-110'
             }
           >
             <Sparkles className="size-3.5" />

@@ -12,7 +12,9 @@ import { requireRole } from '@/lib/auth/server-auth'
 import { hashPassword } from '@/lib/auth/password'
 import { db } from '@/lib/db'
 import { campaigns, users, callResults } from '@/db/schema'
+import type { UserStatus } from '@/db/schema'
 import { AgentDialogForm } from '@/components/admin/agent-dialog-form'
+import { USER_STATUS_LABELS, USER_STATUS_STYLES } from '@/lib/status-styles'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 
@@ -24,19 +26,10 @@ const readParam = ({ sp, key }: Readonly<{ sp: SearchParams; key: string }>): st
   return Array.isArray(raw) ? (raw[0] ?? '') : ''
 }
 
-const statusLabelMap: Readonly<Record<string, string>> = {
-  active: 'Actif',
-  inactive: 'Inactif',
-  expired: 'Expiré',
-}
+const statusLabelMap = USER_STATUS_LABELS
+const statusColorMap = USER_STATUS_STYLES
 
-const statusColorMap: Readonly<Record<string, string>> = {
-  active: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  inactive: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700/40 dark:text-zinc-300',
-  expired: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-}
-
-const statusIconMap: Readonly<Record<string, React.ReactNode>> = {
+const statusIconMap: Readonly<Record<UserStatus, React.ReactNode>> = {
   active: <CheckCircle2 className="size-3.5" />,
   inactive: <XCircle className="size-3.5" />,
   expired: <Clock className="size-3.5" />,
@@ -63,16 +56,20 @@ async function createAgent(formData: FormData): Promise<void> {
       : []
   const expiresAt: Date | null =
     campaign.length > 0 && campaign[0].endsAt ? campaign[0].endsAt : null
-  await db.insert(users).values({
-    fullName: fullName.trim(),
-    email: email.trim().toLowerCase(),
-    passwordHash: hashPassword({ password }),
-    role: 'agent',
-    status: 'active',
-    managedByAdminId: admin.id,
-    createdByUserId: admin.id,
-    campaignAccessExpiresAt: expiresAt,
-  })
+  try {
+    await db.insert(users).values({
+      fullName: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      passwordHash: hashPassword({ password }),
+      role: 'agent',
+      status: 'active',
+      managedByAdminId: admin.id,
+      createdByUserId: admin.id,
+      campaignAccessExpiresAt: expiresAt,
+    })
+  } catch {
+    redirect('/dashboard/admin/agents?notice=error')
+  }
   redirect('/dashboard/admin/agents?notice=created')
 }
 
@@ -85,13 +82,17 @@ async function toggleAgentStatus(formData: FormData): Promise<void> {
     redirect('/dashboard/admin/agents?notice=error')
     return
   }
-  await db
-    .update(users)
-    .set({
-      status: newStatus as 'active' | 'inactive' | 'expired',
-      updatedAt: new Date(),
-    })
-    .where(and(eq(users.id, agentId), eq(users.managedByAdminId, admin.id)))
+  try {
+    await db
+      .update(users)
+      .set({
+        status: newStatus as UserStatus,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(users.id, agentId), eq(users.managedByAdminId, admin.id)))
+  } catch {
+    redirect('/dashboard/admin/agents?notice=error')
+  }
   redirect('/dashboard/admin/agents?notice=updated')
 }
 
@@ -111,14 +112,18 @@ async function reactivateAgent(formData: FormData): Promise<void> {
     .limit(1)
   const expiresAt: Date | null =
     campaign.length > 0 && campaign[0].endsAt ? campaign[0].endsAt : null
-  await db
-    .update(users)
-    .set({
-      status: 'active',
-      campaignAccessExpiresAt: expiresAt,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(users.id, agentId), eq(users.managedByAdminId, admin.id)))
+  try {
+    await db
+      .update(users)
+      .set({
+        status: 'active',
+        campaignAccessExpiresAt: expiresAt,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(users.id, agentId), eq(users.managedByAdminId, admin.id)))
+  } catch {
+    redirect('/dashboard/admin/agents?notice=error')
+  }
   redirect('/dashboard/admin/agents?notice=reactivated')
 }
 
@@ -197,14 +202,14 @@ export default async function AdminAgentsPage({
         </div>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Total agents</p>
             <Users className="size-4 text-blue-400" />
           </div>
           <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{myAgents.length}</p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Actifs</p>
             <CheckCircle2 className="size-4 text-emerald-400" />
@@ -213,7 +218,7 @@ export default async function AdminAgentsPage({
             {myAgents.filter((a) => a.status === 'active').length}
           </p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Expirés</p>
             <Clock className="size-4 text-rose-400" />
@@ -224,7 +229,7 @@ export default async function AdminAgentsPage({
         </div>
       </div>
       {reactivateId.length > 0 ? (
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10">
           <h2 className="mb-4 text-lg font-semibold text-zinc-800 dark:text-white">
             Réactiver l&apos;agent pour une campagne
           </h2>
@@ -237,7 +242,7 @@ export default async function AdminAgentsPage({
               <select
                 name="campaignId"
                 required
-                className="focus:border-lbs-blue w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                className="focus:border-lbs-blue dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:text-white"
               >
                 <option value="">Sélectionner une campagne</option>
                 {myCampaigns.map((c) => (
@@ -250,7 +255,7 @@ export default async function AdminAgentsPage({
             <div className="flex items-center gap-3">
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+                className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
               >
                 <RefreshCcw className="size-4" />
                 Réactiver
@@ -270,7 +275,7 @@ export default async function AdminAgentsPage({
           {/* Mobile cards */}
           <div className="space-y-3 sm:hidden">
             {myAgents.length === 0 ? (
-              <div className="rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10 dark:bg-[#1a2332]">
+              <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10">
                 <Users className="mx-auto mb-2 size-8 text-zinc-300" />
                 <p className="text-sm text-zinc-400">Aucun agent. Créez votre premier agent.</p>
               </div>
@@ -278,7 +283,7 @@ export default async function AdminAgentsPage({
               myAgents.map((agent) => (
                 <div
                   key={agent.id}
-                  className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+                  className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-3">
@@ -337,7 +342,7 @@ export default async function AdminAgentsPage({
           </div>
 
           {/* Desktop table */}
-          <div className="hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>

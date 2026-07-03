@@ -3,14 +3,7 @@
 import { useState } from 'react'
 import { CheckCircle2, MessageCircle, Pencil } from 'lucide-react'
 
-type CallOutcome =
-  | 'interested'
-  | 'not_interested'
-  | 'callback'
-  | 'no_answer'
-  | 'false_number'
-  | 'whatsapp_follow_up'
-  | 'other'
+import type { CallOutcome } from '@/db/schema'
 
 type CallResultFormProps = Readonly<{
   assignmentId: string
@@ -90,7 +83,7 @@ export const CallResultForm = ({
           value={outcome}
           onChange={(e) => setOutcome(e.target.value as CallOutcome | '')}
           required
-          className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:border-[#244976] focus:ring-2 focus:ring-[#244976]/20 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+          className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
         >
           <option value="" disabled>
             — Sélectionner un résultat —
@@ -104,7 +97,7 @@ export const CallResultForm = ({
       </div>
 
       <div>
-        <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm transition hover:bg-zinc-50 dark:border-white/15 dark:bg-[#0f1729] dark:hover:bg-white/5">
+        <label className="dark:bg-lbs-surface-dark-2 flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm transition hover:bg-zinc-50 dark:border-white/15 dark:hover:bg-white/5">
           <input
             type="checkbox"
             checked={showWhatsappOption}
@@ -125,7 +118,7 @@ export const CallResultForm = ({
           rows={3}
           defaultValue={defaultNotes ?? ''}
           placeholder="Ajoutez des notes sur cet appel..."
-          className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full resize-none rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+          className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full resize-none rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
         />
       </div>
 
@@ -133,7 +126,7 @@ export const CallResultForm = ({
         <button
           type="submit"
           disabled={outcome === '' || isSubmitting}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {mode === 'edit' ? (
             <>

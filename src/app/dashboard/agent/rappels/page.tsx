@@ -104,7 +104,7 @@ export default async function AgentRappelsPage(): Promise<React.JSX.Element> {
       {/* Mobile cards */}
       <div className="space-y-3 sm:hidden">
         {rappels.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10">
             <Bell className="mx-auto mb-2 size-8 text-zinc-300" />
             <p className="text-sm text-zinc-400">Aucun rappel en attente.</p>
           </div>
@@ -112,7 +112,7 @@ export default async function AgentRappelsPage(): Promise<React.JSX.Element> {
           rappels.map((r) => (
             <div
               key={r.callId}
-              className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+              className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10"
             >
               <div className="flex items-center gap-3">
                 <div className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-sm font-semibold text-white">
@@ -174,7 +174,7 @@ export default async function AgentRappelsPage(): Promise<React.JSX.Element> {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>

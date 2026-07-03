@@ -5,17 +5,17 @@ import { cache } from 'react'
 import { redirect } from 'next/navigation'
 
 import { auth } from '@/lib/auth'
+import type { UserRole, UserStatus } from '@/db/schema'
 
 // Deduplicate auth() calls within a single server-render cycle
 const getSession = cache(async () => auth())
 
-type AuthRole = 'super_admin' | 'admin' | 'agent'
 type ServerAuthUser = Readonly<{
   id: string
   email: string
-  role: AuthRole
+  role: UserRole
   fullName: string
-  status: 'active' | 'inactive' | 'expired'
+  status: UserStatus
 }>
 
 export const getCurrentUser = async (): Promise<ServerAuthUser | null> => {
@@ -43,7 +43,7 @@ export const requireUser = async (): Promise<ServerAuthUser> => {
 export const requireRole = async ({
   allowedRoles,
 }: Readonly<{
-  allowedRoles: readonly AuthRole[]
+  allowedRoles: readonly UserRole[]
 }>): Promise<ServerAuthUser> => {
   const user: ServerAuthUser = await requireUser()
   const canAccess: boolean = allowedRoles.includes(user.role)

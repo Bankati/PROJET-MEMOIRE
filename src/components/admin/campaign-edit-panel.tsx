@@ -104,7 +104,7 @@ export const CampaignEditPanel = ({
       <div className="mb-6 flex flex-wrap items-start gap-3">
         <a
           href="/dashboard/admin/campaigns"
-          className="flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-medium text-zinc-500 shadow-sm transition hover:border-zinc-300 hover:text-zinc-700 dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-400 dark:hover:text-zinc-200"
+          className="dark:bg-lbs-surface-dark flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-medium text-zinc-500 shadow-sm transition hover:border-zinc-300 hover:text-zinc-700 dark:border-white/10 dark:text-zinc-400 dark:hover:text-zinc-200"
         >
           <ArrowLeft className="size-3.5" />
           Retour
@@ -167,7 +167,7 @@ export const CampaignEditPanel = ({
             type="submit"
             form="edit-form"
             disabled={isPending}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
+            className="from-lbs-blue to-lbs-blue-2 flex items-center gap-1.5 rounded-xl bg-gradient-to-r px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
           >
             {isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -193,7 +193,7 @@ export const CampaignEditPanel = ({
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
                 status === opt.value
                   ? `${opt.color} shadow-sm ring-2 ring-current/30 ring-offset-1`
-                  : 'border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-400'
+                  : 'dark:bg-lbs-surface-dark border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 dark:border-white/10 dark:text-zinc-400'
               }`}
             >
               {status === opt.value && <CheckCircle2 className="size-3" />}
@@ -228,7 +228,7 @@ export const CampaignEditPanel = ({
         <div className="grid gap-6 lg:grid-cols-3">
           {/* ── Left: Script + Détails ── */}
           <div className="space-y-5 lg:col-span-2">
-            <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+            <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="bg-lbs-blue/10 grid size-7 place-items-center rounded-lg dark:bg-blue-500/15">
@@ -270,7 +270,7 @@ export const CampaignEditPanel = ({
               )}
             </div>
 
-            <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+            <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
               <div className="mb-3 flex items-center gap-2">
                 <div className="grid size-7 place-items-center rounded-lg bg-violet-100 dark:bg-violet-500/15">
                   <Edit3 className="size-3.5 text-violet-600 dark:text-violet-300" />
@@ -291,7 +291,7 @@ export const CampaignEditPanel = ({
           {/* ── Right: Metadata sidebar ── */}
           <div className="space-y-5">
             {/* Infos générales */}
-            <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+            <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
               <p className="mb-4 text-xs font-semibold tracking-wide text-zinc-400 uppercase dark:text-zinc-500">
                 Informations
               </p>
@@ -327,7 +327,7 @@ export const CampaignEditPanel = ({
             </div>
 
             {/* Visibilité */}
-            <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+            <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
               <p className="mb-3 text-xs font-semibold tracking-wide text-zinc-400 uppercase dark:text-zinc-500">
                 Visibilité
               </p>
@@ -383,7 +383,7 @@ export const CampaignEditPanel = ({
             </div>
 
             {/* PDF */}
-            <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+            <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
               <div className="mb-3 flex items-center gap-2">
                 <div className="grid size-7 place-items-center rounded-lg bg-amber-100 dark:bg-amber-500/15">
                   <FileText className="size-3.5 text-amber-600 dark:text-amber-300" />
@@ -417,7 +417,7 @@ export const CampaignEditPanel = ({
         </div>
 
         {/* ── Bottom save bar (mobile sticky) ── */}
-        <div className="mt-6 flex items-center justify-between rounded-2xl border border-zinc-200/70 bg-white px-5 py-3 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark mt-6 flex items-center justify-between rounded-2xl border border-zinc-200/70 bg-white px-5 py-3 shadow-sm dark:border-white/10">
           <p className="text-xs text-zinc-400">
             {isDirty ? (
               <span className="text-amber-500">● Modifications non sauvegardées</span>
@@ -428,7 +428,7 @@ export const CampaignEditPanel = ({
           <button
             type="submit"
             disabled={isPending}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
+            className="from-lbs-blue to-lbs-blue-2 flex items-center gap-1.5 rounded-xl bg-gradient-to-r px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
           >
             {isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
             {isPending ? 'Enregistrement…' : 'Enregistrer les modifications'}

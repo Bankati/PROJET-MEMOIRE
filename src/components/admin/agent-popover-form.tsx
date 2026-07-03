@@ -36,7 +36,7 @@ export const AgentPopoverForm = ({
       transition={{ duration: 0.3, ease: 'easeOut' }}
     >
       <MorphingPopoverTrigger asChild>
-        <Button className="gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-white shadow-sm hover:brightness-110">
+        <Button className="from-lbs-blue to-lbs-blue-2 gap-2 rounded-xl bg-gradient-to-r text-white shadow-sm hover:brightness-110">
           <motion.span
             layoutId="agent-create-label"
             layout="position"
@@ -99,7 +99,7 @@ export const AgentPopoverForm = ({
                 <select
                   id="agent-campaignId"
                   name="campaignId"
-                  className="focus:border-lbs-blue flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                  className="focus:border-lbs-blue dark:bg-lbs-surface-dark-2 flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:text-white"
                 >
                   <option value="">Aucune</option>
                   {campaigns.map((c) => (
@@ -118,7 +118,7 @@ export const AgentPopoverForm = ({
           <div className="flex justify-end gap-2 pt-1">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+              className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
             >
               <UserPlus className="size-3.5" />
               Créer l&apos;agent

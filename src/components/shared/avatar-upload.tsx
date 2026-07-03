@@ -87,7 +87,7 @@ export const AvatarUpload = ({
           />
         ) : (
           <div
-            className={`grid ${sizeClass} place-items-center ${shapeClass} bg-gradient-to-br from-[#244976] to-[#21416C] ${textSize} font-bold text-white`}
+            className={`grid ${sizeClass} place-items-center ${shapeClass} from-lbs-blue to-lbs-blue-2 bg-gradient-to-br ${textSize} font-bold text-white`}
           >
             {initials}
           </div>
@@ -96,7 +96,7 @@ export const AvatarUpload = ({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploadState === 'uploading'}
-          className={`absolute right-0 bottom-0 grid size-8 place-items-center rounded-full border-2 border-white bg-zinc-100 text-zinc-600 transition hover:bg-zinc-200 disabled:opacity-60 dark:border-[#1a2332] dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600 ${shape === 'rounded' ? '-right-1 -bottom-1' : ''}`}
+          className={`dark:border-lbs-surface-dark absolute right-0 bottom-0 grid size-8 place-items-center rounded-full border-2 border-white bg-zinc-100 text-zinc-600 transition hover:bg-zinc-200 disabled:opacity-60 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600 ${shape === 'rounded' ? '-right-1 -bottom-1' : ''}`}
           title="Changer la photo"
         >
           {uploadState === 'uploading' ? (
