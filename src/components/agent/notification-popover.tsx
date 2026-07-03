@@ -98,7 +98,7 @@ export const AgentNotificationPopover = ({
                 className="rounded-lg px-3 py-2.5 transition-colors hover:bg-zinc-50 dark:hover:bg-white/5"
               >
                 <div className="relative flex items-start gap-3 pe-4">
-                  <div className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#244976] to-[#21416C]">
+                  <div className="from-lbs-blue to-lbs-blue-2 mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br">
                     <Megaphone className="size-3.5 text-white" />
                   </div>
                   <div className="flex-1 space-y-0.5">

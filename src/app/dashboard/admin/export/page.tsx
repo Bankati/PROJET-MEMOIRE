@@ -4,11 +4,12 @@
  * L'admin peut choisir la campagne et la période à exporter.
  */
 import { BarChart3, Download, FileText, Phone, PhoneMissed, Send, Timer } from 'lucide-react'
-import { and, count, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { callResults, campaigns } from '@/db/schema'
+import { campaignAccessCondition } from '@/lib/campaign-access'
 import { extractCount, formatDuration, readParam } from '@/lib/dashboard-utils'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
@@ -38,7 +39,7 @@ export default async function AdminExportPage({
   const myCampaigns = await db
     .select({ id: campaigns.id, title: campaigns.title })
     .from(campaigns)
-    .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+    .where(campaignAccessCondition({ adminId: user.id }))
     .orderBy(desc(campaigns.createdAt))
   const myCampaignIds: string[] = myCampaigns.map((c) => c.id)
   const hasCampaigns: boolean = myCampaignIds.length > 0
@@ -98,7 +99,7 @@ export default async function AdminExportPage({
           Générez un rapport PDF de vos performances
         </p>
       </div>
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
         <form className="grid items-end gap-3 sm:grid-cols-2 md:grid-cols-4">
           <div>
             <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -107,7 +108,7 @@ export default async function AdminExportPage({
             <select
               name="campaign"
               defaultValue={campaignFilter}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:text-white"
             >
               <option value="">Toutes</option>
               {myCampaigns.map((c) => (
@@ -125,7 +126,7 @@ export default async function AdminExportPage({
               name="from"
               type="date"
               defaultValue={dateFromStr}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:text-white"
             />
           </div>
           <div>
@@ -136,19 +137,19 @@ export default async function AdminExportPage({
               name="to"
               type="date"
               defaultValue={dateToStr}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:text-white"
             />
           </div>
           <button
             type="submit"
-            className="inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+            className="from-lbs-blue to-lbs-blue-2 inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r text-sm font-medium text-white shadow-sm transition hover:brightness-110"
           >
             <BarChart3 className="size-3.5" />
             Prévisualiser
           </button>
         </form>
       </div>
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm sm:p-6 dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm sm:p-6 dark:border-white/10">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-base font-semibold text-zinc-800 sm:text-lg dark:text-white">
@@ -160,7 +161,7 @@ export default async function AdminExportPage({
           </div>
           <button
             type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 sm:w-auto"
+            className="from-lbs-blue to-lbs-blue-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 sm:w-auto"
           >
             <Download className="size-4" />
             Télécharger PDF

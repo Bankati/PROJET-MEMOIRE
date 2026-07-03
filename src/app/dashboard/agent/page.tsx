@@ -305,7 +305,7 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
             backgroundPosition: 'right center',
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1a3354] via-[#244976]/90 to-transparent" />
+          <div className="via-lbs-blue/90 absolute inset-0 bg-gradient-to-r from-[#1a3354] to-transparent" />
         </div>
         <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-10">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
@@ -370,7 +370,7 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
         ].map((kpi) => (
           <div
             key={kpi.label}
-            className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-[#1a2332]"
+            className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10"
           >
             <div className="flex items-center justify-between">
               <p className="text-sm text-zinc-500 dark:text-zinc-400">{kpi.label}</p>
@@ -382,7 +382,7 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
         ))}
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:col-span-2 dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:col-span-2 dark:border-white/10">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -441,7 +441,7 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
             ))}
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <p className="mb-4 text-sm font-medium text-zinc-500 dark:text-zinc-400">
             Répartition des appels
           </p>
@@ -524,7 +524,7 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
           </div>
         ))}
       </div>
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
             <Contact className="size-4 text-blue-400" />
@@ -541,7 +541,7 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
           </h3>
           <Link
             href="/dashboard/agent/contacts"
-            className="text-xs text-[#244976] hover:underline dark:text-blue-300"
+            className="text-lbs-blue text-xs hover:underline dark:text-blue-300"
           >
             Voir tous →
           </Link>
@@ -589,7 +589,7 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
                     <td className="px-3 py-3 text-right">
                       <Link
                         href={`/dashboard/agent/contacts/${c.ccId}`}
-                        className="text-xs text-[#244976] hover:underline dark:text-blue-300"
+                        className="text-lbs-blue text-xs hover:underline dark:text-blue-300"
                       >
                         Voir →
                       </Link>

@@ -53,6 +53,19 @@ export const callOutcomeEnum = pgEnum('call_outcome', [
 export const otpStatusEnum = pgEnum('otp_status', ['pending', 'used', 'expired'])
 export const otpPurposeEnum = pgEnum('otp_purpose', ['password_reset'])
 
+/**
+ * Types dérivés des enums Postgres ci-dessus — à utiliser partout plutôt que de
+ * redéfinir ces unions de chaînes en dur, pour rester synchronisé avec le schéma.
+ */
+export type UserRole = (typeof userRoleEnum.enumValues)[number]
+export type UserStatus = (typeof userStatusEnum.enumValues)[number]
+export type CampaignStatus = (typeof campaignStatusEnum.enumValues)[number]
+export type CampaignVisibility = (typeof campaignVisibilityEnum.enumValues)[number]
+export type CampaignPermission = (typeof campaignPermissionEnum.enumValues)[number]
+export type ContactSource = (typeof contactSourceEnum.enumValues)[number]
+export type AssignmentStatus = (typeof assignmentStatusEnum.enumValues)[number]
+export type CallOutcome = (typeof callOutcomeEnum.enumValues)[number]
+
 export const users = pgTable(
   'users',
   {
@@ -91,7 +104,7 @@ export const campaigns = pgTable(
     baseScript: text('base_script').notNull(),
     details: text('details'),
     pdfUrl: text('pdf_url'),
-    status: campaignStatusEnum('status').notNull().default('draft'),
+    status: campaignStatusEnum('status').notNull().default('active'),
     visibility: campaignVisibilityEnum('visibility').notNull().default('private'),
     startsAt: timestamp('starts_at', { withTimezone: true }),
     endsAt: timestamp('ends_at', { withTimezone: true }),

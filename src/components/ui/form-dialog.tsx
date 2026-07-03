@@ -70,7 +70,7 @@ export const FormDialog = ({
             exit={{ opacity: 0, scale: 0.92, y: 24 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className={cn(
-              'relative z-10 w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-2xl dark:border-white/10 dark:bg-[#1a2332]',
+              'dark:bg-lbs-surface-dark relative z-10 w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-2xl dark:border-white/10',
               maxWidth,
               className
             )}

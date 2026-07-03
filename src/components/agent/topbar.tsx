@@ -144,7 +144,7 @@ export const AgentTopbar = ({
               className="size-7 rounded-full object-cover sm:size-8"
             />
           ) : (
-            <div className="grid size-7 place-items-center rounded-full bg-gradient-to-br from-[#244976] to-[#21416C] text-xs font-semibold text-white sm:size-8">
+            <div className="from-lbs-blue to-lbs-blue-2 grid size-7 place-items-center rounded-full bg-gradient-to-br text-xs font-semibold text-white sm:size-8">
               {initials}
             </div>
           )}

@@ -121,7 +121,7 @@ export const SuperAdminSidebar = (): React.JSX.Element => {
       <div
         className={`flex items-center py-5 transition-all duration-300 ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-5'}`}
       >
-        <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#244976] text-sm font-bold text-white shadow-sm">
+        <div className="bg-lbs-blue grid size-9 shrink-0 place-items-center rounded-xl text-sm font-bold text-white shadow-sm">
           L
         </div>
         {isCollapsed ? null : (
@@ -162,12 +162,12 @@ export const SuperAdminSidebar = (): React.JSX.Element => {
                     isCollapsed ? 'mx-auto justify-center p-2.5' : 'gap-3 px-3 py-2.5',
                     'text-sm',
                     isActive
-                      ? 'bg-[#EBF3FC] font-semibold text-[#244976] dark:bg-[#244976]/15 dark:text-blue-300'
+                      ? 'text-lbs-blue dark:bg-lbs-blue/15 bg-[#EBF3FC] font-semibold dark:text-blue-300'
                       : 'font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white',
                   ].join(' ')}
                 >
                   {isActive && !isCollapsed ? (
-                    <span className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[#244976] dark:bg-blue-400" />
+                    <span className="bg-lbs-blue absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full dark:bg-blue-400" />
                   ) : null}
                   {item.icon}
                   {isCollapsed ? null : <span className="truncate">{item.label}</span>}
@@ -206,7 +206,7 @@ export const SuperAdminSidebar = (): React.JSX.Element => {
       {/* Bottom role card — inspired by Fundex "Upgrade to pro" */}
       {isCollapsed ? null : (
         <div className="px-4 pb-5">
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#244976] to-[#1a3354] p-4 shadow-md">
+          <div className="from-lbs-blue relative overflow-hidden rounded-xl bg-gradient-to-br to-[#1a3354] p-4 shadow-md">
             <div className="mb-2 flex items-center gap-2">
               <div className="grid size-6 place-items-center rounded-lg bg-white/15">
                 <Crown className="size-3.5 text-yellow-300" />

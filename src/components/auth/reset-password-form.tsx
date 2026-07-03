@@ -208,14 +208,14 @@ export const ResetPasswordForm = (): React.JSX.Element => {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm dark:border-white/[0.08] dark:bg-[#1e2535]">
+        <div className="dark:bg-lbs-surface-dark-3 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm dark:border-white/[0.08]">
           <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">{title}</h1>
           <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">{description}</p>
           <div className="mt-6">{children}</div>
           <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
             <Link
               href="/login"
-              className="font-semibold text-[#244976] hover:underline dark:text-blue-300"
+              className="text-lbs-blue font-semibold hover:underline dark:text-blue-300"
             >
               Retour à la connexion
             </Link>
@@ -248,7 +248,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
             router.push('/login')
             router.refresh()
           }}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-6 py-3 text-sm font-medium text-white shadow-lg transition hover:brightness-110"
+          className="from-lbs-blue to-lbs-blue-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-medium text-white shadow-lg transition hover:brightness-110"
         >
           Se connecter
         </button>
@@ -324,7 +324,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
           type="button"
           onClick={handleResetPassword}
           disabled={isSubmitting}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-6 py-3 text-sm font-medium text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
+          className="from-lbs-blue to-lbs-blue-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-medium text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
         >
           {isSubmitting ? (
             <Loader2 className="size-4 animate-spin" />
@@ -405,7 +405,7 @@ export const ResetPasswordForm = (): React.JSX.Element => {
         type="button"
         onClick={handleVerifyOtp}
         disabled={isSubmitting || otpValues.join('').length !== OTP_LENGTH}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-6 py-3 text-sm font-medium text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
+        className="from-lbs-blue to-lbs-blue-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-medium text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
       >
         {isSubmitting ? (
           <Loader2 className="size-4 animate-spin" />

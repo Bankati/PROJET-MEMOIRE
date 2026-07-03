@@ -113,7 +113,7 @@ export const RagAssistant = ({
   }
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+    <div className="dark:bg-lbs-surface-dark flex h-full flex-col rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10">
       <div
         className="flex cursor-pointer items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-white/10"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -146,7 +146,7 @@ export const RagAssistant = ({
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                     msg.role === 'user'
-                      ? 'bg-gradient-to-r from-[#244976] to-[#21416C] text-white'
+                      ? 'from-lbs-blue to-lbs-blue-2 bg-gradient-to-r text-white'
                       : 'bg-zinc-100 text-zinc-800 dark:bg-white/10 dark:text-zinc-200'
                   }`}
                 >
@@ -191,7 +191,7 @@ export const RagAssistant = ({
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Posez une question..."
                 disabled={isStreaming}
-                className="flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-800 transition outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 disabled:opacity-50 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                className="dark:bg-lbs-surface-dark-2 flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-800 transition outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 disabled:opacity-50 dark:border-white/15 dark:text-white"
               />
               <button
                 type="submit"

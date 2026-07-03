@@ -27,7 +27,7 @@ export default function AdminAssistantPage(): React.JSX.Element {
             onClick={() => setActiveTab('chat')}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
               activeTab === 'chat'
-                ? 'bg-white text-zinc-800 shadow-sm dark:bg-[#244976] dark:text-white'
+                ? 'dark:bg-lbs-blue bg-white text-zinc-800 shadow-sm dark:text-white'
                 : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'
             }`}
           >
@@ -39,7 +39,7 @@ export default function AdminAssistantPage(): React.JSX.Element {
             onClick={() => setActiveTab('knowledge')}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
               activeTab === 'knowledge'
-                ? 'bg-white text-zinc-800 shadow-sm dark:bg-[#244976] dark:text-white'
+                ? 'dark:bg-lbs-blue bg-white text-zinc-800 shadow-sm dark:text-white'
                 : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'
             }`}
           >
@@ -49,14 +49,14 @@ export default function AdminAssistantPage(): React.JSX.Element {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark flex flex-1 flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10">
         {activeTab === 'chat' ? (
           <AssistantChat />
         ) : (
           <div className="flex-1 overflow-y-auto p-6">
             <div className="mx-auto max-w-2xl">
               <div className="mb-5 flex items-center gap-3">
-                <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#244976] to-[#21416C]">
+                <div className="from-lbs-blue to-lbs-blue-2 grid size-10 place-items-center rounded-xl bg-gradient-to-br">
                   <Bot className="size-5 text-white" />
                 </div>
                 <div>

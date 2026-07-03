@@ -28,7 +28,7 @@ export const AuthShell = ({
   return (
     <div className="flex min-h-screen">
       {/* ── Left panel: branding (desktop only) ── */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-[#244976] via-[#1d3d68] to-[#132a4f] p-12 lg:flex lg:w-[42%] lg:flex-col lg:justify-between">
+      <div className="from-lbs-blue relative hidden overflow-hidden bg-gradient-to-br via-[#1d3d68] to-[#132a4f] p-12 lg:flex lg:w-[42%] lg:flex-col lg:justify-between">
         {/* Decorative circles */}
         <div className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-white/[0.04]" />
         <div className="pointer-events-none absolute -bottom-32 -left-20 size-96 rounded-full bg-white/[0.04]" />
@@ -96,7 +96,7 @@ export const AuthShell = ({
         </div>
 
         {/* Form card */}
-        <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-sm dark:border-white/[0.08] dark:bg-[#1e2535]">
+        <div className="dark:bg-lbs-surface-dark-3 w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-sm dark:border-white/[0.08]">
           <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">{title}</h1>
           <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">{description}</p>
 
@@ -106,7 +106,7 @@ export const AuthShell = ({
             <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
               <Link
                 href={footerHref}
-                className="font-semibold text-[#244976] hover:underline dark:text-blue-300"
+                className="text-lbs-blue font-semibold hover:underline dark:text-blue-300"
               >
                 {footerLabel}
               </Link>

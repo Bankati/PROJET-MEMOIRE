@@ -8,7 +8,7 @@ function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
       className={cn(
         'rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-200',
         'hover:-translate-y-0.5 hover:shadow-md',
-        'dark:border-white/[0.08] dark:bg-[#1e2535]',
+        'dark:bg-lbs-surface-dark-3 dark:border-white/[0.08]',
         className
       )}
       {...props}

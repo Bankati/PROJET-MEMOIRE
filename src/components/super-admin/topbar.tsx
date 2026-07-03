@@ -119,7 +119,7 @@ export const SuperAdminTopbar = ({ fullName, avatarUrl }: TopbarProps): React.JS
           aria-label="Messagerie"
         >
           <Megaphone className="size-4" />
-          <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-[#244976]" />
+          <span className="bg-lbs-blue absolute -top-0.5 -right-0.5 size-2 rounded-full" />
         </Link>
 
         <ThemeSwitch />
@@ -136,7 +136,7 @@ export const SuperAdminTopbar = ({ fullName, avatarUrl }: TopbarProps): React.JS
               className="size-7 rounded-full object-cover sm:size-8"
             />
           ) : (
-            <div className="grid size-7 place-items-center rounded-full bg-gradient-to-br from-[#244976] to-[#21416C] text-xs font-semibold text-white sm:size-8">
+            <div className="from-lbs-blue to-lbs-blue-2 grid size-7 place-items-center rounded-full bg-gradient-to-br text-xs font-semibold text-white sm:size-8">
               {initials}
             </div>
           )}

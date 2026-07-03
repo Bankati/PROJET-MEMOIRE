@@ -5,11 +5,12 @@
  */
 import { NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
-import { and, eq, inArray, or } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { contacts, campaignContacts, campaigns } from '@/db/schema'
+import { campaignAccessCondition } from '@/lib/campaign-access'
 
 type ParsedRow = Readonly<{
   firstName: string
@@ -183,12 +184,7 @@ export const POST = async (request: Request): Promise<Response> => {
   const campaignExists = await db
     .select({ id: campaigns.id })
     .from(campaigns)
-    .where(
-      and(
-        eq(campaigns.id, campaignId),
-        or(eq(campaigns.createdByAdminId, session.user.id), eq(campaigns.visibility, 'public'))
-      )
-    )
+    .where(and(eq(campaigns.id, campaignId), campaignAccessCondition({ adminId: session.user.id })))
     .limit(1)
   if (campaignExists.length === 0) {
     return NextResponse.json(
@@ -290,63 +286,109 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json(result)
   }
 
-  // — Étape 2 : trouver les contacts déjà existants en une seule requête —
-  const allNormalized: string[] = validRows.map((r) => r.normalized)
-  const existingContacts = await db
-    .select({ id: contacts.id, normalizedPhonePrimary: contacts.normalizedPhonePrimary })
-    .from(contacts)
-    .where(inArray(contacts.normalizedPhonePrimary, allNormalized))
+  let imported: number
+  try {
+    // — Étape 2 : trouver les contacts déjà existants en une seule requête —
+    const allNormalized: string[] = validRows.map((r) => r.normalized)
+    const existingContacts = await db
+      .select({
+        id: contacts.id,
+        normalizedPhonePrimary: contacts.normalizedPhonePrimary,
+        email: contacts.email,
+        schoolName: contacts.schoolName,
+        desiredProgram: contacts.desiredProgram,
+        city: contacts.city,
+      })
+      .from(contacts)
+      .where(inArray(contacts.normalizedPhonePrimary, allNormalized))
 
-  const existingMap = new Map<string, string>(
-    existingContacts.map((c) => [c.normalizedPhonePrimary, c.id])
-  )
+    const existingMap = new Map<string, string>(
+      existingContacts.map((c) => [c.normalizedPhonePrimary, c.id])
+    )
+    const existingByNormalized = new Map(existingContacts.map((c) => [c.normalizedPhonePrimary, c]))
 
-  // — Étape 3 : insérer en bulk les nouveaux contacts —
-  const toInsert = validRows.filter((r) => !existingMap.has(r.normalized))
-  if (toInsert.length > 0) {
-    const inserted = await db
-      .insert(contacts)
-      .values(
-        toInsert.map((r) => {
-          const displayName = r.parsed.firstName.length > 0 ? r.parsed.firstName : r.parsed.lastName
-          return {
-            firstName: r.parsed.firstName.length > 0 ? r.parsed.firstName : displayName,
-            lastName: r.parsed.lastName.length > 0 ? r.parsed.lastName : null,
-            email: r.parsed.email.length > 0 ? r.parsed.email : null,
-            phonePrimary: r.parsed.phonePrimary,
-            phoneSecondary: r.parsed.phoneSecondary.length > 0 ? r.parsed.phoneSecondary : null,
-            normalizedPhonePrimary: r.normalized,
-            normalizedPhoneSecondary:
-              r.normalizedSecondary.length > 0 ? r.normalizedSecondary : null,
-            schoolName: r.parsed.schoolName.length > 0 ? r.parsed.schoolName : null,
-            desiredProgram: r.parsed.desiredProgram.length > 0 ? r.parsed.desiredProgram : null,
-            city: r.parsed.city.length > 0 ? r.parsed.city : null,
-          }
-        })
-      )
-      .returning({ id: contacts.id, normalizedPhonePrimary: contacts.normalizedPhonePrimary })
+    // — Étape 3 : insérer en bulk les nouveaux contacts —
+    const toInsert = validRows.filter((r) => !existingMap.has(r.normalized))
+    if (toInsert.length > 0) {
+      const inserted = await db
+        .insert(contacts)
+        .values(
+          toInsert.map((r) => {
+            const displayName =
+              r.parsed.firstName.length > 0 ? r.parsed.firstName : r.parsed.lastName
+            return {
+              firstName: r.parsed.firstName.length > 0 ? r.parsed.firstName : displayName,
+              lastName: r.parsed.lastName.length > 0 ? r.parsed.lastName : null,
+              email: r.parsed.email.length > 0 ? r.parsed.email : null,
+              phonePrimary: r.parsed.phonePrimary,
+              phoneSecondary: r.parsed.phoneSecondary.length > 0 ? r.parsed.phoneSecondary : null,
+              normalizedPhonePrimary: r.normalized,
+              normalizedPhoneSecondary:
+                r.normalizedSecondary.length > 0 ? r.normalizedSecondary : null,
+              schoolName: r.parsed.schoolName.length > 0 ? r.parsed.schoolName : null,
+              desiredProgram: r.parsed.desiredProgram.length > 0 ? r.parsed.desiredProgram : null,
+              city: r.parsed.city.length > 0 ? r.parsed.city : null,
+            }
+          })
+        )
+        .returning({ id: contacts.id, normalizedPhonePrimary: contacts.normalizedPhonePrimary })
 
-    for (const c of inserted) {
-      existingMap.set(c.normalizedPhonePrimary, c.id)
+      for (const c of inserted) {
+        existingMap.set(c.normalizedPhonePrimary, c.id)
+      }
     }
+
+    // — Étape 3bis : compléter les champs vides des contacts déjà existants —
+    // (ne jamais écraser une valeur déjà renseignée, seulement combler les trous)
+    const updates = validRows.flatMap((r) => {
+      const existing = existingByNormalized.get(r.normalized)
+      if (!existing) return []
+      const patch: Partial<typeof contacts.$inferInsert> = {}
+      if (!existing.email && r.parsed.email.length > 0) patch.email = r.parsed.email
+      if (!existing.schoolName && r.parsed.schoolName.length > 0) {
+        patch.schoolName = r.parsed.schoolName
+      }
+      if (!existing.desiredProgram && r.parsed.desiredProgram.length > 0) {
+        patch.desiredProgram = r.parsed.desiredProgram
+      }
+      if (!existing.city && r.parsed.city.length > 0) patch.city = r.parsed.city
+      return Object.keys(patch).length > 0 ? [{ id: existing.id, patch }] : []
+    })
+    if (updates.length > 0) {
+      await Promise.all(
+        updates.map(({ id, patch }) => db.update(contacts).set(patch).where(eq(contacts.id, id)))
+      )
+    }
+
+    // — Étape 4 : insérer en bulk les liens campagne-contact —
+    const campaignContactValues = validRows
+      .map((r) => existingMap.get(r.normalized))
+      .filter((id): id is string => id !== undefined)
+      .map((contactId) => ({
+        campaignId,
+        contactId,
+        source: 'excel_import' as const,
+        importedByAdminId: session.user.id,
+      }))
+
+    if (campaignContactValues.length > 0) {
+      await db.insert(campaignContacts).values(campaignContactValues).onConflictDoNothing()
+    }
+
+    imported = campaignContactValues.length
+  } catch {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Échec de l'enregistrement en base de données. Aucun contact n'a été importé.",
+        imported: 0,
+        skipped,
+        errors,
+      },
+      { status: 500 }
+    )
   }
 
-  // — Étape 4 : insérer en bulk les liens campagne-contact —
-  const campaignContactValues = validRows
-    .map((r) => existingMap.get(r.normalized))
-    .filter((id): id is string => id !== undefined)
-    .map((contactId) => ({
-      campaignId,
-      contactId,
-      source: 'excel_import' as const,
-      importedByAdminId: session.user.id,
-    }))
-
-  if (campaignContactValues.length > 0) {
-    await db.insert(campaignContacts).values(campaignContactValues).onConflictDoNothing()
-  }
-
-  const imported: number = campaignContactValues.length
   const result: ImportResult = {
     ok: true,
     imported,

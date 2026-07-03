@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { and, eq, inArray, or } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { campaignContacts, campaigns } from '@/db/schema'
+import { campaignAccessCondition } from '@/lib/campaign-access'
 
 type TransferBody = Readonly<{
   ccIds: string[]
@@ -39,12 +40,7 @@ export const POST = async (request: Request): Promise<Response> => {
     const [targetCampaign] = await db
       .select({ id: campaigns.id })
       .from(campaigns)
-      .where(
-        and(
-          eq(campaigns.id, targetCampaignId),
-          or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public'))
-        )
-      )
+      .where(and(eq(campaigns.id, targetCampaignId), campaignAccessCondition({ adminId: user.id })))
       .limit(1)
 
     if (!targetCampaign) {
@@ -59,7 +55,7 @@ export const POST = async (request: Request): Promise<Response> => {
       await db
         .select({ id: campaigns.id })
         .from(campaigns)
-        .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+        .where(campaignAccessCondition({ adminId: user.id }))
     ).map((c) => c.id)
 
     const sourceCCs =

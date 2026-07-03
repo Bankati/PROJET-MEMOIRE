@@ -3,9 +3,8 @@
  * Ce fichier ne doit PAS importer de modules Node.js natifs.
  */
 import type { NextAuthConfig } from 'next-auth'
-
-type UserRole = 'super_admin' | 'admin' | 'agent'
-type UserStatus = 'active' | 'inactive' | 'expired'
+// Import de type uniquement (effacé à la compilation) — sûr pour l'Edge Runtime.
+import type { UserRole, UserStatus } from '@/db/schema'
 
 declare module 'next-auth' {
   interface User {

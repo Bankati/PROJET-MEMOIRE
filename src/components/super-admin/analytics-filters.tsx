@@ -46,7 +46,7 @@ export const AnalyticsFilters = ({
   }, [dateFrom, dateTo, router])
   return (
     <div
-      className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+      className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10"
       suppressHydrationWarning
     >
       <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
@@ -76,7 +76,7 @@ export const AnalyticsFilters = ({
           <button
             type="button"
             onClick={handleApply}
-            className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+            className="from-lbs-blue to-lbs-blue-2 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r text-sm font-medium text-white shadow-sm transition hover:brightness-110"
           >
             <Sparkles className="size-3.5" />
             Appliquer

@@ -38,9 +38,9 @@ export const AutoAssignPanel = ({
   )
 
   return (
-    <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+    <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
       <div className="mb-4 flex items-center gap-3">
-        <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#244976] to-[#21416C] text-white shadow-sm">
+        <div className="from-lbs-blue to-lbs-blue-2 grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br text-white shadow-sm">
           <Zap className="size-4" />
         </div>
         <div>
@@ -68,7 +68,7 @@ export const AutoAssignPanel = ({
             id="auto-agent"
             name="agentId"
             required
-            className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+            className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
           >
             <option value="">Sélectionner un destinataire</option>
             <optgroup label="Moi-même (Admin)">
@@ -100,13 +100,13 @@ export const AutoAssignPanel = ({
             min={1}
             max={500}
             placeholder="Ex : 10"
-            className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+            className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
           />
         </div>
         <button
           type="submit"
           disabled={isSubmitting || unassignedCount === 0}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting ? (
             <Loader2 className="size-4 animate-spin" />

@@ -28,17 +28,22 @@ const broadcastAction = async (formData: FormData): Promise<void> => {
     )
     return
   }
-  const [row] = await db
-    .select({ value: count(users.id) })
-    .from(users)
-    .where(and(eq(users.role, 'agent'), eq(users.status, 'active')))
-  const recipientCount: number = row?.value ?? 0
-  await db.insert(broadcastMessages).values({
-    sentByUserId: admin.id,
-    message,
-    recipientCount,
-    recipientRole: 'agent',
-  })
+  let recipientCount = 0
+  try {
+    const [row] = await db
+      .select({ value: count(users.id) })
+      .from(users)
+      .where(and(eq(users.role, 'agent'), eq(users.status, 'active')))
+    recipientCount = row?.value ?? 0
+    await db.insert(broadcastMessages).values({
+      sentByUserId: admin.id,
+      message,
+      recipientCount,
+      recipientRole: 'agent',
+    })
+  } catch {
+    redirect("/dashboard/admin/messaging?notice=Échec+de+l'envoi+du+message.&success=false")
+  }
   redirect(
     `/dashboard/admin/messaging?notice=Message+envoyé+à+${recipientCount}+agent${recipientCount > 1 ? 's' : ''}+actif${recipientCount > 1 ? 's' : ''}.&success=true`
   )
@@ -102,9 +107,9 @@ export default async function AdminMessagingPage({
       ) : null}
 
       {/* Destinataires */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
         <div className="flex items-center gap-3">
-          <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#244976] to-[#21416C] text-white shadow-sm">
+          <div className="from-lbs-blue to-lbs-blue-2 grid size-10 place-items-center rounded-xl bg-gradient-to-br text-white shadow-sm">
             <Megaphone className="size-5" />
           </div>
           <div>
@@ -119,7 +124,7 @@ export default async function AdminMessagingPage({
 
       {/* Formulaire */}
       <form action={broadcastAction} className="space-y-4" suppressHydrationWarning>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10">
           <div className="space-y-1.5">
             <label
               htmlFor="message"
@@ -140,7 +145,7 @@ export default async function AdminMessagingPage({
         </div>
         <button
           type="submit"
-          className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-6 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+          className="from-lbs-blue to-lbs-blue-2 inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r px-6 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
         >
           <Send className="size-4" />
           Envoyer à tous les agents
@@ -150,7 +155,7 @@ export default async function AdminMessagingPage({
       {/* Historique */}
       <div className="space-y-3">
         <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Historique</h2>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10">
           {history.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
               <Megaphone className="size-8 text-zinc-300 dark:text-zinc-600" />

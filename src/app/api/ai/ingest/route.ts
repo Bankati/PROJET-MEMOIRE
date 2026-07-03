@@ -62,9 +62,14 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json({ ok: false, error: 'COHERE_API_KEY manquant.' }, { status: 503 })
   }
 
-  const formData = await request.formData()
-  const fileEntry = formData.get('file')
-  const file: File | null = fileEntry instanceof File ? fileEntry : null
+  let file: File | null = null
+  try {
+    const formData = await request.formData()
+    const fileEntry = formData.get('file')
+    file = fileEntry instanceof File ? fileEntry : null
+  } catch {
+    return NextResponse.json({ ok: false, error: 'Formulaire invalide.' }, { status: 400 })
+  }
 
   if (!file) {
     return NextResponse.json({ ok: false, error: 'Aucun fichier fourni.' }, { status: 400 })
@@ -83,85 +88,93 @@ export const POST = async (request: Request): Promise<Response> => {
     )
   }
 
-  const arrayBuffer = await file.arrayBuffer()
-  let rawText = ''
+  try {
+    const arrayBuffer = await file.arrayBuffer()
+    let rawText = ''
 
-  if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-    type PdfParseInstance = { getText: () => Promise<{ text: string }> }
-    type PdfParseModule = { PDFParse: new (opts: { data: Buffer }) => PdfParseInstance }
-    // pdf-parse ships no TypeScript declarations; unknown→type assertion is the only approach
-    const { PDFParse } = (await import('pdf-parse')) as unknown as PdfParseModule
-    const parser: PdfParseInstance = new PDFParse({ data: Buffer.from(arrayBuffer) })
-    const pdfData = await parser.getText()
-    rawText = pdfData.text
-  } else {
-    rawText = new TextDecoder().decode(arrayBuffer)
-  }
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      type PdfParseInstance = { getText: () => Promise<{ text: string }> }
+      type PdfParseModule = { PDFParse: new (opts: { data: Buffer }) => PdfParseInstance }
+      // pdf-parse ships no TypeScript declarations; unknown→type assertion is the only approach
+      const { PDFParse } = (await import('pdf-parse')) as unknown as PdfParseModule
+      const parser: PdfParseInstance = new PDFParse({ data: Buffer.from(arrayBuffer) })
+      const pdfData = await parser.getText()
+      rawText = pdfData.text
+    } else {
+      rawText = new TextDecoder().decode(arrayBuffer)
+    }
 
-  rawText = rawText
-    .replace(/\r\n/g, '\n')
-    .replace(/[ \t]+/g, ' ')
-    .trim()
+    rawText = rawText
+      .replace(/\r\n/g, '\n')
+      .replace(/[ \t]+/g, ' ')
+      .trim()
 
-  if (rawText.length < 50) {
+    if (rawText.length < 50) {
+      return NextResponse.json(
+        { ok: false, error: 'Le document ne contient pas assez de texte.' },
+        { status: 400 }
+      )
+    }
+
+    const textChunks = chunkText({ text: rawText })
+
+    if (textChunks.length === 0) {
+      return NextResponse.json(
+        { ok: false, error: "Impossible d'extraire du texte du document." },
+        { status: 400 }
+      )
+    }
+
+    const cohere = createCohere({ apiKey: env.COHERE_API_KEY })
+    const embeddingModel = cohere.embedding('embed-multilingual-v3.0')
+
+    const embeddings: number[][] = []
+    for (const chunk of textChunks) {
+      const { embedding } = await embed({ model: embeddingModel, value: chunk })
+      embeddings.push(embedding)
+    }
+
+    const fileName = file.name
+    const documentName = fileName.replace(/\.[^/.]+$/, '')
+
+    // Upload original file to Supabase Storage
+    const { publicUrl, storagePath } = await uploadRagDocument({
+      documentName,
+      fileBuffer: Buffer.from(arrayBuffer),
+      contentType: file.type || 'application/octet-stream',
+    })
+
+    const chunksToStore = textChunks.map((content, index) => ({
+      document_name: documentName,
+      content,
+      metadata: {
+        chunk_index: index,
+        total_chunks: textChunks.length,
+        file_name: fileName,
+        storage_path: storagePath ?? undefined,
+        storage_url: publicUrl ?? undefined,
+      },
+      embedding: embeddings[index],
+    }))
+
+    const { stored, error } = await storeChunks({ chunks: chunksToStore })
+
+    if (error) {
+      return NextResponse.json({ ok: false, error }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      ok: true,
+      document_name: documentName,
+      chunks_stored: stored,
+      storage_url: publicUrl,
+      storage_path: storagePath,
+      message: `${stored} segment${stored > 1 ? 's' : ''} indexé${stored > 1 ? 's' : ''} avec succès.`,
+    })
+  } catch {
     return NextResponse.json(
-      { ok: false, error: 'Le document ne contient pas assez de texte.' },
-      { status: 400 }
+      { ok: false, error: 'Échec du traitement du document (fichier corrompu ou illisible).' },
+      { status: 500 }
     )
   }
-
-  const textChunks = chunkText({ text: rawText })
-
-  if (textChunks.length === 0) {
-    return NextResponse.json(
-      { ok: false, error: "Impossible d'extraire du texte du document." },
-      { status: 400 }
-    )
-  }
-
-  const cohere = createCohere({ apiKey: env.COHERE_API_KEY })
-  const embeddingModel = cohere.embedding('embed-multilingual-v3.0')
-
-  const embeddings: number[][] = []
-  for (const chunk of textChunks) {
-    const { embedding } = await embed({ model: embeddingModel, value: chunk })
-    embeddings.push(embedding)
-  }
-
-  const documentName = file.name.replace(/\.[^/.]+$/, '')
-
-  // Upload original file to Supabase Storage
-  const { publicUrl, storagePath } = await uploadRagDocument({
-    documentName,
-    fileBuffer: Buffer.from(arrayBuffer),
-    contentType: file.type || 'application/octet-stream',
-  })
-
-  const chunksToStore = textChunks.map((content, index) => ({
-    document_name: documentName,
-    content,
-    metadata: {
-      chunk_index: index,
-      total_chunks: textChunks.length,
-      file_name: file.name,
-      storage_path: storagePath ?? undefined,
-      storage_url: publicUrl ?? undefined,
-    },
-    embedding: embeddings[index],
-  }))
-
-  const { stored, error } = await storeChunks({ chunks: chunksToStore })
-
-  if (error) {
-    return NextResponse.json({ ok: false, error }, { status: 500 })
-  }
-
-  return NextResponse.json({
-    ok: true,
-    document_name: documentName,
-    chunks_stored: stored,
-    storage_url: publicUrl,
-    storage_path: storagePath,
-    message: `${stored} segment${stored > 1 ? 's' : ''} indexé${stored > 1 ? 's' : ''} avec succès.`,
-  })
 }

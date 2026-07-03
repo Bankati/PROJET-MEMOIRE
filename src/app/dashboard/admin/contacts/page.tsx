@@ -4,12 +4,13 @@
  */
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { and, asc, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { X } from 'lucide-react'
 
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { campaigns, campaignContacts, contacts, users, agentContactAssignments } from '@/db/schema'
+import { campaignAccessCondition } from '@/lib/campaign-access'
 import { ContactDialogForm } from '@/components/admin/contact-dialog-form'
 import { ImportExcelDialog } from '@/components/admin/import-excel-dialog'
 import { BulkAssignContacts } from '@/components/admin/bulk-assign-contacts'
@@ -49,12 +50,7 @@ async function addContact(formData: FormData): Promise<void> {
   const accessibleCampaign = await db
     .select({ id: campaigns.id })
     .from(campaigns)
-    .where(
-      and(
-        eq(campaigns.id, campaignId),
-        or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public'))
-      )
-    )
+    .where(and(eq(campaigns.id, campaignId), campaignAccessCondition({ adminId: user.id })))
     .limit(1)
 
   if (accessibleCampaign.length === 0) {
@@ -152,7 +148,7 @@ async function bulkAssignAction(formData: FormData): Promise<void> {
     await db
       .select({ id: campaigns.id })
       .from(campaigns)
-      .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+      .where(campaignAccessCondition({ adminId: user.id }))
   ).map((c) => c.id)
 
   if (accessibleCampaignIds.length === 0) {
@@ -224,7 +220,7 @@ async function autoAssignAction(formData: FormData): Promise<void> {
     .from(campaigns)
     .where(
       and(
-        or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')),
+        campaignAccessCondition({ adminId: user.id }),
         campaign.length > 0 ? eq(campaigns.id, campaign) : undefined
       )
     )
@@ -290,7 +286,7 @@ export default async function AdminContactsPage({
     db
       .select({ id: campaigns.id, title: campaigns.title })
       .from(campaigns)
-      .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+      .where(campaignAccessCondition({ adminId: user.id }))
       .orderBy(desc(campaigns.createdAt)),
     db
       .select({ id: users.id, fullName: users.fullName })
