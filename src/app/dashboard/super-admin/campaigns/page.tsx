@@ -7,14 +7,16 @@ import { Table2 } from 'lucide-react'
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { campaigns, callResults, users } from '@/db/schema'
+import type { CampaignStatus } from '@/db/schema'
 import { CampaignsFilters } from '@/components/super-admin/campaigns-filters'
+import { CAMPAIGN_STATUS_LABELS, CAMPAIGN_STATUS_STYLES } from '@/lib/status-styles'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 type CampaignRow = Readonly<{
   id: string
   title: string
   year: number
-  status: 'draft' | 'active' | 'paused' | 'completed' | 'archived'
+  status: CampaignStatus
   createdAt: Date
   ownerAdminName: string
   callCount: number
@@ -36,20 +38,9 @@ const readParam = ({
   }
   return ''
 }
-const statusLabel = (status: string): string => {
-  const map: Readonly<Record<string, string>> = {
-    active: 'Active',
-    completed: 'Terminée',
-  }
-  return map[status] ?? status
-}
-const statusColor = (status: string): string => {
-  const map: Readonly<Record<string, string>> = {
-    active: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-    completed: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
-  }
-  return map[status] ?? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-500/15 dark:text-zinc-300'
-}
+const statusLabel = (status: CampaignStatus): string => CAMPAIGN_STATUS_LABELS[status] ?? status
+const statusColor = (status: CampaignStatus): string =>
+  CAMPAIGN_STATUS_STYLES[status] ?? CAMPAIGN_STATUS_STYLES.draft
 
 export default async function CampaignsPage({
   searchParams,
@@ -126,7 +117,7 @@ export default async function CampaignsPage({
       {/* Mobile cards */}
       <div className="space-y-3 sm:hidden">
         {filteredRows.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10">
             <Table2 className="mx-auto mb-2 size-8 text-zinc-300" />
             <p className="text-sm text-zinc-400">
               Aucune campagne ne correspond aux filtres sélectionnés.
@@ -136,7 +127,7 @@ export default async function CampaignsPage({
           filteredRows.map((row) => (
             <div
               key={row.id}
-              className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+              className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -163,7 +154,7 @@ export default async function CampaignsPage({
       </div>
 
       {/* Desktop table */}
-      <div className="hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10">
         <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-white/10">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
             <Table2 className="size-4 text-blue-500" />

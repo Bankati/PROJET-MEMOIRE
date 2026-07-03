@@ -33,7 +33,7 @@ export const CallCenterTabs = ({
   ]
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+    <div className="dark:bg-lbs-surface-dark flex h-full flex-col rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10">
       {/* Tab bar */}
       <div className="flex border-b border-zinc-200 dark:border-white/10">
         {tabs.map((tab) => (

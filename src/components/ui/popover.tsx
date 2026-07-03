@@ -21,14 +21,14 @@ const PopoverContent = React.forwardRef<
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-[var(--radix-popover-content-available-height)] min-w-[8rem] overflow-x-hidden overflow-y-auto rounded-xl border border-zinc-200/70 bg-white p-4 text-zinc-900 shadow-lg shadow-black/5 outline-none dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:bg-lbs-surface-dark z-50 max-h-[var(--radix-popover-content-available-height)] min-w-[8rem] overflow-x-hidden overflow-y-auto rounded-xl border border-zinc-200/70 bg-white p-4 text-zinc-900 shadow-lg shadow-black/5 outline-none dark:border-white/10 dark:text-zinc-100',
         className
       )}
       {...props}
     >
       {props.children}
       {showArrow && (
-        <PopoverPrimitive.Arrow className="-my-px fill-white drop-shadow-[0_1px_0_theme(colors.zinc.200)] dark:fill-[#1a2332] dark:drop-shadow-[0_1px_0_rgba(255,255,255,0.1)]" />
+        <PopoverPrimitive.Arrow className="dark:fill-lbs-surface-dark -my-px fill-white drop-shadow-[0_1px_0_theme(colors.zinc.200)] dark:drop-shadow-[0_1px_0_rgba(255,255,255,0.1)]" />
       )}
     </PopoverPrimitive.Content>
   </PopoverPrimitive.Portal>

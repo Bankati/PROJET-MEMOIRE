@@ -81,7 +81,7 @@ export const CampaignDialogForm = ({
         className={
           isEdit
             ? 'hover:text-lbs-blue gap-1.5 rounded-lg border-zinc-200 text-zinc-600 dark:border-white/15 dark:text-zinc-400'
-            : 'gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-white shadow-sm hover:brightness-110'
+            : 'from-lbs-blue to-lbs-blue-2 gap-2 rounded-xl bg-gradient-to-r text-white shadow-sm hover:brightness-110'
         }
       >
         {isEdit ? <Edit3 className="size-4" /> : <Plus className="size-4" />}
@@ -295,7 +295,7 @@ export const CampaignDialogForm = ({
                   id="dialog-status"
                   name="status"
                   defaultValue={campaign.status}
-                  className="focus:border-lbs-blue flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                  className="focus:border-lbs-blue dark:bg-lbs-surface-dark-2 flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:text-white"
                 >
                   <option value="draft">Brouillon</option>
                   <option value="active">Active</option>
@@ -330,7 +330,7 @@ export const CampaignDialogForm = ({
                 }}
                 maxLength={SCRIPT_MAX}
                 placeholder="Bonjour, je vous appelle de la part de LBS. Je vous contacte au sujet de..."
-                className={`w-full resize-none rounded-xl border bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all placeholder:text-zinc-400 focus:ring-2 focus:outline-none dark:bg-[#0f1729] dark:text-white ${
+                className={`dark:bg-lbs-surface-dark-2 w-full resize-none rounded-xl border bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all placeholder:text-zinc-400 focus:ring-2 focus:outline-none dark:text-white ${
                   scriptError
                     ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/20'
                     : 'focus:border-lbs-blue focus:ring-lbs-blue/20 border-zinc-200 dark:border-white/15'
@@ -358,7 +358,7 @@ export const CampaignDialogForm = ({
                 rows={2}
                 defaultValue={campaign?.details ?? ''}
                 placeholder="Objectifs, consignes particulières, contexte de la campagne..."
-                className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full resize-none rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all placeholder:text-zinc-400 focus:ring-2 focus:outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full resize-none rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all placeholder:text-zinc-400 focus:ring-2 focus:outline-none dark:border-white/15 dark:text-white"
               />
             </div>
 
@@ -386,7 +386,7 @@ export const CampaignDialogForm = ({
                 name="pdfFile"
                 type="file"
                 accept="application/pdf"
-                className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-600 focus:ring-2 focus:outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white dark:file:bg-white/10 dark:file:text-zinc-300"
+                className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-600 focus:ring-2 focus:outline-none dark:border-white/15 dark:text-white dark:file:bg-white/10 dark:file:text-zinc-300"
               />
               <p className="text-[11px] text-zinc-400">
                 PDF uniquement, 10 Mo max. Accessible par les agents depuis l&apos;onglet Docs
@@ -423,7 +423,7 @@ export const CampaignDialogForm = ({
                 type="button"
                 onClick={() => step1Valid && setStep(2)}
                 disabled={!step1Valid}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Suivant
                 <ArrowRight className="size-4" />
@@ -432,7 +432,7 @@ export const CampaignDialogForm = ({
               <button
                 type="submit"
                 disabled={isPending}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
+                className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
               >
                 {isPending ? (
                   <Loader2 className="size-3.5 animate-spin" />

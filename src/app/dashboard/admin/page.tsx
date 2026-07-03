@@ -25,6 +25,7 @@ import {
   contacts,
   users,
 } from '@/db/schema'
+import { campaignAccessCondition } from '@/lib/campaign-access'
 import { AdminDashboardFilters } from '@/components/admin/dashboard-filters'
 import { extractCount, formatTimeAgo, readParam } from '@/lib/dashboard-utils'
 
@@ -115,7 +116,7 @@ export default async function AdminDashboardPage({
     db
       .select({ id: campaigns.id, title: campaigns.title })
       .from(campaigns)
-      .where(eq(campaigns.createdByAdminId, user.id))
+      .where(campaignAccessCondition({ adminId: user.id }))
       .orderBy(desc(campaigns.createdAt)),
 
     db
@@ -133,7 +134,7 @@ export default async function AdminDashboardPage({
     db
       .select({ value: count(campaigns.id) })
       .from(campaigns)
-      .where(and(eq(campaigns.createdByAdminId, user.id), eq(campaigns.status, 'active')))
+      .where(and(campaignAccessCondition({ adminId: user.id }), eq(campaigns.status, 'active')))
       .then((r) => r[0]?.value ?? 0),
 
     db
@@ -162,7 +163,14 @@ export default async function AdminDashboardPage({
     db
       .select({ id: campaigns.id, title: campaigns.title })
       .from(campaigns)
-      .where(eq(campaigns.createdByAdminId, user.id))
+      .where(
+        // Si une campagne est sélectionnée dans le filtre, la carte "Campagne en cours"
+        // doit refléter ce choix plutôt que toujours retomber sur la campagne active
+        // la plus récente (sinon le filtre campagne n'a aucun effet sur cette carte).
+        campaignFilter.length > 0
+          ? and(campaignAccessCondition({ adminId: user.id }), eq(campaigns.id, campaignFilter))
+          : campaignAccessCondition({ adminId: user.id })
+      )
       .orderBy(
         sql`case when ${campaigns.status} = 'active' then 0 else 1 end asc`,
         desc(campaigns.createdAt)
@@ -338,27 +346,38 @@ export default async function AdminDashboardPage({
             .orderBy(sql`date_trunc('month', ${callResults.createdAt}) asc`)
       : Promise.resolve([]),
 
-    // topAgents
+    // topAgents — réutilise callWhereClause (campagne + école + période) pour rester
+    // cohérent avec les autres graphiques au lieu de reconstruire sa propre condition
+    // qui ignorait le filtre de campagne.
     hasCampaigns
-      ? db
-          .select({
-            agentId: callResults.agentId,
-            agentName: users.fullName,
-            totalCalls: count(callResults.id),
-            whatsappCalls: sql<number>`count(case when ${callResults.isWhatsappRedirected} then 1 end)`,
-          })
-          .from(callResults)
-          .innerJoin(users, eq(callResults.agentId, users.id))
-          .where(
-            and(
-              inArray(callResults.campaignId, adminCampaignIds as string[]),
-              gte(callResults.createdAt, dateFrom),
-              lte(callResults.createdAt, dateTo)
-            )
-          )
-          .groupBy(callResults.agentId, users.fullName)
-          .orderBy(desc(count(callResults.id)))
-          .limit(5)
+      ? needsContactsJoin
+        ? db
+            .select({
+              agentId: callResults.agentId,
+              agentName: users.fullName,
+              totalCalls: count(callResults.id),
+              whatsappCalls: sql<number>`count(case when ${callResults.isWhatsappRedirected} then 1 end)`,
+            })
+            .from(callResults)
+            .innerJoin(users, eq(callResults.agentId, users.id))
+            .innerJoin(contacts, eq(callResults.contactId, contacts.id))
+            .where(callWhereClause)
+            .groupBy(callResults.agentId, users.fullName)
+            .orderBy(desc(count(callResults.id)))
+            .limit(5)
+        : db
+            .select({
+              agentId: callResults.agentId,
+              agentName: users.fullName,
+              totalCalls: count(callResults.id),
+              whatsappCalls: sql<number>`count(case when ${callResults.isWhatsappRedirected} then 1 end)`,
+            })
+            .from(callResults)
+            .innerJoin(users, eq(callResults.agentId, users.id))
+            .where(callWhereClause)
+            .groupBy(callResults.agentId, users.fullName)
+            .orderBy(desc(count(callResults.id)))
+            .limit(5)
       : Promise.resolve([]),
 
     // monthlyByOutcome
@@ -573,7 +592,7 @@ export default async function AdminDashboardPage({
             backgroundPosition: 'center top',
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1a3354]/90 via-[#244976]/80 to-[#1a3354]/60" />
+          <div className="via-lbs-blue/80 absolute inset-0 bg-gradient-to-r from-[#1a3354]/90 to-[#1a3354]/60" />
         </div>
 
         <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-10">
@@ -698,7 +717,7 @@ export default async function AdminDashboardPage({
         ].map((kpi) => (
           <div
             key={kpi.label}
-            className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-[#1a2332]"
+            className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10"
           >
             <div className="flex items-center justify-between">
               <p className="text-sm text-zinc-500 dark:text-zinc-400">{kpi.label}</p>
@@ -712,7 +731,7 @@ export default async function AdminDashboardPage({
 
       {/* Multi-series line chart + donut */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:col-span-2 dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:col-span-2 dark:border-white/10">
           <div className="mb-3 flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -787,7 +806,7 @@ export default async function AdminDashboardPage({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <p className="mb-4 text-sm font-medium text-zinc-500 dark:text-zinc-400">
             Répartition des résultats
           </p>
@@ -876,7 +895,7 @@ export default async function AdminDashboardPage({
       {/* Top Agents + Recent Agents */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Top Agents */}
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
             <Trophy className="size-4 text-amber-400" />
             Top Agents
@@ -919,7 +938,7 @@ export default async function AdminDashboardPage({
         </div>
 
         {/* Recent Agents */}
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
             <Sparkles className="size-4 text-amber-400" />
             Agents récents
@@ -937,7 +956,7 @@ export default async function AdminDashboardPage({
                       {agent.fullName.charAt(0).toUpperCase()}
                     </div>
                     {idx === 0 ? (
-                      <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white bg-emerald-400 dark:border-[#1a2332]" />
+                      <span className="dark:border-lbs-surface-dark absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white bg-emerald-400" />
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -959,7 +978,7 @@ export default async function AdminDashboardPage({
       </div>
 
       {/* Campagne en cours */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
             <Contact className="size-4 text-blue-400" />
@@ -976,7 +995,7 @@ export default async function AdminDashboardPage({
           </h3>
           <Link
             href="/dashboard/admin/contacts"
-            className="text-xs text-[#244976] hover:underline dark:text-blue-300"
+            className="text-lbs-blue text-xs hover:underline dark:text-blue-300"
           >
             Voir tous →
           </Link>

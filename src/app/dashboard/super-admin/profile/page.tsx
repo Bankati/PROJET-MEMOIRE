@@ -47,10 +47,16 @@ const changePasswordAction = async (formData: FormData): Promise<void> => {
     )
     return
   }
-  await db
-    .update(users)
-    .set({ passwordHash: hashPassword({ password: newPassword }), updatedAt: new Date() })
-    .where(eq(users.id, user.id))
+  try {
+    await db
+      .update(users)
+      .set({ passwordHash: hashPassword({ password: newPassword }), updatedAt: new Date() })
+      .where(eq(users.id, user.id))
+  } catch {
+    redirect(
+      '/dashboard/super-admin/profile?notice=Échec+de+la+mise+à+jour+du+mot+de+passe.&success=false'
+    )
+  }
   redirect(
     '/dashboard/super-admin/profile?notice=Mot+de+passe+mis+à+jour+avec+succès.&success=true'
   )
@@ -108,7 +114,7 @@ export default async function ProfilePage({
       ) : null}
 
       {/* Carte identité */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10">
         <div className="flex items-center gap-6">
           <AvatarUpload
             currentAvatarUrl={userRecord?.avatarUrl ?? null}
@@ -135,7 +141,7 @@ export default async function ProfilePage({
       {/* Mot de passe */}
       <form
         action={changePasswordAction}
-        className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+        className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10"
         suppressHydrationWarning
       >
         <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-zinc-800 dark:text-white">
@@ -179,7 +185,7 @@ export default async function ProfilePage({
         </div>
         <button
           type="submit"
-          className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-6 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+          className="from-lbs-blue to-lbs-blue-2 mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r px-6 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
         >
           <KeyRound className="size-4" />
           Mettre à jour le mot de passe

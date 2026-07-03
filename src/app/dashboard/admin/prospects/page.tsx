@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm'
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { campaigns, users } from '@/db/schema'
+import { campaignAccessCondition } from '@/lib/campaign-access'
 import { ProspectsTable } from '@/components/admin/prospects-table'
 
 export type ProspectRow = {
@@ -49,7 +50,7 @@ export default async function ProspectsPage(): Promise<React.JSX.Element> {
       status: campaigns.status,
     })
     .from(campaigns)
-    .where(eq(campaigns.createdByAdminId, user.id))
+    .where(campaignAccessCondition({ adminId: user.id }))
     .orderBy(desc(campaigns.createdAt))
 
   const myAgents: AgentOption[] = await db

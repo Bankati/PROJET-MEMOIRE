@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, inArray, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, inArray, sql } from 'drizzle-orm'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import {
@@ -24,41 +24,17 @@ import {
   users,
 } from '@/db/schema'
 import { formatDuration, readParam } from '@/lib/dashboard-utils'
+import { campaignAccessCondition } from '@/lib/campaign-access'
+import {
+  CALL_OUTCOME_LABELS,
+  CALL_OUTCOME_BADGE_STYLES,
+  CALL_OUTCOME_CHART_COLORS,
+} from '@/lib/status-styles'
 
 type Params = Readonly<{ agentId: string }>
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-const OUTCOME_LABELS: Readonly<Record<string, string>> = {
-  interested: 'Intéressé',
-  not_interested: 'Pas intéressé',
-  callback: 'Rappel',
-  no_answer: 'Pas de réponse',
-  false_number: 'Faux numéro',
-  whatsapp_follow_up: 'Suivi WhatsApp',
-  other: 'Autre',
-}
-
-const OUTCOME_STYLES: Readonly<Record<string, string>> = {
-  interested: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  not_interested: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-  callback: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-  no_answer: 'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-400',
-  false_number: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',
-  whatsapp_follow_up: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
-  other: 'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-400',
-}
-
-const OUTCOME_COLORS: Readonly<Record<string, string>> = {
-  interested: '#10b981',
-  not_interested: '#f43f5e',
-  callback: '#f59e0b',
-  no_answer: '#71717a',
-  false_number: '#ef4444',
-  whatsapp_follow_up: '#3b82f6',
-  other: '#a1a1aa',
-}
 
 const buildAreaPath = ({
   values,
@@ -111,7 +87,7 @@ export default async function AdminAgentPerformanceDetailPage({
     db
       .select({ id: campaigns.id, title: campaigns.title })
       .from(campaigns)
-      .where(or(eq(campaigns.createdByAdminId, admin.id), eq(campaigns.visibility, 'public')))
+      .where(campaignAccessCondition({ adminId: admin.id }))
       .orderBy(desc(campaigns.createdAt)),
   ])
 
@@ -244,8 +220,8 @@ export default async function AdminAgentPerformanceDetailPage({
   const donutTotal = Math.max(1, totalCalls)
   const donutSegments = outcomeBreakdown.map((row) => ({
     outcome: row.outcome,
-    label: OUTCOME_LABELS[row.outcome] ?? row.outcome,
-    color: OUTCOME_COLORS[row.outcome] ?? '#a1a1aa',
+    label: CALL_OUTCOME_LABELS[row.outcome] ?? row.outcome,
+    color: CALL_OUTCOME_CHART_COLORS[row.outcome] ?? CALL_OUTCOME_CHART_COLORS.other,
     count: row.value,
     percent: Math.round((row.value / donutTotal) * 100),
   }))
@@ -283,7 +259,7 @@ export default async function AdminAgentPerformanceDetailPage({
             ← Retour aux performances
           </Link>
           <div className="flex items-center gap-3">
-            <div className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[#244976] to-[#21416C] text-white shadow-sm">
+            <div className="from-lbs-blue to-lbs-blue-2 grid size-11 place-items-center rounded-xl bg-gradient-to-br text-white shadow-sm">
               <User className="size-5" />
             </div>
             <div>
@@ -302,7 +278,7 @@ export default async function AdminAgentPerformanceDetailPage({
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Total appels</p>
             <Phone className="size-4 text-blue-400" />
@@ -310,7 +286,7 @@ export default async function AdminAgentPerformanceDetailPage({
           <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{totalCalls}</p>
           <p className="mt-1 text-xs text-zinc-400">{assignedCount} assignés</p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Progression</p>
             <TrendingUp className="size-4 text-violet-400" />
@@ -323,7 +299,7 @@ export default async function AdminAgentPerformanceDetailPage({
             />
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Taux de conversion</p>
             <Target className="size-4 text-amber-400" />
@@ -333,7 +309,7 @@ export default async function AdminAgentPerformanceDetailPage({
             {interestedCount} intéressé{interestedCount !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">WhatsApp</p>
             <Send className="size-4 text-emerald-400" />
@@ -343,7 +319,7 @@ export default async function AdminAgentPerformanceDetailPage({
             {totalCalls === 0 ? 0 : Math.round((whatsappCount / totalCalls) * 100)}% du total
           </p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Faux numéros</p>
             <PhoneMissed className="size-4 text-rose-400" />
@@ -358,7 +334,7 @@ export default async function AdminAgentPerformanceDetailPage({
       {/* Statistiques avancées */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Donut — répartition résultats */}
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <p className="mb-4 text-sm font-semibold text-zinc-800 dark:text-white">
             Répartition des résultats
           </p>
@@ -441,7 +417,7 @@ export default async function AdminAgentPerformanceDetailPage({
         </div>
 
         {/* Courbe activité journalière */}
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:col-span-2 dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:col-span-2 dark:border-white/10">
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm font-semibold text-zinc-800 dark:text-white">
               Activité journalière — 30 derniers jours
@@ -485,7 +461,7 @@ export default async function AdminAgentPerformanceDetailPage({
 
       {/* Performance par campagne */}
       {campaignBreakdown.length > 1 ? (
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <p className="mb-4 text-sm font-semibold text-zinc-800 dark:text-white">
             Performance par campagne
           </p>
@@ -549,7 +525,7 @@ export default async function AdminAgentPerformanceDetailPage({
       ) : null}
 
       {/* Filtre campagne */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
         <form className="flex flex-wrap items-end gap-3">
           <div>
             <label
@@ -562,7 +538,7 @@ export default async function AdminAgentPerformanceDetailPage({
               id="detail-campaign"
               name="campaign"
               defaultValue={campaignFilter}
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="dark:bg-lbs-surface-dark-2 rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:text-white"
             >
               <option value="">Toutes les campagnes</option>
               {myCampaigns.map((c) => (
@@ -574,7 +550,7 @@ export default async function AdminAgentPerformanceDetailPage({
           </div>
           <button
             type="submit"
-            className="inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-4 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+            className="from-lbs-blue to-lbs-blue-2 inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-gradient-to-r px-4 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
           >
             <BarChart3 className="size-3.5" />
             Filtrer
@@ -592,7 +568,7 @@ export default async function AdminAgentPerformanceDetailPage({
 
       {/* Liste des appels */}
       {calls.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-200 bg-white py-16 text-center dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-200 bg-white py-16 text-center dark:border-white/10">
           <div className="grid size-14 place-items-center rounded-2xl bg-zinc-100 dark:bg-white/10">
             <Phone className="size-7 text-zinc-400 dark:text-zinc-500" />
           </div>
@@ -612,11 +588,11 @@ export default async function AdminAgentPerformanceDetailPage({
           {calls.map((call) => (
             <div
               key={call.id}
-              className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+              className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#244976] to-[#21416C] shadow-sm">
+                  <div className="from-lbs-blue to-lbs-blue-2 grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br shadow-sm">
                     <Phone className="size-4 text-white" />
                   </div>
                   <div>
@@ -630,12 +606,9 @@ export default async function AdminAgentPerformanceDetailPage({
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      OUTCOME_STYLES[call.outcome] ??
-                      'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-400'
-                    }`}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${CALL_OUTCOME_BADGE_STYLES[call.outcome] ?? CALL_OUTCOME_BADGE_STYLES.other}`}
                   >
-                    {OUTCOME_LABELS[call.outcome] ?? call.outcome}
+                    {CALL_OUTCOME_LABELS[call.outcome] ?? call.outcome}
                   </span>
                   {call.isWhatsappRedirected ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">

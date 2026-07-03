@@ -28,10 +28,14 @@ async function updateProfile(formData: FormData): Promise<void> {
     redirect('/dashboard/admin/profile?notice=missing_fields')
     return
   }
-  await db
-    .update(users)
-    .set({ fullName: fullName.trim(), updatedAt: new Date() })
-    .where(eq(users.id, user.id))
+  try {
+    await db
+      .update(users)
+      .set({ fullName: fullName.trim(), updatedAt: new Date() })
+      .where(eq(users.id, user.id))
+  } catch {
+    redirect('/dashboard/admin/profile?notice=error')
+  }
   redirect('/dashboard/admin/profile?notice=profile_updated')
 }
 
@@ -61,10 +65,14 @@ async function changePassword(formData: FormData): Promise<void> {
     redirect('/dashboard/admin/profile?notice=wrong_password')
     return
   }
-  await db
-    .update(users)
-    .set({ passwordHash: hashPassword({ password: newPassword }), updatedAt: new Date() })
-    .where(eq(users.id, user.id))
+  try {
+    await db
+      .update(users)
+      .set({ passwordHash: hashPassword({ password: newPassword }), updatedAt: new Date() })
+      .where(eq(users.id, user.id))
+  } catch {
+    redirect('/dashboard/admin/profile?notice=error')
+  }
   redirect('/dashboard/admin/profile?notice=password_updated')
 }
 
@@ -103,6 +111,7 @@ export default async function AdminProfilePage({
     },
     password_mismatch: { text: 'Les mots de passe ne correspondent pas.', type: 'error' },
     wrong_password: { text: 'Le mot de passe actuel est incorrect.', type: 'error' },
+    error: { text: 'Une erreur est survenue.', type: 'error' },
   }
   const currentNotice = notice.length > 0 ? noticeMessages[notice] : undefined
 
@@ -132,7 +141,7 @@ export default async function AdminProfilePage({
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Carte identité */}
         <div className="lg:col-span-1">
-          <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-center shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 text-center shadow-sm dark:border-white/10">
             <div className="mb-4">
               <AvatarUpload
                 currentAvatarUrl={profile.avatarUrl ?? null}
@@ -157,7 +166,7 @@ export default async function AdminProfilePage({
 
         {/* Formulaires */}
         <div className="space-y-6 lg:col-span-2">
-          <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10">
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
               <User className="size-4 text-blue-400" />
               Informations personnelles
@@ -172,7 +181,7 @@ export default async function AdminProfilePage({
                   type="text"
                   required
                   defaultValue={profile.fullName}
-                  className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                  className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
                 />
               </div>
               <div>
@@ -187,7 +196,7 @@ export default async function AdminProfilePage({
               </div>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+                className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
               >
                 <Save className="size-4" />
                 Enregistrer
@@ -195,7 +204,7 @@ export default async function AdminProfilePage({
             </form>
           </div>
 
-          <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10">
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
               <Key className="size-4 text-amber-400" />
               Changer le mot de passe
@@ -209,7 +218,7 @@ export default async function AdminProfilePage({
                   name="currentPassword"
                   type="password"
                   required
-                  className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                  className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
                 />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -222,7 +231,7 @@ export default async function AdminProfilePage({
                     type="password"
                     required
                     minLength={6}
-                    className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                    className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
                   />
                 </div>
                 <div>
@@ -234,7 +243,7 @@ export default async function AdminProfilePage({
                     type="password"
                     required
                     minLength={6}
-                    className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                    className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
                   />
                 </div>
               </div>

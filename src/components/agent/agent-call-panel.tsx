@@ -2,14 +2,7 @@
 import { useState } from 'react'
 import { Delete, MessageCircle, Phone } from 'lucide-react'
 
-type CallOutcome =
-  | 'interested'
-  | 'not_interested'
-  | 'callback'
-  | 'no_answer'
-  | 'false_number'
-  | 'whatsapp_follow_up'
-  | 'other'
+import type { CallOutcome } from '@/db/schema'
 
 type AgentCallPanelProps = Readonly<{
   assignmentId: string
@@ -72,7 +65,7 @@ export const AgentCallPanel = ({
   return (
     <div className="flex flex-col gap-4">
       {/* ── Call result form ── */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10">
         <div className="border-b border-zinc-100 px-5 py-3 dark:border-white/10">
           <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
             Résultat de l&apos;appel
@@ -153,7 +146,7 @@ export const AgentCallPanel = ({
       </div>
 
       {/* ── Phone composer / keypad ── */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10">
         <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3 dark:border-white/10">
           <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
             Composer

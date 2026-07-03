@@ -49,7 +49,7 @@ export const EstablishmentInfo = ({
   ]
 
   return (
-    <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+    <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10">
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}

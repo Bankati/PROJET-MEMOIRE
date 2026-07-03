@@ -35,7 +35,7 @@ export const ContactFilters = ({
         <select
           value={currentCampaign}
           onChange={(e) => router.push(buildHref(e.target.value, currentSchool))}
-          className="focus:border-lbs-blue focus:ring-lbs-blue/20 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-zinc-200"
+          className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition outline-none focus:ring-2 dark:border-white/15 dark:text-zinc-200"
         >
           <option value="">Toutes</option>
           {campaigns.map((c) => (
@@ -54,7 +54,7 @@ export const ContactFilters = ({
           value={currentSchool}
           onChange={(e) => router.push(buildHref(currentCampaign, e.target.value))}
           disabled={schoolOptions.length === 0}
-          className="focus:border-lbs-blue focus:ring-lbs-blue/20 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:bg-[#0f1729] dark:text-zinc-200"
+          className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:text-zinc-200"
         >
           <option value="">Tous</option>
           {schoolOptions.map((s) => (

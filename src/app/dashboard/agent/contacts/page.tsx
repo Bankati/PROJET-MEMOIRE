@@ -197,7 +197,7 @@ export default async function AgentContactsPage({
               name="q"
               placeholder="Rechercher..."
               defaultValue={searchQuery}
-              className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white py-2 pr-4 pl-10 text-sm text-zinc-800 transition outline-none focus:ring-2 sm:w-56 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white py-2 pr-4 pl-10 text-sm text-zinc-800 transition outline-none focus:ring-2 sm:w-56 dark:border-white/15 dark:text-white"
             />
           </div>
           <button
@@ -236,7 +236,7 @@ export default async function AgentContactsPage({
       {/* Mobile cards */}
       <div className="space-y-3 sm:hidden">
         {contactsList.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white py-10 text-center dark:border-white/10">
             <Contact className="mx-auto mb-2 size-8 text-zinc-300" />
             <p className="text-sm text-zinc-400">Aucun contact trouvé.</p>
           </div>
@@ -244,7 +244,7 @@ export default async function AgentContactsPage({
           contactsList.map((c) => (
             <div
               key={c.assignmentId}
-              className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+              className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-3">
@@ -304,7 +304,7 @@ export default async function AgentContactsPage({
       </div>
 
       {/* Desktop table */}
-      <div className="hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm sm:block dark:border-white/10">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>

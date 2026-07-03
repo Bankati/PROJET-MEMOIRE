@@ -150,7 +150,7 @@ export const AssistantChat = (): React.JSX.Element => {
         <div className="mx-auto max-w-2xl space-y-4">
           {messages.length === 0 ? (
             <div className="flex gap-3">
-              <div className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#244976] to-[#21416C]">
+              <div className="from-lbs-blue to-lbs-blue-2 grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br">
                 <Bot className="size-4 text-white" />
               </div>
               <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3 dark:bg-white/10">
@@ -169,7 +169,7 @@ export const AssistantChat = (): React.JSX.Element => {
               className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
             >
               <div
-                className={`grid size-8 shrink-0 place-items-center rounded-full ${msg.role === 'user' ? 'bg-gradient-to-br from-blue-400 to-blue-600' : 'bg-gradient-to-br from-[#244976] to-[#21416C]'}`}
+                className={`grid size-8 shrink-0 place-items-center rounded-full ${msg.role === 'user' ? 'bg-gradient-to-br from-blue-400 to-blue-600' : 'from-lbs-blue to-lbs-blue-2 bg-gradient-to-br'}`}
               >
                 {msg.role === 'user' ? (
                   <span className="text-xs font-semibold text-white">V</span>
@@ -178,7 +178,7 @@ export const AssistantChat = (): React.JSX.Element => {
                 )}
               </div>
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'rounded-tr-sm bg-[#244976] text-white' : 'rounded-tl-sm bg-zinc-100 dark:bg-white/10'}`}
+                className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-lbs-blue rounded-tr-sm text-white' : 'rounded-tl-sm bg-zinc-100 dark:bg-white/10'}`}
               >
                 <p
                   className={`text-sm leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'text-white' : 'text-zinc-700 dark:text-zinc-200'}`}
@@ -202,7 +202,7 @@ export const AssistantChat = (): React.JSX.Element => {
           messages[messages.length - 1]?.role === 'assistant' &&
           messages[messages.length - 1]?.content === '' ? (
             <div className="flex gap-3">
-              <div className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#244976] to-[#21416C]">
+              <div className="from-lbs-blue to-lbs-blue-2 grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br">
                 <Bot className="size-4 text-white" />
               </div>
               <div className="rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3.5 dark:bg-white/10">
@@ -230,7 +230,7 @@ export const AssistantChat = (): React.JSX.Element => {
                 type="button"
                 disabled={isStreaming}
                 onClick={() => sendMessage(s.query)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 transition hover:border-[#244976] hover:bg-[#244976]/5 hover:text-[#244976] disabled:opacity-50 dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:border-blue-400 dark:hover:text-blue-300"
+                className="hover:border-lbs-blue hover:bg-lbs-blue/5 hover:text-lbs-blue inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 transition disabled:opacity-50 dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:border-blue-400 dark:hover:text-blue-300"
               >
                 {s.icon}
                 {s.label}
@@ -246,12 +246,12 @@ export const AssistantChat = (): React.JSX.Element => {
                 onKeyDown={handleKeyDown}
                 placeholder="Posez votre question..."
                 disabled={isStreaming}
-                className="w-full resize-none rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 pr-12 text-sm text-zinc-800 transition outline-none focus:border-[#244976] focus:bg-white focus:ring-2 focus:ring-[#244976]/20 disabled:opacity-50 dark:border-white/15 dark:bg-[#0f1729] dark:text-white dark:focus:bg-[#0f1729]"
+                className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 dark:focus:bg-lbs-surface-dark-2 w-full resize-none rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 pr-12 text-sm text-zinc-800 transition outline-none focus:bg-white focus:ring-2 disabled:opacity-50 dark:border-white/15 dark:text-white"
               />
               <button
                 type="submit"
                 disabled={inputValue.trim().length === 0 || isStreaming}
-                className="absolute right-2 bottom-2 grid size-8 place-items-center rounded-lg bg-gradient-to-r from-[#244976] to-[#21416C] text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                className="from-lbs-blue to-lbs-blue-2 absolute right-2 bottom-2 grid size-8 place-items-center rounded-lg bg-gradient-to-r text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Send className="size-4" />
               </button>

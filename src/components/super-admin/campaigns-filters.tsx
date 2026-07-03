@@ -59,7 +59,7 @@ export const CampaignsFilters = ({
   }, [router])
   return (
     <div
-      className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+      className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10"
       suppressHydrationWarning
     >
       <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
@@ -74,7 +74,7 @@ export const CampaignsFilters = ({
             type="text"
             defaultValue={currentQuery}
             placeholder="Rechercher..."
-            className="focus:border-lbs-blue focus:ring-lbs-blue/20 h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100"
+            className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-white/10 dark:text-zinc-100"
           />
         </div>
         <FilterSelect
@@ -101,14 +101,14 @@ export const CampaignsFilters = ({
             min={0}
             defaultValue={currentMinCalls > 0 ? String(currentMinCalls) : ''}
             placeholder="0"
-            className="focus:border-lbs-blue focus:ring-lbs-blue/20 h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100"
+            className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-900 transition outline-none focus:ring-2 dark:border-white/10 dark:text-zinc-100"
           />
         </div>
         <div className="flex items-end">
           <button
             type="button"
             onClick={handleApply}
-            className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+            className="from-lbs-blue to-lbs-blue-2 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r text-sm font-medium text-white shadow-sm transition hover:brightness-110"
           >
             <Sparkles className="size-3.5" />
             Appliquer

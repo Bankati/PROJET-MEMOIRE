@@ -301,7 +301,7 @@ export default async function AnalyticsPage({
         ))}
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
           <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
             <PhoneMissed className="size-4 text-rose-400" />
             Faux numéros
@@ -311,7 +311,7 @@ export default async function AnalyticsPage({
             {falseRate}% du total
           </span>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
           <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
             <Send className="size-4 text-emerald-400" />
             WhatsApp
@@ -321,7 +321,7 @@ export default async function AnalyticsPage({
             {whatsappRate}% du total
           </span>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
           <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
             <TrendingUp className="size-4 text-blue-400" />
             Durée moyenne
@@ -333,7 +333,7 @@ export default async function AnalyticsPage({
             par appel
           </span>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
           <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
             {callsTrend >= 0 ? (
               <ArrowUpRight className="size-4 text-emerald-400" />
@@ -353,7 +353,7 @@ export default async function AnalyticsPage({
           </span>
         </div>
       </div>
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10">
         <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
           <TrendingUp className="text-lbs-blue size-4" />
           Appels — {selectedCampaignTitle}
@@ -385,7 +385,7 @@ export default async function AnalyticsPage({
           ))}
         </div>
       </div>
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10">
         <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
           <BarChart3 className="size-4 text-blue-500" />
           Campagnes créées — {dateFromStr} → {dateToStr}
@@ -417,7 +417,7 @@ export default async function AnalyticsPage({
           ))}
         </div>
       </div>
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
         <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
           Détail mensuel
         </h3>

@@ -85,7 +85,7 @@ export const CampaignDetailsModal = ({
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setSelected(null)}
           />
-          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark relative z-10 w-full max-w-lg rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-xl dark:border-white/10">
             <div className="mb-4 flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-bold text-zinc-900 dark:text-white">

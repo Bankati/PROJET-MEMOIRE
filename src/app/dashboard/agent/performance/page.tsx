@@ -6,28 +6,14 @@ import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { callResults, campaigns, contacts } from '@/db/schema'
 import { formatDuration, readParam } from '@/lib/dashboard-utils'
+import { CallComment } from '@/components/agent/call-comment'
+import {
+  CALL_OUTCOME_LABELS,
+  CALL_OUTCOME_BADGE_STYLES,
+  CALL_OUTCOME_ACCENT_STYLES,
+} from '@/lib/status-styles'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
-
-const OUTCOME_LABELS: Readonly<Record<string, string>> = {
-  interested: 'Intéressé',
-  not_interested: 'Pas intéressé',
-  callback: 'Rappel',
-  no_answer: 'Pas de réponse',
-  false_number: 'Faux numéro',
-  whatsapp_follow_up: 'Suivi WhatsApp',
-  other: 'Autre',
-}
-
-const OUTCOME_STYLES: Readonly<Record<string, string>> = {
-  interested: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  not_interested: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-  callback: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-  no_answer: 'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-400',
-  false_number: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',
-  whatsapp_follow_up: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
-  other: 'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-400',
-}
 
 export default async function AgentPerformancePage({
   searchParams,
@@ -85,7 +71,7 @@ export default async function AgentPerformancePage({
       </div>
 
       {/* Filtre campagne */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
         <form className="flex flex-wrap items-end gap-3">
           <div>
             <label
@@ -98,7 +84,7 @@ export default async function AgentPerformancePage({
               id="perf-campaign"
               name="campaign"
               defaultValue={campaignFilter}
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="dark:bg-lbs-surface-dark-2 rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:text-white"
             >
               <option value="">Toutes mes campagnes</option>
               {agentCampaigns.map((c) => (
@@ -110,7 +96,7 @@ export default async function AgentPerformancePage({
           </div>
           <button
             type="submit"
-            className="inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-4 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+            className="from-lbs-blue to-lbs-blue-2 inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-gradient-to-r px-4 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
           >
             <BarChart3 className="size-3.5" />
             Filtrer
@@ -128,7 +114,7 @@ export default async function AgentPerformancePage({
 
       {/* Liste des appels */}
       {calls.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-200 bg-white py-16 text-center dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-200 bg-white py-16 text-center dark:border-white/10">
           <div className="grid size-14 place-items-center rounded-2xl bg-zinc-100 dark:bg-white/10">
             <Phone className="size-7 text-zinc-400 dark:text-zinc-500" />
           </div>
@@ -148,12 +134,12 @@ export default async function AgentPerformancePage({
           {calls.map((call) => (
             <div
               key={call.id}
-              className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]"
+              className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10"
             >
               {/* En-tête */}
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#244976] to-[#21416C] shadow-sm">
+                  <div className="from-lbs-blue to-lbs-blue-2 grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br shadow-sm">
                     <Phone className="size-4 text-white" />
                   </div>
                   <div>
@@ -167,12 +153,9 @@ export default async function AgentPerformancePage({
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      OUTCOME_STYLES[call.outcome] ??
-                      'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-400'
-                    }`}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${CALL_OUTCOME_BADGE_STYLES[call.outcome] ?? CALL_OUTCOME_BADGE_STYLES.other}`}
                   >
-                    {OUTCOME_LABELS[call.outcome] ?? call.outcome}
+                    {CALL_OUTCOME_LABELS[call.outcome] ?? call.outcome}
                   </span>
                   {call.isWhatsappRedirected ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
@@ -205,14 +188,12 @@ export default async function AgentPerformancePage({
 
               {/* Commentaire */}
               {call.notes && call.notes.trim().length > 0 ? (
-                <div className="mt-3 rounded-xl bg-zinc-50 px-3.5 py-2.5 dark:bg-white/5">
-                  <p className="mb-1 text-[11px] font-medium tracking-wide text-zinc-400 uppercase dark:text-zinc-500">
-                    Commentaire
-                  </p>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap text-zinc-700 dark:text-zinc-200">
-                    {call.notes}
-                  </p>
-                </div>
+                <CallComment
+                  notes={call.notes}
+                  accentClassName={
+                    CALL_OUTCOME_ACCENT_STYLES[call.outcome] ?? CALL_OUTCOME_ACCENT_STYLES.other
+                  }
+                />
               ) : null}
             </div>
           ))}

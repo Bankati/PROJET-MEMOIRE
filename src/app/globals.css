@@ -32,10 +32,11 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
 
-  /* Couleurs de la marque LBS enregistrées dans Tailwind v4 */
-  --color-lbs-blue: #244976;
-  --color-lbs-blue-2: #21416c;
-  --color-lbs-red: #800000;
+  /* Couleurs de la marque LBS enregistrées dans Tailwind v4 — dérivées de :root
+     plutôt que redéfinies en dur, pour n'avoir qu'une seule valeur source par couleur. */
+  --color-lbs-blue: var(--lbs-blue);
+  --color-lbs-blue-2: var(--lbs-blue-2);
+  --color-lbs-red: var(--lbs-red);
 }
 
 .dark {

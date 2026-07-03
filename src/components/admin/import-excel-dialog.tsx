@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import {
   AlertCircle,
   CheckCircle2,
+  Download,
   FileSpreadsheet,
   Loader2,
   Upload,
@@ -210,7 +211,7 @@ export const ImportExcelDialog = ({ campaigns }: ImportExcelDialogProps): React.
               <button
                 type="button"
                 onClick={handleClose}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+                className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
               >
                 <CheckCircle2 className="size-3.5" />
                 Fermer
@@ -219,6 +220,14 @@ export const ImportExcelDialog = ({ campaigns }: ImportExcelDialogProps): React.
           </div>
         ) : (
           <div className="space-y-4">
+            <a
+              href="/templates/modele-import-contacts.xlsx"
+              download
+              className="text-lbs-blue inline-flex items-center gap-1.5 text-xs font-medium underline dark:text-blue-300"
+            >
+              <Download className="size-3.5" />
+              Télécharger le modèle Excel
+            </a>
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -284,7 +293,7 @@ export const ImportExcelDialog = ({ campaigns }: ImportExcelDialogProps): React.
               <select
                 value={campaignId}
                 onChange={(e) => setCampaignId(e.target.value)}
-                className="focus:border-lbs-blue focus:ring-lbs-blue/20 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none focus:ring-2 dark:border-white/15 dark:text-white"
               >
                 <option value="">Sélectionner une campagne</option>
                 {campaigns.map((c) => (
@@ -308,7 +317,7 @@ export const ImportExcelDialog = ({ campaigns }: ImportExcelDialogProps): React.
                 type="button"
                 onClick={handleUpload}
                 disabled={isUploading || !file || campaignId.length === 0}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:opacity-50"
+                className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:opacity-50"
               >
                 {isUploading ? (
                   <Loader2 className="size-4 animate-spin" />

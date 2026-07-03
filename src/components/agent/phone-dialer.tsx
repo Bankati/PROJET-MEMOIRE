@@ -54,7 +54,7 @@ export const PhoneDialer = ({
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+    <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
           <Phone className="size-4 text-blue-400" />
@@ -82,7 +82,7 @@ export const PhoneDialer = ({
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             disabled={callStatus !== 'idle'}
-            className="flex w-full items-center justify-between rounded-xl border border-zinc-200 bg-white px-4 py-3 text-left transition hover:border-zinc-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:bg-[#0f1729] dark:hover:border-white/25"
+            className="dark:bg-lbs-surface-dark-2 flex w-full items-center justify-between rounded-xl border border-zinc-200 bg-white px-4 py-3 text-left transition hover:border-zinc-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:hover:border-white/25"
           >
             <div className="flex items-center gap-3">
               <div className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white">
@@ -104,7 +104,7 @@ export const PhoneDialer = ({
             ) : null}
           </button>
           {isDropdownOpen && phones.length > 1 ? (
-            <div className="absolute top-full right-0 left-0 z-10 mt-1 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-white/15 dark:bg-[#1a2332]">
+            <div className="dark:bg-lbs-surface-dark absolute top-full right-0 left-0 z-10 mt-1 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-white/15">
               {phones.map((phone) => (
                 <button
                   key={phone.value}

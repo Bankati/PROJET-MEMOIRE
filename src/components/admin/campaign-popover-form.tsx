@@ -57,7 +57,7 @@ export const CampaignPopoverForm = ({
           className={
             isEdit
               ? 'hover:text-lbs-blue gap-1.5 rounded-lg border-zinc-200 text-zinc-600 dark:border-white/15 dark:text-zinc-400'
-              : 'gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-white shadow-sm hover:brightness-110'
+              : 'from-lbs-blue to-lbs-blue-2 gap-2 rounded-xl bg-gradient-to-r text-white shadow-sm hover:brightness-110'
           }
         >
           <motion.span
@@ -125,7 +125,7 @@ export const CampaignPopoverForm = ({
                   id={`${layoutId}-status`}
                   name="status"
                   defaultValue={campaign?.status ?? 'draft'}
-                  className="focus:border-lbs-blue col-span-2 flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                  className="focus:border-lbs-blue dark:bg-lbs-surface-dark-2 col-span-2 flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:text-white"
                 >
                   <option value="draft">Brouillon</option>
                   <option value="active">Active</option>
@@ -146,7 +146,7 @@ export const CampaignPopoverForm = ({
                 rows={3}
                 defaultValue={campaign?.baseScript ?? ''}
                 placeholder="Script que les agents utiliseront..."
-                className="focus:border-lbs-blue focus:ring-lbs-blue/20 col-span-2 flex w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all placeholder:text-zinc-400 focus:ring-2 focus:outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 col-span-2 flex w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all placeholder:text-zinc-400 focus:ring-2 focus:outline-none dark:border-white/15 dark:text-white"
               />
             </div>
             <div className="grid grid-cols-3 items-start gap-3">
@@ -159,14 +159,14 @@ export const CampaignPopoverForm = ({
                 rows={2}
                 defaultValue={campaign?.details ?? ''}
                 placeholder="Notes supplémentaires..."
-                className="focus:border-lbs-blue focus:ring-lbs-blue/20 col-span-2 flex w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all placeholder:text-zinc-400 focus:ring-2 focus:outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+                className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 col-span-2 flex w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all placeholder:text-zinc-400 focus:ring-2 focus:outline-none dark:border-white/15 dark:text-white"
               />
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-1">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+              className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
             >
               {isEdit ? (
                 <>

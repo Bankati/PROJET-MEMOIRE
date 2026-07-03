@@ -50,7 +50,7 @@ export const LoginForm = (): React.JSX.Element => {
             placeholder="vous@etablissement.fr"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-4 pl-10 text-sm text-gray-900 transition outline-none placeholder:text-gray-400 focus:border-[#244976] focus:bg-white focus:ring-2 focus:ring-[#244976]/15 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:bg-white/[0.08] dark:focus:ring-blue-400/15"
+            className="focus:border-lbs-blue focus:ring-lbs-blue/15 w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-4 pl-10 text-sm text-gray-900 transition outline-none placeholder:text-gray-400 focus:bg-white focus:ring-2 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:bg-white/[0.08] dark:focus:ring-blue-400/15"
             required
             suppressHydrationWarning
           />
@@ -75,7 +75,7 @@ export const LoginForm = (): React.JSX.Element => {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-10 pl-10 text-sm text-gray-900 transition outline-none placeholder:text-gray-400 focus:border-[#244976] focus:bg-white focus:ring-2 focus:ring-[#244976]/15 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:focus:border-blue-400 dark:focus:bg-white/[0.08] dark:focus:ring-blue-400/15"
+            className="focus:border-lbs-blue focus:ring-lbs-blue/15 w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-10 pl-10 text-sm text-gray-900 transition outline-none placeholder:text-gray-400 focus:bg-white focus:ring-2 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-white dark:focus:border-blue-400 dark:focus:bg-white/[0.08] dark:focus:ring-blue-400/15"
             required
             suppressHydrationWarning
           />

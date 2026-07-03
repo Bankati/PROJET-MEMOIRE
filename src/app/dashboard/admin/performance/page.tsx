@@ -3,7 +3,7 @@
  * KPI globaux, performances par agent, par campagne, avec graphiques et filtres.
  */
 import { BarChart3, Phone, PhoneMissed, Send, TrendingUp, Users } from 'lucide-react'
-import { and, count, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import Link from 'next/link'
 
 import { requireRole } from '@/lib/auth/server-auth'
@@ -15,6 +15,7 @@ import {
   campaigns,
   users,
 } from '@/db/schema'
+import { campaignAccessCondition } from '@/lib/campaign-access'
 import { extractCount, readParam } from '@/lib/dashboard-utils'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
@@ -44,7 +45,7 @@ export default async function AdminPerformancePage({
     db
       .select({ id: campaigns.id, title: campaigns.title })
       .from(campaigns)
-      .where(or(eq(campaigns.createdByAdminId, user.id), eq(campaigns.visibility, 'public')))
+      .where(campaignAccessCondition({ adminId: user.id }))
       .orderBy(desc(campaigns.createdAt)),
     db
       .select({ id: users.id, fullName: users.fullName })
@@ -167,7 +168,7 @@ export default async function AdminPerformancePage({
       </div>
 
       {/* Filters */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
         <form className="grid items-end gap-3 sm:grid-cols-2 md:grid-cols-5">
           <div>
             <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -176,7 +177,7 @@ export default async function AdminPerformancePage({
             <select
               name="campaign"
               defaultValue={campaignFilter}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:text-white"
             >
               <option value="">Toutes</option>
               {myCampaigns.map((c) => (
@@ -193,7 +194,7 @@ export default async function AdminPerformancePage({
             <select
               name="agent"
               defaultValue={agentFilter}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:text-white"
             >
               <option value="">Tous</option>
               {allAgents.map((a) => (
@@ -211,7 +212,7 @@ export default async function AdminPerformancePage({
               name="from"
               type="date"
               defaultValue={dateFromStr}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:text-white"
             />
           </div>
           <div>
@@ -222,12 +223,12 @@ export default async function AdminPerformancePage({
               name="to"
               type="date"
               defaultValue={dateToStr}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:bg-[#0f1729] dark:text-white"
+              className="dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 outline-none dark:border-white/15 dark:text-white"
             />
           </div>
           <button
             type="submit"
-            className="inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#244976] to-[#21416C] text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+            className="from-lbs-blue to-lbs-blue-2 inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r text-sm font-medium text-white shadow-sm transition hover:brightness-110"
           >
             <BarChart3 className="size-3.5" />
             Filtrer
@@ -237,14 +238,14 @@ export default async function AdminPerformancePage({
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Total appels</p>
             <Phone className="size-4 text-blue-400" />
           </div>
           <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{totalCallsCount}</p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Faux numéros</p>
             <PhoneMissed className="size-4 text-rose-400" />
@@ -254,7 +255,7 @@ export default async function AdminPerformancePage({
           </p>
           <p className="mt-1 text-xs text-zinc-400">{falseRate}% du total</p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">WhatsApp</p>
             <Send className="size-4 text-emerald-400" />
@@ -262,7 +263,7 @@ export default async function AdminPerformancePage({
           <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{whatsappCount}</p>
           <p className="mt-1 text-xs text-zinc-400">{whatsappRate}% du total</p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Intéressés</p>
             <TrendingUp className="size-4 text-amber-400" />
@@ -274,7 +275,7 @@ export default async function AdminPerformancePage({
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Agent performance table */}
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
             <Users className="size-4 text-blue-400" />
             Performance par agent
@@ -306,7 +307,7 @@ export default async function AdminPerformancePage({
                         <td className="px-3 py-3 font-medium">
                           <Link
                             href={`/dashboard/admin/performance/${agent.agentId}${campaignFilter.length > 0 ? `?campaign=${campaignFilter}` : ''}`}
-                            className="text-[#244976] transition hover:underline dark:text-blue-300"
+                            className="text-lbs-blue transition hover:underline dark:text-blue-300"
                           >
                             {agent.agentName}
                           </Link>
@@ -345,7 +346,7 @@ export default async function AdminPerformancePage({
         </div>
 
         {/* Campaign performance table */}
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
             <TrendingUp className="size-4 text-emerald-400" />
             Performance par campagne

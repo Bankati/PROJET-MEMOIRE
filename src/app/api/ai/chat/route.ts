@@ -23,8 +23,13 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json({ error: 'OPENAI_API_KEY manquant.' }, { status: 503 })
   }
 
-  const body = (await request.json()) as { query?: string }
-  const query = (body.query ?? '').trim()
+  let query: string
+  try {
+    const body = (await request.json()) as { query?: string }
+    query = (body.query ?? '').trim()
+  } catch {
+    return NextResponse.json({ error: 'Requête JSON invalide.' }, { status: 400 })
+  }
 
   if (query.length === 0) {
     return NextResponse.json({ error: 'La question est vide.' }, { status: 400 })
@@ -33,32 +38,44 @@ export const POST = async (request: Request): Promise<Response> => {
   const cohere = createCohere({ apiKey: env.COHERE_API_KEY })
   const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY })
 
-  const { embedding } = await embed({
-    model: cohere.embedding('embed-multilingual-v3.0'),
-    value: query,
-  })
+  let systemPrompt: string
+  try {
+    const { embedding } = await embed({
+      model: cohere.embedding('embed-multilingual-v3.0'),
+      value: query,
+    })
 
-  const chunks = await searchSimilarChunks({
-    queryEmbedding: embedding,
-    matchThreshold: 0.45,
-    matchCount: 6,
-  })
+    const chunks = await searchSimilarChunks({
+      queryEmbedding: embedding,
+      matchThreshold: 0.45,
+      matchCount: 6,
+    })
 
-  const context = buildContextFromChunks({ chunks })
-  const subjectPrompt = detectSubject({ query })
-  const systemPrompt = buildSystemPrompt({
-    globalSystemPrompt: GLOBAL_SYSTEM_PROMPT,
-    context,
-    subjectPrompt,
-  })
+    const context = buildContextFromChunks({ chunks })
+    const subjectPrompt = detectSubject({ query })
+    systemPrompt = buildSystemPrompt({
+      globalSystemPrompt: GLOBAL_SYSTEM_PROMPT,
+      context,
+      subjectPrompt,
+    })
+  } catch {
+    return NextResponse.json(
+      { error: 'Impossible de préparer la réponse (recherche de contexte échouée).' },
+      { status: 502 }
+    )
+  }
 
-  const result = streamText({
-    model: openai('gpt-4o-mini'),
-    system: systemPrompt,
-    messages: [{ role: 'user', content: query }],
-    maxOutputTokens: 400,
-    temperature: 0.2,
-  })
+  try {
+    const result = streamText({
+      model: openai('gpt-4o-mini'),
+      system: systemPrompt,
+      messages: [{ role: 'user', content: query }],
+      maxOutputTokens: 400,
+      temperature: 0.2,
+    })
 
-  return result.toTextStreamResponse()
+    return result.toTextStreamResponse()
+  } catch {
+    return NextResponse.json({ error: "Le modèle n'a pas pu répondre." }, { status: 502 })
+  }
 }

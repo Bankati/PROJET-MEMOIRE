@@ -29,6 +29,7 @@ import {
   campaigns,
   contacts,
 } from '@/db/schema'
+import type { CallOutcome } from '@/db/schema'
 import { CallCenterTabs } from '@/components/agent/call-center-tabs'
 import { AgentCallPanel } from '@/components/agent/agent-call-panel'
 
@@ -53,29 +54,32 @@ async function submitCallResult(formData: FormData): Promise<void> {
 
   const durationSeconds = Math.max(0, parseInt(durationSecondsStr, 10) || 0)
 
-  await db.insert(callResults).values({
-    assignmentId,
-    campaignId,
-    contactId,
-    agentId: user.id,
-    dialedPhone,
-    durationSeconds,
-    outcome: outcome as
-      | 'interested'
-      | 'not_interested'
-      | 'callback'
-      | 'no_answer'
-      | 'false_number'
-      | 'whatsapp_follow_up'
-      | 'other',
-    notes: notes.trim().length > 0 ? notes.trim() : null,
-    isWhatsappRedirected,
-  })
+  try {
+    // Transaction : sans elle, un échec du 2e update après le 1er insert laisserait
+    // un callResult enregistré avec l'assignation encore "in_progress" — et comme
+    // callResults n'a pas de contrainte unique sur assignmentId, un nouvel essai
+    // créerait un doublon plutôt que d'échouer proprement.
+    await db.transaction(async (tx) => {
+      await tx.insert(callResults).values({
+        assignmentId,
+        campaignId,
+        contactId,
+        agentId: user.id,
+        dialedPhone,
+        durationSeconds,
+        outcome: outcome as CallOutcome,
+        notes: notes.trim().length > 0 ? notes.trim() : null,
+        isWhatsappRedirected,
+      })
 
-  await db
-    .update(agentContactAssignments)
-    .set({ status: 'completed', completedAt: new Date() })
-    .where(eq(agentContactAssignments.id, assignmentId))
+      await tx
+        .update(agentContactAssignments)
+        .set({ status: 'completed', completedAt: new Date() })
+        .where(eq(agentContactAssignments.id, assignmentId))
+    })
+  } catch {
+    redirect('/dashboard/admin/calls?notice=error')
+  }
 
   redirect('/dashboard/admin/calls?notice=call_saved')
 }
@@ -266,7 +270,7 @@ export default async function AdminCallDetailPage({
         {/* LEFT PANEL */}
         <div className="flex flex-col gap-4">
           {/* Campaign + progress */}
-          <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
                 Campagne active
@@ -313,7 +317,7 @@ export default async function AdminCallDetailPage({
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-white/10">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#244976] to-[#21416C] transition-all"
+                  className="from-lbs-blue to-lbs-blue-2 h-full rounded-full bg-gradient-to-r transition-all"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
@@ -321,7 +325,7 @@ export default async function AdminCallDetailPage({
           </div>
 
           {/* Contact full info */}
-          <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
             <p className="mb-3 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
               Contact
             </p>
@@ -470,7 +474,7 @@ export default async function AdminCallDetailPage({
 
           {/* Queue */}
           {queueContacts.length > 0 ? (
-            <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+            <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
                   File d&apos;attente

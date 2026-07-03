@@ -76,7 +76,7 @@ export const FilterSelect = ({
       <button
         type="button"
         onClick={handleToggle}
-        className="focus:border-lbs-blue focus:ring-lbs-blue/20 flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-left text-sm shadow-sm transition hover:border-zinc-300 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-[#1a2332] dark:text-zinc-100 dark:hover:border-white/20"
+        className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-left text-sm shadow-sm transition hover:border-zinc-300 focus:ring-2 focus:outline-none dark:border-white/10 dark:text-zinc-100 dark:hover:border-white/20"
       >
         <span
           className={
@@ -113,7 +113,7 @@ export const FilterSelect = ({
         </div>
       </button>
       {isOpen ? (
-        <div className="absolute top-full left-0 z-50 mt-1 w-full rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark absolute top-full left-0 z-50 mt-1 w-full rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-white/10">
           {searchable ? (
             <div className="flex items-center gap-2 border-b border-zinc-100 px-3 py-2 dark:border-white/5">
               <Search className="size-3.5 text-zinc-400" />

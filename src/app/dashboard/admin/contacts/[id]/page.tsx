@@ -16,6 +16,7 @@ import { and, eq } from 'drizzle-orm'
 import { requireRole } from '@/lib/auth/server-auth'
 import { db } from '@/lib/db'
 import { campaigns, campaignContacts, contacts } from '@/db/schema'
+import { campaignAccessCondition } from '@/lib/campaign-access'
 import { PhoneDialer } from '@/components/agent/phone-dialer'
 import { CallCenterTabs } from '@/components/agent/call-center-tabs'
 
@@ -49,7 +50,7 @@ export default async function AdminContactDetailPage({
     .from(campaignContacts)
     .innerJoin(contacts, eq(campaignContacts.contactId, contacts.id))
     .innerJoin(campaigns, eq(campaignContacts.campaignId, campaigns.id))
-    .where(and(eq(campaignContacts.id, id), eq(campaigns.createdByAdminId, user.id)))
+    .where(and(eq(campaignContacts.id, id), campaignAccessCondition({ adminId: user.id })))
     .limit(1)
 
   if (result.length === 0) notFound()
@@ -97,7 +98,7 @@ export default async function AdminContactDetailPage({
       <div className="grid gap-4 lg:grid-cols-4">
         {/* LEFT PANEL — campaign + prospect info */}
         <div className="space-y-4 lg:col-span-1">
-          <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
             <div className="mb-3 flex items-center gap-2">
               <Megaphone className="text-lbs-blue size-4 dark:text-blue-400" />
               <p className="text-xs font-semibold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
@@ -112,7 +113,7 @@ export default async function AdminContactDetailPage({
             ) : null}
           </div>
 
-          <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10">
             <div className="mb-3 flex items-center gap-2">
               <User className="size-4 text-blue-400" />
               <p className="text-xs font-semibold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">

@@ -397,7 +397,7 @@ export default async function SuperAdminDashboardPage({
             backgroundPosition: 'center',
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1a3354]/90 via-[#244976]/80 to-[#1a3354]/60" />
+          <div className="via-lbs-blue/80 absolute inset-0 bg-gradient-to-r from-[#1a3354]/90 to-[#1a3354]/60" />
         </div>
         <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-10">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
@@ -473,7 +473,7 @@ export default async function SuperAdminDashboardPage({
         ].map((kpi) => (
           <div
             key={kpi.label}
-            className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-[#1a2332]"
+            className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10"
           >
             <div className="flex items-center justify-between">
               <p className="text-sm text-zinc-500 dark:text-zinc-400">{kpi.label}</p>
@@ -487,7 +487,7 @@ export default async function SuperAdminDashboardPage({
 
       {/* Chart + donut */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:col-span-2 dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:col-span-2 dark:border-white/10">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -534,7 +534,7 @@ export default async function SuperAdminDashboardPage({
             ))}
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <p className="mb-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">
             Indicateurs clés
           </p>
@@ -620,7 +620,7 @@ export default async function SuperAdminDashboardPage({
 
       {/* Monthly trend + recent activity */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
             <BarChart3 className="text-lbs-blue size-4" />
             Détail mensuel
@@ -646,7 +646,7 @@ export default async function SuperAdminDashboardPage({
             </table>
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
             <Sparkles className="size-4 text-amber-400" />
             Activité récente
@@ -662,7 +662,7 @@ export default async function SuperAdminDashboardPage({
                       {admin.fullName.charAt(0).toUpperCase()}
                     </div>
                     {idx === 0 ? (
-                      <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white bg-emerald-400 dark:border-[#1a2332]" />
+                      <span className="dark:border-lbs-surface-dark absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white bg-emerald-400" />
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -684,7 +684,7 @@ export default async function SuperAdminDashboardPage({
       </div>
 
       {/* Campaigns table with details modal */}
-      <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1a2332]">
+      <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
         <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
           <Globe className="size-4 text-blue-400" />
           Campagnes — vue détaillée
