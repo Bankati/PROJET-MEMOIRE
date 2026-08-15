@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray } from 'drizzle-orm'
-import { Bell, Building2, Calendar, Phone, User } from 'lucide-react'
+import { Bell, Building2, Calendar, GraduationCap, Phone, User } from 'lucide-react'
 import Link from 'next/link'
 
 import { requireRole } from '@/lib/auth/server-auth'
@@ -25,6 +25,7 @@ export default async function AdminRappelsPage(): Promise<React.JSX.Element> {
             contactLastName: contacts.lastName,
             contactPhone: contacts.phonePrimary,
             contactSchool: contacts.schoolName,
+            desiredProgram: contacts.desiredProgram,
             contactCity: contacts.city,
             campaignTitle: campaigns.title,
             campaignId: callResults.campaignId,
@@ -102,6 +103,12 @@ export default async function AdminRappelsPage(): Promise<React.JSX.Element> {
                     {r.contactSchool}
                   </p>
                 ) : null}
+                {r.desiredProgram ? (
+                  <p className="flex items-center gap-2 text-xs font-medium text-amber-700 dark:text-amber-400">
+                    <GraduationCap className="size-3.5 shrink-0" />
+                    {r.desiredProgram}
+                  </p>
+                ) : null}
                 <p className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
                   <User className="size-3.5 shrink-0 text-zinc-400" />
                   Agent : {r.agentName}
@@ -134,6 +141,7 @@ export default async function AdminRappelsPage(): Promise<React.JSX.Element> {
                 <th className="px-5 py-3">Contact</th>
                 <th className="px-5 py-3">Téléphone</th>
                 <th className="px-5 py-3">Établissement</th>
+                <th className="px-5 py-3">Filière souhaitée</th>
                 <th className="px-5 py-3">Campagne</th>
                 <th className="px-5 py-3">Agent</th>
                 <th className="px-5 py-3">Note</th>
@@ -144,7 +152,7 @@ export default async function AdminRappelsPage(): Promise<React.JSX.Element> {
             <tbody>
               {rappels.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-10 text-center">
+                  <td colSpan={9} className="px-5 py-10 text-center">
                     <Bell className="mx-auto mb-2 size-8 text-zinc-300" />
                     <p className="text-sm text-zinc-400">Aucun rappel planifié pour le moment.</p>
                     <p className="text-xs text-zinc-300 dark:text-zinc-500">
@@ -172,6 +180,16 @@ export default async function AdminRappelsPage(): Promise<React.JSX.Element> {
                     <td className="px-5 py-3 text-zinc-700 dark:text-zinc-200">{r.contactPhone}</td>
                     <td className="px-5 py-3 text-zinc-600 dark:text-zinc-300">
                       {r.contactSchool ?? '—'}
+                    </td>
+                    <td className="px-5 py-3">
+                      {r.desiredProgram ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                          <GraduationCap className="size-3" />
+                          {r.desiredProgram}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-300 dark:text-zinc-600">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3">
                       <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
