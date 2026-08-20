@@ -5,7 +5,7 @@
  */
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2, Clock, Power, RefreshCcw, Users, X, XCircle } from 'lucide-react'
+import { CheckCircle2, Clock, Megaphone, Power, RefreshCcw, Users, X, XCircle } from 'lucide-react'
 import { and, desc, eq, count } from 'drizzle-orm'
 
 import { requireRole } from '@/lib/auth/server-auth'
@@ -65,6 +65,7 @@ async function createAgent(formData: FormData): Promise<void> {
       status: 'active',
       managedByAdminId: admin.id,
       createdByUserId: admin.id,
+      campaignId: campaignId.length > 0 ? campaignId : null,
       campaignAccessExpiresAt: expiresAt,
     })
   } catch {
@@ -117,6 +118,7 @@ async function reactivateAgent(formData: FormData): Promise<void> {
       .update(users)
       .set({
         status: 'active',
+        campaignId,
         campaignAccessExpiresAt: expiresAt,
         updatedAt: new Date(),
       })
@@ -143,10 +145,13 @@ export default async function AdminAgentsPage({
         fullName: users.fullName,
         email: users.email,
         status: users.status,
+        campaignId: users.campaignId,
+        campaignTitle: campaigns.title,
         campaignAccessExpiresAt: users.campaignAccessExpiresAt,
         createdAt: users.createdAt,
       })
       .from(users)
+      .leftJoin(campaigns, eq(users.campaignId, campaigns.id))
       .where(and(eq(users.role, 'agent'), eq(users.managedByAdminId, user.id)))
       .orderBy(desc(users.createdAt)),
     db
@@ -242,6 +247,7 @@ export default async function AdminAgentsPage({
               <select
                 name="campaignId"
                 required
+                defaultValue={myAgents.find((a) => a.id === reactivateId)?.campaignId ?? ''}
                 className="focus:border-lbs-blue dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 transition outline-none dark:border-white/15 dark:text-white"
               >
                 <option value="">Sélectionner une campagne</option>
@@ -306,6 +312,18 @@ export default async function AdminAgentsPage({
                       {statusLabelMap[agent.status]}
                     </span>
                   </div>
+                  <div className="mt-2">
+                    {agent.campaignTitle ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                        <Megaphone className="size-3" />
+                        {agent.campaignTitle}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500 dark:bg-white/10 dark:text-zinc-400">
+                        Aucune campagne
+                      </span>
+                    )}
+                  </div>
                   <div className="mt-3 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
                     <span>{callCountMap.get(agent.id) ?? 0} appels</span>
                     <span>
@@ -348,6 +366,7 @@ export default async function AdminAgentsPage({
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs text-zinc-500 uppercase dark:border-white/10">
                     <th className="px-5 py-3">Agent</th>
+                    <th className="px-5 py-3">Campagne</th>
                     <th className="px-5 py-3">Statut</th>
                     <th className="px-5 py-3">Appels</th>
                     <th className="px-5 py-3">Expiration</th>
@@ -357,7 +376,7 @@ export default async function AdminAgentsPage({
                 <tbody>
                   {myAgents.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-5 py-8 text-center text-zinc-400">
+                      <td colSpan={6} className="px-5 py-8 text-center text-zinc-400">
                         <Users className="mx-auto mb-2 size-8 text-zinc-300" />
                         Aucun agent. Créez votre premier agent.
                       </td>
@@ -382,6 +401,18 @@ export default async function AdminAgentsPage({
                               </p>
                             </div>
                           </div>
+                        </td>
+                        <td className="px-5 py-3">
+                          {agent.campaignTitle ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                              <Megaphone className="size-3" />
+                              {agent.campaignTitle}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-zinc-300 dark:text-zinc-600">
+                              Aucune campagne
+                            </span>
+                          )}
                         </td>
                         <td className="px-5 py-3">
                           <span
