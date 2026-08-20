@@ -82,6 +82,12 @@ export const users = pgTable(
     managedByAdminId: uuid('managed_by_admin_id').references((): AnyPgColumn => users.id, {
       onDelete: 'set null',
     }),
+    // Campagne à laquelle un agent est rattaché (nullable : un admin/super_admin n'en a pas,
+    // et un agent peut temporairement ne pas en avoir). Référence différée car `campaigns`
+    // est déclarée plus bas dans ce fichier.
+    campaignId: uuid('campaign_id').references((): AnyPgColumn => campaigns.id, {
+      onDelete: 'set null',
+    }),
     campaignAccessExpiresAt: timestamp('campaign_access_expires_at', {
       withTimezone: true,
     }),
@@ -92,8 +98,9 @@ export const users = pgTable(
     usersEmailUniqueIdx: uniqueIndex('users_email_unique_idx').on(table.email),
     usersRoleIdx: index('users_role_idx').on(table.role),
     usersManagedByAdminIdx: index('users_managed_by_admin_idx').on(table.managedByAdminId),
+    usersCampaignIdx: index('users_campaign_idx').on(table.campaignId),
   })
-)
+).enableRLS()
 
 export const campaigns = pgTable(
   'campaigns',
@@ -118,7 +125,7 @@ export const campaigns = pgTable(
     campaignsCreatedByAdminIdx: index('campaigns_created_by_admin_idx').on(table.createdByAdminId),
     campaignsStatusIdx: index('campaigns_status_idx').on(table.status),
   })
-)
+).enableRLS()
 
 export const campaignCollaborators = pgTable(
   'campaign_collaborators',
@@ -144,7 +151,7 @@ export const campaignCollaborators = pgTable(
       table.permission
     ),
   })
-)
+).enableRLS()
 
 export const contacts = pgTable(
   'contacts',
@@ -177,7 +184,7 @@ export const contacts = pgTable(
     ),
     contactsEmailIdx: index('contacts_email_idx').on(table.email),
   })
-)
+).enableRLS()
 
 export const campaignContacts = pgTable(
   'campaign_contacts',
@@ -204,7 +211,7 @@ export const campaignContacts = pgTable(
       'campaign_contacts_campaign_contact_unique_idx'
     ).on(table.campaignId, table.contactId),
   })
-)
+).enableRLS()
 
 export const agentContactAssignments = pgTable(
   'agent_contact_assignments',
@@ -229,7 +236,7 @@ export const agentContactAssignments = pgTable(
       'agent_assignments_campaign_contact_unique_idx'
     ).on(table.campaignContactId),
   })
-)
+).enableRLS()
 
 export const callResults = pgTable(
   'call_results',
@@ -260,7 +267,7 @@ export const callResults = pgTable(
     callResultsAgentIdx: index('call_results_agent_idx').on(table.agentId),
     callResultsOutcomeIdx: index('call_results_outcome_idx').on(table.outcome),
   })
-)
+).enableRLS()
 
 export const passwordResetOtps = pgTable(
   'password_reset_otps',
@@ -281,7 +288,7 @@ export const passwordResetOtps = pgTable(
     passwordResetOtpsUserIdx: index('password_reset_otps_user_idx').on(table.userId),
     passwordResetOtpsStatusIdx: index('password_reset_otps_status_idx').on(table.status),
   })
-)
+).enableRLS()
 
 export const broadcastMessages = pgTable(
   'broadcast_messages',
@@ -301,7 +308,7 @@ export const broadcastMessages = pgTable(
       table.recipientRole
     ),
   })
-)
+).enableRLS()
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   creator: one(users, {
@@ -317,6 +324,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   createdCampaigns: many(campaigns),
   ownedAssignments: many(agentContactAssignments),
   callResults: many(callResults),
+  assignedCampaign: one(campaigns, {
+    fields: [users.campaignId],
+    references: [campaigns.id],
+  }),
 }))
 
 export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
@@ -327,4 +338,5 @@ export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
   contacts: many(campaignContacts),
   collaborators: many(campaignCollaborators),
   callResults: many(callResults),
+  agents: many(users),
 }))

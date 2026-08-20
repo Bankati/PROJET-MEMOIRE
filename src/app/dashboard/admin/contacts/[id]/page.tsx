@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Megaphone,
   Phone,
+  Star,
   User,
 } from 'lucide-react'
 import { and, eq } from 'drizzle-orm'
@@ -120,6 +121,26 @@ export default async function AdminContactDetailPage({
                 Prospect
               </p>
             </div>
+
+            {/* Filière souhaitée — info clé pour l'argumentaire, toujours visible */}
+            <div className="mb-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2.5 dark:border-amber-500/30 dark:from-amber-500/10 dark:to-orange-500/10">
+              <div className="mb-1 flex items-center gap-1.5">
+                <Star className="size-3 fill-amber-500 text-amber-500" />
+                <p className="text-[10px] font-semibold tracking-wider text-amber-600 uppercase dark:text-amber-400">
+                  Filière souhaitée
+                </p>
+              </div>
+              <p
+                className={
+                  contact.desiredProgram
+                    ? 'text-sm font-bold text-amber-800 dark:text-amber-200'
+                    : 'text-sm text-amber-600/70 italic dark:text-amber-400/70'
+                }
+              >
+                {contact.desiredProgram ?? 'Non renseignée — à demander au prospect'}
+              </p>
+            </div>
+
             <div className="space-y-2.5">
               <div className="flex items-start gap-2.5">
                 <User className="mt-0.5 size-4 shrink-0 text-zinc-400" />

@@ -15,6 +15,7 @@ export type ProspectRow = {
   phoneSecondary: string | null
   email: string | null
   schoolName: string | null
+  desiredProgram: string | null
   city: string | null
   ccId: string
   campaignId: string
@@ -73,6 +74,7 @@ export default async function ProspectsPage(): Promise<React.JSX.Element> {
         c.phone_secondary       AS "phoneSecondary",
         c.email,
         c.school_name           AS "schoolName",
+        c.desired_program       AS "desiredProgram",
         c.city,
         cc.id                   AS "ccId",
         cc.campaign_id          AS "campaignId",

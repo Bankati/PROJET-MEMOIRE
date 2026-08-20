@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react'
 import {
   CheckCircle2,
   Contact as ContactIcon,
+  GraduationCap,
   Loader2,
   MessageCircle,
   UserPlus,
@@ -23,6 +24,7 @@ type ContactData = Readonly<{
   phoneSecondary: string | null
   email: string | null
   schoolName: string | null
+  desiredProgram: string | null
   isAssigned: boolean
   assignedTo: string | null
 }>
@@ -157,6 +159,7 @@ export const BulkAssignContacts = ({
                   <th className="px-5 py-3">Nom</th>
                   <th className="px-5 py-3">Téléphone</th>
                   <th className="px-5 py-3">École</th>
+                  <th className="px-5 py-3">Filière souhaitée</th>
                   <th className="px-5 py-3">Attribué à</th>
                   <th className="px-5 py-3">WhatsApp</th>
                   <th className="px-5 py-3 text-right">Actions</th>
@@ -199,6 +202,16 @@ export const BulkAssignContacts = ({
                     </td>
                     <td className="px-5 py-3 text-zinc-600 dark:text-zinc-300">
                       {c.schoolName ?? '—'}
+                    </td>
+                    <td className="px-5 py-3">
+                      {c.desiredProgram ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                          <GraduationCap className="size-3" />
+                          {c.desiredProgram}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-300 dark:text-zinc-600">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3">
                       {c.isAssigned && c.assignedTo ? (

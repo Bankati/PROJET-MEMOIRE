@@ -1,5 +1,5 @@
 import { createCohere } from '@ai-sdk/cohere'
-import { embed } from 'ai'
+import { embedMany } from 'ai'
 import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
@@ -88,11 +88,11 @@ export const POST = async (request: Request): Promise<Response> => {
     )
   }
 
-  try {
-    const arrayBuffer = await file.arrayBuffer()
-    let rawText = ''
+  const arrayBuffer = await file.arrayBuffer()
+  let rawText = ''
 
-    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+  if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+    try {
       type PdfParseInstance = { getText: () => Promise<{ text: string }> }
       type PdfParseModule = { PDFParse: new (opts: { data: Buffer }) => PdfParseInstance }
       // pdf-parse ships no TypeScript declarations; unknown→type assertion is the only approach
@@ -100,10 +100,22 @@ export const POST = async (request: Request): Promise<Response> => {
       const parser: PdfParseInstance = new PDFParse({ data: Buffer.from(arrayBuffer) })
       const pdfData = await parser.getText()
       rawText = pdfData.text
-    } else {
-      rawText = new TextDecoder().decode(arrayBuffer)
+    } catch (err) {
+      console.error('Échec du parsing PDF (pdf-parse) :', err)
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            'Impossible de lire ce PDF (fichier corrompu, protégé par mot de passe, ou scanné sans texte). Essayez de le ré-exporter (par ex. "Imprimer en PDF") puis réessayez.',
+        },
+        { status: 400 }
+      )
     }
+  } else {
+    rawText = new TextDecoder().decode(arrayBuffer)
+  }
 
+  try {
     rawText = rawText
       .replace(/\r\n/g, '\n')
       .replace(/[ \t]+/g, ' ')
@@ -128,11 +140,14 @@ export const POST = async (request: Request): Promise<Response> => {
     const cohere = createCohere({ apiKey: env.COHERE_API_KEY })
     const embeddingModel = cohere.embedding('embed-multilingual-v3.0')
 
-    const embeddings: number[][] = []
-    for (const chunk of textChunks) {
-      const { embedding } = await embed({ model: embeddingModel, value: chunk })
-      embeddings.push(embedding)
-    }
+    // embedMany regroupe automatiquement les textes par lots de 96 (limite Cohere par appel)
+    // au lieu d'un appel HTTP par segment — indispensable dès qu'un document dépasse une
+    // centaine de segments, sous peine de heurter la limite de débit de l'API (429).
+    const { embeddings } = await embedMany({
+      model: embeddingModel,
+      values: textChunks,
+      maxParallelCalls: 3,
+    })
 
     const fileName = file.name
     const documentName = fileName.replace(/\.[^/.]+$/, '')
@@ -171,9 +186,16 @@ export const POST = async (request: Request): Promise<Response> => {
       storage_path: storagePath,
       message: `${stored} segment${stored > 1 ? 's' : ''} indexé${stored > 1 ? 's' : ''} avec succès.`,
     })
-  } catch {
+  } catch (err) {
+    console.error('Échec du traitement du document (après extraction du texte) :', err)
     return NextResponse.json(
-      { ok: false, error: 'Échec du traitement du document (fichier corrompu ou illisible).' },
+      {
+        ok: false,
+        error:
+          err instanceof Error
+            ? `Échec du traitement : ${err.message}`
+            : 'Échec du traitement du document.',
+      },
       { status: 500 }
     )
   }
