@@ -1,7 +1,16 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
-import { ArrowRightLeft, Check, ChevronDown, Filter, Loader2, Search, X } from 'lucide-react'
+import {
+  ArrowRightLeft,
+  Check,
+  ChevronDown,
+  Filter,
+  GraduationCap,
+  Loader2,
+  Search,
+  X,
+} from 'lucide-react'
 
 import type { ProspectRow, CampaignOption, AgentOption } from '@/app/dashboard/admin/prospects/page'
 import type { CallOutcome } from '@/db/schema'
@@ -334,6 +343,9 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
                   Prospect
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-400">
+                  Filière souhaitée
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-400">
                   Téléphone
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-400">
@@ -357,7 +369,7 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-4 py-12 text-center text-zinc-400 dark:text-zinc-500"
                   >
                     Aucun prospect ne correspond à ces filtres.
@@ -391,6 +403,16 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
                         </div>
                         {p.schoolName && (
                           <div className="text-xs text-zinc-400">{p.schoolName}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {p.desiredProgram ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                            <GraduationCap className="size-3" />
+                            {p.desiredProgram}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-zinc-300 dark:text-zinc-600">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">

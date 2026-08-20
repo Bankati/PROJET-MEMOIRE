@@ -122,22 +122,25 @@ async function bulkAssignAction(formData: FormData): Promise<void> {
   }
 
   /*
-   * Vérifier que l'agent cible appartient à cet admin
-   * (ou que l'admin s'assigne les contacts à lui-même).
+   * Vérifier que l'agent cible appartient à cet admin (ou que l'admin s'assigne les
+   * contacts à lui-même), et récupérer sa campagne pour n'autoriser que les contacts
+   * de cette même campagne — un agent ne doit recevoir que des contacts de sa campagne.
    */
   const isAdminItself = agentId === user.id
+  let agentCampaignId: string | null = null
   if (!isAdminItself) {
-    const ownedAgent = await db
-      .select({ id: users.id })
+    const [ownedAgent] = await db
+      .select({ id: users.id, campaignId: users.campaignId })
       .from(users)
       .where(
         and(eq(users.id, agentId), eq(users.managedByAdminId, user.id), eq(users.role, 'agent'))
       )
       .limit(1)
 
-    if (ownedAgent.length === 0) {
+    if (!ownedAgent) {
       redirect('/dashboard/admin/contacts?notice=error')
     }
+    agentCampaignId = ownedAgent.campaignId
   }
 
   /*
@@ -155,13 +158,20 @@ async function bulkAssignAction(formData: FormData): Promise<void> {
     redirect('/dashboard/admin/contacts?notice=error')
   }
 
+  // Si l'admin s'assigne les contacts à lui-même, aucune restriction de campagne.
+  // Sinon, l'agent ne peut recevoir que les contacts de SA campagne (inArray sur un
+  // tableau vide n'exclut rien s'il n'y avait pas cette condition — d'où le tableau
+  // à un seul élément ou vide selon que l'agent a une campagne ou non).
   const validCcs = await db
     .select({ id: campaignContacts.id })
     .from(campaignContacts)
     .where(
       and(
         inArray(campaignContacts.id, ids),
-        inArray(campaignContacts.campaignId, accessibleCampaignIds)
+        inArray(campaignContacts.campaignId, accessibleCampaignIds),
+        isAdminItself
+          ? undefined
+          : inArray(campaignContacts.campaignId, agentCampaignId !== null ? [agentCampaignId] : [])
       )
     )
 
@@ -201,9 +211,10 @@ async function autoAssignAction(formData: FormData): Promise<void> {
   }
 
   const isAdminItself = agentId === user.id
+  let agentCampaignId: string | null = null
   if (!isAdminItself) {
     const [ownedAgent] = await db
-      .select({ id: users.id })
+      .select({ id: users.id, campaignId: users.campaignId })
       .from(users)
       .where(
         and(eq(users.id, agentId), eq(users.managedByAdminId, user.id), eq(users.role, 'agent'))
@@ -213,6 +224,7 @@ async function autoAssignAction(formData: FormData): Promise<void> {
       redirect('/dashboard/admin/contacts?notice=error')
       return
     }
+    agentCampaignId = ownedAgent.campaignId
   }
 
   const accessibleCampaigns = await db
@@ -221,7 +233,12 @@ async function autoAssignAction(formData: FormData): Promise<void> {
     .where(
       and(
         campaignAccessCondition({ adminId: user.id }),
-        campaign.length > 0 ? eq(campaigns.id, campaign) : undefined
+        campaign.length > 0 ? eq(campaigns.id, campaign) : undefined,
+        // Un agent (hors admin s'auto-assignant) ne peut recevoir que des contacts de sa
+        // propre campagne — tableau vide si l'agent n'a pas de campagne, pour ne rien matcher.
+        isAdminItself
+          ? undefined
+          : inArray(campaigns.id, agentCampaignId !== null ? [agentCampaignId] : [])
       )
     )
 
@@ -295,7 +312,10 @@ export default async function AdminContactsPage({
         and(
           eq(users.managedByAdminId, user.id),
           eq(users.role, 'agent'),
-          eq(users.status, 'active')
+          eq(users.status, 'active'),
+          // Si une campagne est sélectionnée, ne proposer que les agents qui lui sont
+          // rattachés — un agent d'une autre campagne ne doit pas apparaître ici.
+          campaignFilter.length > 0 ? eq(users.campaignId, campaignFilter) : undefined
         )
       )
       .orderBy(users.fullName),
@@ -339,6 +359,7 @@ export default async function AdminContactsPage({
             phoneSecondary: contacts.phoneSecondary,
             email: contacts.email,
             schoolName: contacts.schoolName,
+            desiredProgram: contacts.desiredProgram,
             isAssigned: sql<boolean>`${agentContactAssignments.id} is not null`,
             assignedTo: users.fullName,
           })
@@ -464,6 +485,7 @@ export default async function AdminContactsPage({
           phoneSecondary: c.phoneSecondary,
           email: c.email,
           schoolName: c.schoolName,
+          desiredProgram: c.desiredProgram,
           isAssigned: Boolean(c.isAssigned),
           assignedTo: c.assignedTo ?? null,
         }))}

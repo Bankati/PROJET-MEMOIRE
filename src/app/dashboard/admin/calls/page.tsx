@@ -3,7 +3,17 @@
  * Même interface que l'agent : liste filtrée des contacts assignés avec accès à la fiche d'appel.
  */
 import Link from 'next/link'
-import { CheckCircle2, Contact, Eye, Filter, MessageCircle, Phone, Search, X } from 'lucide-react'
+import {
+  CheckCircle2,
+  Contact,
+  Eye,
+  Filter,
+  GraduationCap,
+  MessageCircle,
+  Phone,
+  Search,
+  X,
+} from 'lucide-react'
 import { and, desc, eq } from 'drizzle-orm'
 
 import { requireRole } from '@/lib/auth/server-auth'
@@ -55,6 +65,7 @@ export default async function AdminCallsPage({
       phoneSecondary: contacts.phoneSecondary,
       email: contacts.email,
       schoolName: contacts.schoolName,
+      desiredProgram: contacts.desiredProgram,
       city: contacts.city,
       campaignTitle: campaigns.title,
     })
@@ -273,6 +284,12 @@ export default async function AdminCallsPage({
                     {c.city ? ` — ${c.city}` : ''}
                   </p>
                 ) : null}
+                {c.desiredProgram ? (
+                  <p className="flex items-center gap-2 text-xs font-medium text-amber-700 dark:text-amber-400">
+                    <GraduationCap className="size-3.5 shrink-0" />
+                    {c.desiredProgram}
+                  </p>
+                ) : null}
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <a
@@ -311,6 +328,7 @@ export default async function AdminCallsPage({
                 <th className="px-5 py-3">Contact</th>
                 <th className="px-5 py-3">Téléphone</th>
                 <th className="px-5 py-3">Établissement / Ville</th>
+                <th className="px-5 py-3">Filière souhaitée</th>
                 <th className="px-5 py-3">Campagne</th>
                 <th className="px-5 py-3">Statut</th>
                 <th className="px-5 py-3 text-right">Actions</th>
@@ -319,7 +337,7 @@ export default async function AdminCallsPage({
             <tbody>
               {contactsList.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-zinc-400">
+                  <td colSpan={7} className="px-5 py-8 text-center text-zinc-400">
                     <Contact className="mx-auto mb-2 size-8 text-zinc-300" />
                     Aucun contact trouvé.
                   </td>
@@ -364,6 +382,16 @@ export default async function AdminCallsPage({
                     <td className="px-5 py-3">
                       <p className="text-zinc-700 dark:text-zinc-200">{c.schoolName ?? '—'}</p>
                       {c.city ? <p className="text-xs text-zinc-400">{c.city}</p> : null}
+                    </td>
+                    <td className="px-5 py-3">
+                      {c.desiredProgram ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                          <GraduationCap className="size-3" />
+                          {c.desiredProgram}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-300 dark:text-zinc-600">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3">
                       <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
