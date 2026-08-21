@@ -4,7 +4,7 @@
  */
 'use client'
 
-import { Reveal } from '@/components/marketing/reveal'
+import { Reveal } from '@/components/ui/reveal'
 import { Badge } from '@/components/ui/badge'
 
 type SectionHeadingProps = Readonly<{

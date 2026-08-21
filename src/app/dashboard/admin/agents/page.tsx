@@ -15,6 +15,8 @@ import { campaigns, users, callResults } from '@/db/schema'
 import type { UserStatus } from '@/db/schema'
 import { AgentDialogForm } from '@/components/admin/agent-dialog-form'
 import { USER_STATUS_LABELS, USER_STATUS_STYLES } from '@/lib/status-styles'
+import { Reveal } from '@/components/ui/reveal'
+import { AnimatedCounter } from '@/components/ui/animated-counter'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 
@@ -207,31 +209,39 @@ export default async function AdminAgentsPage({
         </div>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Total agents</p>
-            <Users className="size-4 text-blue-400" />
+        <Reveal delay={0}>
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">Total agents</p>
+              <Users className="size-4 text-blue-400" />
+            </div>
+            <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
+              <AnimatedCounter target={myAgents.length} />
+            </p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{myAgents.length}</p>
-        </div>
-        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Actifs</p>
-            <CheckCircle2 className="size-4 text-emerald-400" />
+        </Reveal>
+        <Reveal delay={0.06}>
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">Actifs</p>
+              <CheckCircle2 className="size-4 text-emerald-400" />
+            </div>
+            <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
+              <AnimatedCounter target={myAgents.filter((a) => a.status === 'active').length} />
+            </p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
-            {myAgents.filter((a) => a.status === 'active').length}
-          </p>
-        </div>
-        <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm dark:border-white/10">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Expirés</p>
-            <Clock className="size-4 text-rose-400" />
+        </Reveal>
+        <Reveal delay={0.12}>
+          <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">Expirés</p>
+              <Clock className="size-4 text-rose-400" />
+            </div>
+            <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
+              <AnimatedCounter target={myAgents.filter((a) => a.status === 'expired').length} />
+            </p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
-            {myAgents.filter((a) => a.status === 'expired').length}
-          </p>
-        </div>
+        </Reveal>
       </div>
       {reactivateId.length > 0 ? (
         <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-white/10">
