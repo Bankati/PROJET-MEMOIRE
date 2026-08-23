@@ -28,6 +28,8 @@ import {
 import { campaignAccessCondition } from '@/lib/campaign-access'
 import { AdminDashboardFilters } from '@/components/admin/dashboard-filters'
 import { extractCount, formatTimeAgo, readParam } from '@/lib/dashboard-utils'
+import { Reveal } from '@/components/ui/reveal'
+import { AnimatedCounter } from '@/components/ui/animated-counter'
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
 type CurvePoint = Readonly<{ label: string; calls: number }>
@@ -714,18 +716,19 @@ export default async function AdminDashboardPage({
             icon: <Phone className="size-4 text-amber-400" />,
             hint: `Du ${dateFromStr} au ${dateToStr}`,
           },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">{kpi.label}</p>
-              {kpi.icon}
+        ].map((kpi, idx) => (
+          <Reveal key={kpi.label} delay={idx * 0.06}>
+            <div className="dark:bg-lbs-surface-dark rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">{kpi.label}</p>
+                {kpi.icon}
+              </div>
+              <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
+                <AnimatedCounter target={kpi.value} />
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">{kpi.hint}</p>
             </div>
-            <p className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{kpi.value}</p>
-            <p className="mt-1 text-xs text-zinc-400">{kpi.hint}</p>
-          </div>
+          </Reveal>
         ))}
       </div>
 
@@ -864,31 +867,34 @@ export default async function AdminDashboardPage({
 
       {/* Stat gradient cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card) => (
-          <div
-            key={card.label}
-            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-5 text-white shadow-lg transition-transform duration-300 hover:scale-[1.02]`}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-white/80">{card.label}</p>
-              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold">
-                {card.badge}
-              </span>
-            </div>
-            <p className="mt-1 text-2xl font-bold">{card.value}</p>
-            <svg
-              viewBox="0 0 100 40"
-              className="absolute right-0 bottom-0 h-12 w-24 opacity-40"
-              preserveAspectRatio="none"
+        {statCards.map((card, idx) => (
+          <Reveal key={card.label} delay={idx * 0.06}>
+            <div
+              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-5 text-white shadow-lg transition-transform duration-300 hover:scale-[1.02]`}
             >
-              <polyline
-                fill="none"
-                stroke="rgba(255,255,255,0.6)"
-                strokeWidth="2"
-                points={buildSparkline({ n: card.n })}
-              />
-            </svg>
-          </div>
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-white/80">{card.label}</p>
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold">
+                  {card.badge}
+                </span>
+              </div>
+              <p className="mt-1 text-2xl font-bold">
+                <AnimatedCounter target={card.n} suffix={card.value.endsWith('%') ? '%' : ''} />
+              </p>
+              <svg
+                viewBox="0 0 100 40"
+                className="absolute right-0 bottom-0 h-12 w-24 opacity-40"
+                preserveAspectRatio="none"
+              >
+                <polyline
+                  fill="none"
+                  stroke="rgba(255,255,255,0.6)"
+                  strokeWidth="2"
+                  points={buildSparkline({ n: card.n })}
+                />
+              </svg>
+            </div>
+          </Reveal>
         ))}
       </div>
 

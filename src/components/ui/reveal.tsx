@@ -1,24 +1,25 @@
 /**
- * Marketing animation helpers.
- * Keeps framer-motion in small client components so the page can stay a Server Component.
+ * Wrapper d'animation générique : fait apparaître ses enfants en fondu + léger
+ * mouvement vers le haut. Garde framer-motion isolé dans un petit composant
+ * client pour que la page appelante puisse rester un Server Component.
  */
 'use client'
 
 import * as React from 'react'
 import { motion, useReducedMotion, type Variants } from 'framer-motion'
 
-type RevealProps = {
+type RevealProps = Readonly<{
   children: React.ReactNode
   className?: string
   delay?: number
-}
+}>
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 22, filter: 'blur(6px)' },
   show: { opacity: 1, y: 0, filter: 'blur(0px)' },
 }
 
-export function Reveal({ children, className, delay = 0 }: RevealProps) {
+export function Reveal({ children, className, delay = 0 }: RevealProps): React.JSX.Element {
   const reduce = useReducedMotion()
 
   if (reduce) {

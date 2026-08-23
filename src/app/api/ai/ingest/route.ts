@@ -10,6 +10,11 @@ import { uploadRagDocument } from '@/lib/supabase'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
+// Vercel plafonne le corps des requêtes des Serverless Functions Node.js à 4.5 Mo,
+// une limite de plateforme non contournable par maxDuration ni par le code applicatif.
+// On garde une marge de sécurité pour les en-têtes multipart.
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+
 const chunkText = ({
   text,
   chunkSize = 600,
@@ -75,6 +80,16 @@ export const POST = async (request: Request): Promise<Response> => {
     return NextResponse.json({ ok: false, error: 'Aucun fichier fourni.' }, { status: 400 })
   }
 
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)} Mo). La taille maximale est de 4 Mo.`,
+      },
+      { status: 413 }
+    )
+  }
+
   const allowedTypes = ['application/pdf', 'text/plain', 'text/markdown']
   if (
     !allowedTypes.includes(file.type) &&
@@ -102,11 +117,11 @@ export const POST = async (request: Request): Promise<Response> => {
       rawText = pdfData.text
     } catch (err) {
       console.error('Échec du parsing PDF (pdf-parse) :', err)
+      // DEBUG TEMPORAIRE — expose le vrai message pour diagnostiquer l'échec sur Vercel, à retirer après.
       return NextResponse.json(
         {
           ok: false,
-          error:
-            'Impossible de lire ce PDF (fichier corrompu, protégé par mot de passe, ou scanné sans texte). Essayez de le ré-exporter (par ex. "Imprimer en PDF") puis réessayez.',
+          error: `[DEBUG] ${err instanceof Error ? `${err.name}: ${err.message}\n${err.stack ?? ''}` : String(err)}`,
         },
         { status: 400 }
       )

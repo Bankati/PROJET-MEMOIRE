@@ -20,7 +20,7 @@ import { GradientText } from '@/components/marketing/gradient-text'
 import { HeroIntro } from '@/components/marketing/hero-intro'
 import { Navbar } from '@/components/marketing/navbar'
 import { PersonasShowcase } from '@/components/marketing/personas-showcase'
-import { Reveal } from '@/components/marketing/reveal'
+import { Reveal } from '@/components/ui/reveal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
