@@ -19,7 +19,7 @@ export function AnimatedCounter({
   prefix = '',
   suffix = '',
   duration = 1.8,
-}: AnimatedCounterProps) {
+}: AnimatedCounterProps): React.JSX.Element {
   const ref = React.useRef<HTMLSpanElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-10%' })
   const reduce = useReducedMotion()

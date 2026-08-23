@@ -4,7 +4,7 @@
  * Inclut l'alerte sur la durée de vie liée à la campagne.
  */
 import { useState } from 'react'
-import { Shield, Users, UserPlus } from 'lucide-react'
+import { Loader2, Shield, Users, UserPlus } from 'lucide-react'
 
 import { FormDialog } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
@@ -23,10 +23,14 @@ export const AgentDialogForm = ({
   createAction,
 }: AgentDialogFormProps): React.JSX.Element => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
+  const [isPending, setIsPending] = useState<boolean>(false)
   return (
     <>
       <Button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsPending(false)
+          setIsOpen(true)
+        }}
         className="from-lbs-blue to-lbs-blue-2 gap-2 rounded-xl bg-gradient-to-r text-white shadow-sm hover:brightness-110"
       >
         <UserPlus className="size-4" />
@@ -40,7 +44,7 @@ export const AgentDialogForm = ({
         icon={<Users className="text-lbs-blue size-5 dark:text-blue-300" />}
         maxWidth="max-w-lg"
       >
-        <form action={createAction} className="space-y-4">
+        <form action={createAction} onSubmit={() => setIsPending(true)} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="dialog-agent-fullName">Nom complet *</Label>
@@ -107,10 +111,15 @@ export const AgentDialogForm = ({
             </Button>
             <button
               type="submit"
-              className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+              disabled={isPending}
+              className="from-lbs-blue to-lbs-blue-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
             >
-              <UserPlus className="size-3.5" />
-              Créer l&apos;agent
+              {isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <UserPlus className="size-3.5" />
+              )}
+              {isPending ? 'Création…' : "Créer l'agent"}
             </button>
           </div>
         </form>

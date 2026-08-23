@@ -49,7 +49,17 @@ export const RagManager = (): React.JSX.Element => {
     if (!hasFetched) fetchDocuments()
   }
 
+  const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+
   const handleFileUpload = async (file: File): Promise<void> => {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadState({
+        status: 'error',
+        message: `Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)} Mo). La taille maximale est de 4 Mo — compressez le PDF ou divisez-le en plusieurs documents.`,
+      })
+      return
+    }
+
     setUploadState({ status: 'uploading' })
     const formData = new FormData()
     formData.append('file', file)
@@ -135,7 +145,7 @@ export const RagManager = (): React.JSX.Element => {
                 <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   Glissez un fichier ou cliquez pour sélectionner
                 </p>
-                <p className="mt-1 text-xs text-zinc-400">PDF, TXT, Markdown — max 20 Mo</p>
+                <p className="mt-1 text-xs text-zinc-400">PDF, TXT, Markdown — max 4 Mo</p>
               </div>
             </>
           )}
