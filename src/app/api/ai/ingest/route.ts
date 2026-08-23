@@ -126,11 +126,11 @@ export const POST = async (request: Request): Promise<Response> => {
       rawText = pdfData.text
     } catch (err) {
       console.error('Échec du parsing PDF (pdf-parse) :', err)
-      // DEBUG TEMPORAIRE 2 — a retirer une fois la cause confirmee.
       return NextResponse.json(
         {
           ok: false,
-          error: `[DEBUG2] DOMMatrix type=${typeof globalThis.DOMMatrix} ctorName=${globalThis.DOMMatrix?.name ?? 'n/a'} :: ${err instanceof Error ? `${err.name}: ${err.message}\n${err.stack ?? ''}` : String(err)}`,
+          error:
+            'Impossible de lire ce PDF (fichier corrompu, protégé par mot de passe, ou scanné sans texte). Essayez de le ré-exporter (par ex. "Imprimer en PDF") puis réessayez.',
         },
         { status: 400 }
       )
