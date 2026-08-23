@@ -1,6 +1,7 @@
 import { createCohere } from '@ai-sdk/cohere'
 import { embedMany } from 'ai'
 import { NextResponse } from 'next/server'
+import DOMMatrixPolyfill from 'dommatrix'
 
 import { auth } from '@/lib/auth'
 import { env } from '@/lib/env'
@@ -9,6 +10,14 @@ import { uploadRagDocument } from '@/lib/supabase'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
+
+// pdfjs-dist (via pdf-parse) référence l'API navigateur DOMMatrix pour les transformations
+// de police, même en extraction texte pure. Il tente de la polyfiller via le binaire natif
+// @napi-rs/canvas, qui échoue silencieusement sur le runtime serverless Linux de Vercel
+// (fonctionne en local sous Windows) — d'où un crash sur tous les PDF avec polices embarquées.
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  globalThis.DOMMatrix = DOMMatrixPolyfill as unknown as typeof DOMMatrix
+}
 
 // Vercel plafonne le corps des requêtes des Serverless Functions Node.js à 4.5 Mo,
 // une limite de plateforme non contournable par maxDuration ni par le code applicatif.
@@ -117,11 +126,11 @@ export const POST = async (request: Request): Promise<Response> => {
       rawText = pdfData.text
     } catch (err) {
       console.error('Échec du parsing PDF (pdf-parse) :', err)
-      // DEBUG TEMPORAIRE — expose le vrai message pour diagnostiquer l'échec sur Vercel, à retirer après.
       return NextResponse.json(
         {
           ok: false,
-          error: `[DEBUG] ${err instanceof Error ? `${err.name}: ${err.message}\n${err.stack ?? ''}` : String(err)}`,
+          error:
+            'Impossible de lire ce PDF (fichier corrompu, protégé par mot de passe, ou scanné sans texte). Essayez de le ré-exporter (par ex. "Imprimer en PDF") puis réessayez.',
         },
         { status: 400 }
       )
