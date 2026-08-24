@@ -34,6 +34,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Applique la classe dark avant l'hydratation React pour éviter un flash du mauvais thème au chargement. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})()`,
