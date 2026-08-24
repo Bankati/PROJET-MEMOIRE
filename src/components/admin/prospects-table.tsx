@@ -45,6 +45,7 @@ type Filters = {
   campaignId: string
   outcome: string
   agentName: string
+  schoolName: string
 }
 
 type TransferResult = {
@@ -82,6 +83,7 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
     campaignId: '',
     outcome: '',
     agentName: '',
+    schoolName: '',
   })
 
   // Sélection
@@ -101,6 +103,7 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
       if (filters.campaignId && p.campaignId !== filters.campaignId) return false
       if (filters.outcome && p.lastOutcome !== filters.outcome) return false
       if (filters.agentName && p.lastAgentName !== filters.agentName) return false
+      if (filters.schoolName && p.schoolName !== filters.schoolName) return false
       if (q) {
         const haystack = [
           p.firstName,
@@ -201,6 +204,12 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
     return [...names].sort()
   }, [prospects])
 
+  // ── Établissements présents dans les données importées ───────────────────────
+  const schoolNames = useMemo(() => {
+    const names = new Set(prospects.map((p) => p.schoolName).filter((x): x is string => x !== null))
+    return [...names].sort()
+  }, [prospects])
+
   // ── Rendu ───────────────────────────────────────────────────────────────────
 
   return (
@@ -276,11 +285,42 @@ export const ProspectsTable = ({ prospects, campaigns }: Props): React.JSX.Eleme
             </div>
           )}
 
+          {/* Filtre établissement */}
+          {schoolNames.length > 0 && (
+            <div className="relative">
+              <select
+                value={filters.schoolName}
+                onChange={(e) => setFilters((f) => ({ ...f, schoolName: e.target.value }))}
+                className="focus:ring-lbs-blue appearance-none rounded-lg border border-zinc-200 bg-zinc-50 py-2 pr-8 pl-3 text-sm text-zinc-700 focus:ring-2 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+              >
+                <option value="">Tous les établissements</option>
+                {schoolNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-zinc-400" />
+            </div>
+          )}
+
           {/* Reset filtres */}
-          {(filters.search || filters.campaignId || filters.outcome || filters.agentName) && (
+          {(filters.search ||
+            filters.campaignId ||
+            filters.outcome ||
+            filters.agentName ||
+            filters.schoolName) && (
             <button
               type="button"
-              onClick={() => setFilters({ search: '', campaignId: '', outcome: '', agentName: '' })}
+              onClick={() =>
+                setFilters({
+                  search: '',
+                  campaignId: '',
+                  outcome: '',
+                  agentName: '',
+                  schoolName: '',
+                })
+              }
               className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
             >
               <X className="size-3.5" /> Réinitialiser
