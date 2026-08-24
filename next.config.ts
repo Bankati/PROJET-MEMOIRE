@@ -13,6 +13,20 @@ const nextConfig: NextConfig = {
     '/api/ai/ingest': ['./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'],
   },
   /**
+   * Next.js plafonne le corps des Server Actions à 1 Mo par défaut — bien en-dessous
+   * du PDF de script de campagne (jusqu'à 4 Mo, cf. PDF_MAX_SIZE_BYTES dans
+   * campaigns/page.tsx). Réglé volontairement au-dessus de cette limite applicative
+   * (elle-même déjà sous le plafond réel de Vercel, ~4.5 Mo) : la marge laisse le
+   * code applicatif intercepter et rejeter proprement un PDF trop gros, plutôt que
+   * de laisser Next.js planter la requête avec une erreur 413 non explicite avant
+   * même d'atteindre ce code.
+   */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '4.4mb',
+    },
+  },
+  /**
    * LBS Call Center - Next.js config (Next.js 15).
    * Goal: sane defaults for performance, security headers, and image handling.
    */
