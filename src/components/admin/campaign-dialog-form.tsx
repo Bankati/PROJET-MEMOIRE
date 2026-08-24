@@ -389,7 +389,7 @@ export const CampaignDialogForm = ({
                 className="focus:border-lbs-blue focus:ring-lbs-blue/20 dark:bg-lbs-surface-dark-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 shadow-sm transition-all file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-600 focus:ring-2 focus:outline-none dark:border-white/15 dark:text-white dark:file:bg-white/10 dark:file:text-zinc-300"
               />
               <p className="text-[11px] text-zinc-400">
-                PDF uniquement, 10 Mo max. Accessible par les agents depuis l&apos;onglet Docs
+                PDF uniquement, 4 Mo max. Accessible par les agents depuis l&apos;onglet Docs
                 pendant l&apos;appel.
                 {isEdit && campaign?.pdfUrl
                   ? ' Laissez vide pour conserver le fichier actuel.'
