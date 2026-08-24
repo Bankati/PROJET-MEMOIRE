@@ -67,6 +67,10 @@ async function createCampaign(formData: FormData): Promise<void> {
   if (title.trim().length === 0 || baseScript.trim().length === 0) {
     redirect('/dashboard/admin/campaigns?notice=missing_fields')
   }
+  // Le redirect final se decide via une variable plutot qu'un redirect() direct dans le
+  // bloc if ci-dessous : redirect() fonctionne en lancant une exception speciale, qu'un
+  // catch generique comme celui plus bas avalerait silencieusement et redirigerait a tort
+  // vers notice=error.
   let redirectNotice = 'created'
   try {
     // L'ID est généré avant l'insertion pour pouvoir uploader le PDF (qui a besoin
