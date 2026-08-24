@@ -17,6 +17,7 @@ import {
 import { and, desc, eq } from 'drizzle-orm'
 
 import { requireRole } from '@/lib/auth/server-auth'
+import { SchoolFilterSelect } from '@/components/shared/school-filter-select'
 import { db } from '@/lib/db'
 import { agentContactAssignments, campaignContacts, campaigns, contacts } from '@/db/schema'
 
@@ -220,28 +221,12 @@ export default async function AdminCallsPage({
       </div>
 
       {/* School filter */}
-      {allSchools.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            Établissement :
-          </span>
-          <Link
-            href={buildHref({ school: '' })}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${schoolFilter.length === 0 ? 'border-lbs-blue bg-lbs-blue/10 text-lbs-blue dark:border-blue-400 dark:bg-blue-500/15 dark:text-blue-300' : 'hover:border-lbs-blue hover:text-lbs-blue border-zinc-200 text-zinc-600 dark:border-white/15 dark:text-zinc-300'}`}
-          >
-            Tous
-          </Link>
-          {allSchools.map((school) => (
-            <Link
-              key={school}
-              href={buildHref({ school })}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${schoolFilter === school ? 'border-lbs-blue bg-lbs-blue/10 text-lbs-blue dark:border-blue-400 dark:bg-blue-500/15 dark:text-blue-300' : 'hover:border-lbs-blue hover:text-lbs-blue border-zinc-200 text-zinc-600 dark:border-white/15 dark:text-zinc-300'}`}
-            >
-              {school}
-            </Link>
-          ))}
-        </div>
-      ) : null}
+      <SchoolFilterSelect
+        basePath="/dashboard/admin/calls"
+        otherParams={{ status: statusFilter, q: searchQuery }}
+        schools={allSchools}
+        currentSchool={schoolFilter}
+      />
 
       {/* Mobile cards */}
       <div className="space-y-3 sm:hidden">

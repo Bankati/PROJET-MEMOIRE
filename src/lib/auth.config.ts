@@ -19,6 +19,7 @@ declare module 'next-auth' {
       role: UserRole
       status: UserStatus
       fullName: string
+      validatedAt?: number
     }
   }
 }
@@ -29,6 +30,7 @@ declare module '@auth/core/jwt' {
     role: UserRole
     status: UserStatus
     fullName: string
+    validatedAt?: number
   }
 }
 
@@ -71,6 +73,7 @@ export const authConfig: NextAuthConfig = {
       session.user.role = token.role
       session.user.status = token.status
       session.user.fullName = token.fullName
+      session.user.validatedAt = token.validatedAt
       return session
     },
   },

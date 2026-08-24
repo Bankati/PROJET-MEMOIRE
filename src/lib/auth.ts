@@ -14,8 +14,42 @@ import { db } from '@/lib/db'
 import { users } from '@/db/schema'
 import { hashPassword, verifyPassword } from '@/lib/auth/password'
 
+// Au-delà de cet intervalle, un token JWT valide est revérifié contre la base
+// avant d'être accepté — sinon un compte supprimé ou désactivé après connexion
+// resterait utilisable jusqu'à l'expiration naturelle de la session (10h).
+const SESSION_REVALIDATE_INTERVAL_MS = 5 * 60 * 1000
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id as string
+        token.role = user.role
+        token.status = user.status
+        token.fullName = user.fullName
+        token.validatedAt = Date.now()
+        return token
+      }
+
+      const lastValidated = token.validatedAt ?? 0
+      if (Date.now() - lastValidated < SESSION_REVALIDATE_INTERVAL_MS) {
+        return token
+      }
+
+      const [dbUser] = await db.select().from(users).where(eq(users.id, token.id)).limit(1)
+      if (!dbUser || dbUser.status !== 'active') {
+        return null
+      }
+
+      token.role = dbUser.role
+      token.status = dbUser.status
+      token.fullName = dbUser.fullName
+      token.validatedAt = Date.now()
+      return token
+    },
+  },
   providers: [
     Credentials({
       name: 'credentials',

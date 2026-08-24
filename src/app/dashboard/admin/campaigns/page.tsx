@@ -17,7 +17,10 @@ import { CampaignEditPanel } from '@/components/admin/campaign-edit-panel'
 import { uploadCampaignScript } from '@/lib/supabase'
 import { CAMPAIGN_STATUS_LABELS, CAMPAIGN_STATUS_STYLES } from '@/lib/status-styles'
 
-const PDF_MAX_SIZE_BYTES = 10 * 1024 * 1024 // 10 Mo
+// Vercel plafonne le corps des Server Actions et des Serverless Functions Node.js
+// à quelques Mo (bien en-dessous de l'ancienne limite de 10 Mo affichée ici) — on
+// garde une marge de sécurité sous ce plafond réel.
+const PDF_MAX_SIZE_BYTES = 4 * 1024 * 1024 // 4 Mo
 
 const resolvePdfUrl = async ({
   formData,
@@ -27,13 +30,13 @@ const resolvePdfUrl = async ({
   formData: FormData
   campaignId: string
   currentPdfUrl: string | null
-}>): Promise<string | null> => {
+}>): Promise<{ pdfUrl: string | null; rejected: boolean }> => {
   const file = formData.get('pdfFile')
   if (!(file instanceof File) || file.size === 0) {
-    return currentPdfUrl
+    return { pdfUrl: currentPdfUrl, rejected: false }
   }
   if (file.type !== 'application/pdf' || file.size > PDF_MAX_SIZE_BYTES) {
-    return currentPdfUrl
+    return { pdfUrl: currentPdfUrl, rejected: true }
   }
   const buffer = Buffer.from(await file.arrayBuffer())
   const uploadedUrl = await uploadCampaignScript({
@@ -41,7 +44,7 @@ const resolvePdfUrl = async ({
     fileBuffer: buffer,
     contentType: file.type,
   })
-  return uploadedUrl ?? currentPdfUrl
+  return { pdfUrl: uploadedUrl ?? currentPdfUrl, rejected: false }
 }
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>
@@ -64,12 +67,17 @@ async function createCampaign(formData: FormData): Promise<void> {
   if (title.trim().length === 0 || baseScript.trim().length === 0) {
     redirect('/dashboard/admin/campaigns?notice=missing_fields')
   }
+  // Le redirect final se decide via une variable plutot qu'un redirect() direct dans le
+  // bloc if ci-dessous : redirect() fonctionne en lancant une exception speciale, qu'un
+  // catch generique comme celui plus bas avalerait silencieusement et redirigerait a tort
+  // vers notice=error.
+  let redirectNotice = 'created'
   try {
     // L'ID est généré avant l'insertion pour pouvoir uploader le PDF (qui a besoin
     // d'un campaignId pour son chemin de storage) avant d'écrire quoi que ce soit en base —
     // ainsi un échec d'upload n'a jamais créé de campagne partielle sans PDF.
     const campaignId = randomUUID()
-    const pdfUrl = await resolvePdfUrl({ formData, campaignId, currentPdfUrl: null })
+    const { pdfUrl, rejected } = await resolvePdfUrl({ formData, campaignId, currentPdfUrl: null })
     await db.insert(campaigns).values({
       id: campaignId,
       title: title.trim(),
@@ -81,10 +89,13 @@ async function createCampaign(formData: FormData): Promise<void> {
       visibility,
       createdByAdminId: user.id,
     })
+    if (rejected) {
+      redirectNotice = 'created_pdf_too_large'
+    }
   } catch {
     redirect('/dashboard/admin/campaigns?notice=error')
   }
-  redirect('/dashboard/admin/campaigns?notice=created')
+  redirect(`/dashboard/admin/campaigns?notice=${redirectNotice}`)
 }
 
 async function updateCampaign(formData: FormData): Promise<void> {
@@ -102,8 +113,9 @@ async function updateCampaign(formData: FormData): Promise<void> {
   if (campaignId.length === 0 || title.trim().length === 0) {
     redirect('/dashboard/admin/campaigns?notice=missing_fields')
   }
+  let redirectNotice = 'updated'
   try {
-    const pdfUrl = await resolvePdfUrl({
+    const { pdfUrl, rejected } = await resolvePdfUrl({
       formData,
       campaignId,
       currentPdfUrl: currentPdfUrlRaw.trim().length > 0 ? currentPdfUrlRaw.trim() : null,
@@ -121,10 +133,13 @@ async function updateCampaign(formData: FormData): Promise<void> {
         updatedAt: new Date(),
       })
       .where(and(eq(campaigns.id, campaignId), eq(campaigns.createdByAdminId, user.id)))
+    if (rejected) {
+      redirectNotice = 'updated_pdf_too_large'
+    }
   } catch {
     redirect('/dashboard/admin/campaigns?notice=error')
   }
-  redirect('/dashboard/admin/campaigns?notice=updated')
+  redirect(`/dashboard/admin/campaigns?notice=${redirectNotice}`)
 }
 
 async function deleteCampaign(formData: FormData): Promise<void> {
@@ -185,6 +200,14 @@ export default async function AdminCampaignsPage({
     deleted: { text: 'Campagne supprimée.', type: 'success' },
     missing_fields: { text: 'Veuillez remplir tous les champs obligatoires.', type: 'error' },
     error: { text: 'Une erreur est survenue.', type: 'error' },
+    created_pdf_too_large: {
+      text: 'Campagne créée, mais le PDF dépassait 4 Mo et n’a pas été enregistré. Vous pouvez le rajouter en modifiant la campagne.',
+      type: 'error',
+    },
+    updated_pdf_too_large: {
+      text: 'Campagne mise à jour, mais le PDF dépassait 4 Mo et n’a pas été enregistré.',
+      type: 'error',
+    },
   }
   const currentNotice = notice.length > 0 ? noticeMessages[notice] : undefined
 
