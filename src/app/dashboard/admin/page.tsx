@@ -16,6 +16,7 @@ import { and, asc, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import Link from 'next/link'
 
 import { requireRole } from '@/lib/auth/server-auth'
+import { SchoolFilterSelect } from '@/components/shared/school-filter-select'
 import { db } from '@/lib/db'
 import {
   campaigns,
@@ -574,12 +575,6 @@ export default async function AdminDashboardPage({
       ? (campaignOptions.find((c) => c.id === campaignFilter)?.title ?? 'Campagne')
       : 'Toutes mes campagnes'
 
-  const currentUrl = new URL('http://x/dashboard/admin')
-  if (campaignFilter.length > 0) currentUrl.searchParams.set('campaign', campaignFilter)
-  if (dateFromStr) currentUrl.searchParams.set('from', dateFromStr)
-  if (dateToStr) currentUrl.searchParams.set('to', dateToStr)
-  const baseFilterUrl = currentUrl.search
-
   return (
     <div className="space-y-6">
       {/* ── Hero banner ── */}
@@ -623,37 +618,14 @@ export default async function AdminDashboardPage({
               hero
             />
 
-            {/* School filter chips */}
-            {schoolOptions.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-medium text-white/60">Établissement :</span>
-                <a
-                  href={`/dashboard/admin${baseFilterUrl}`}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                    schoolFilter.length === 0
-                      ? 'border-white bg-white/20 text-white'
-                      : 'border-white/30 text-white/70 hover:border-white hover:text-white'
-                  }`}
-                >
-                  Tous
-                </a>
-                {schoolOptions.map((s) =>
-                  s.schoolName ? (
-                    <a
-                      key={s.schoolName}
-                      href={`/dashboard/admin${baseFilterUrl}&school=${encodeURIComponent(s.schoolName)}`}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                        schoolFilter === s.schoolName
-                          ? 'border-white bg-white/20 text-white'
-                          : 'border-white/30 text-white/70 hover:border-white hover:text-white'
-                      }`}
-                    >
-                      {s.schoolName}
-                    </a>
-                  ) : null
-                )}
-              </div>
-            ) : null}
+            {/* School filter */}
+            <SchoolFilterSelect
+              basePath="/dashboard/admin"
+              otherParams={{ campaign: campaignFilter, from: dateFromStr, to: dateToStr }}
+              schools={schoolOptions.flatMap((s) => (s.schoolName ? [s.schoolName] : []))}
+              currentSchool={schoolFilter}
+              variant="dark"
+            />
 
             {/* Active filter banner */}
             {campaignFilter.length > 0 || schoolFilter.length > 0 ? (

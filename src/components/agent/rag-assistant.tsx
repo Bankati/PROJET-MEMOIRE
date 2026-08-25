@@ -2,6 +2,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { Bot, ChevronDown, ChevronUp, Send, Sparkles } from 'lucide-react'
 import LoaderOne from '@/components/ui/loader-one'
+import { ChatMarkdown } from '@/components/shared/chat-markdown'
 
 type Message = Readonly<{
   id: string
@@ -150,10 +151,16 @@ export const RagAssistant = ({
                       : 'bg-zinc-100 text-zinc-800 dark:bg-white/10 dark:text-zinc-200'
                   }`}
                 >
-                  {msg.content}
-                  {msg.role === 'assistant' && isStreaming && msg.content.length === 0 ? (
-                    <span className="inline-block h-4 w-0.5 animate-pulse bg-current" />
-                  ) : null}
+                  {msg.role === 'user' ? (
+                    <span className="whitespace-pre-wrap">{msg.content}</span>
+                  ) : (
+                    <>
+                      <ChatMarkdown content={msg.content} />
+                      {isStreaming && msg.content.length === 0 ? (
+                        <span className="inline-block h-4 w-0.5 animate-pulse bg-current" />
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </div>
             ))}

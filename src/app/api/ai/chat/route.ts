@@ -70,7 +70,10 @@ export const POST = async (request: Request): Promise<Response> => {
       model: openai('gpt-4o-mini'),
       system: systemPrompt,
       messages: [{ role: 'user', content: query }],
-      maxOutputTokens: 400,
+      // Assez large pour ne jamais couper une reponse structuree (liste de filieres,
+      // debouches...) en plein milieu ; le prompt systeme se charge de garder les
+      // reponses simples courtes malgre ce plafond releve.
+      maxOutputTokens: 1000,
       temperature: 0.2,
     })
 
