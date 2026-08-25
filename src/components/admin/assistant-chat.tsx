@@ -13,6 +13,7 @@ import {
   Phone,
 } from 'lucide-react'
 import LoaderOne from '@/components/ui/loader-one'
+import { ChatMarkdown } from '@/components/shared/chat-markdown'
 
 type Message = Readonly<{
   id: string
@@ -180,14 +181,21 @@ export const AssistantChat = (): React.JSX.Element => {
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-lbs-blue rounded-tr-sm text-white' : 'rounded-tl-sm bg-zinc-100 dark:bg-white/10'}`}
               >
-                <p
-                  className={`text-sm leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'text-white' : 'text-zinc-700 dark:text-zinc-200'}`}
-                >
-                  {msg.content}
-                  {msg.role === 'assistant' && isStreaming && msg.content.length === 0 ? (
-                    <span className="inline-block h-4 w-0.5 animate-pulse bg-current" />
-                  ) : null}
-                </p>
+                {msg.role === 'user' ? (
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap text-white">
+                    {msg.content}
+                  </p>
+                ) : (
+                  <>
+                    <ChatMarkdown
+                      content={msg.content}
+                      className="text-zinc-700 dark:text-zinc-200"
+                    />
+                    {isStreaming && msg.content.length === 0 ? (
+                      <span className="inline-block h-4 w-0.5 animate-pulse bg-current" />
+                    ) : null}
+                  </>
+                )}
                 {msg.role === 'assistant' && msg.content.length > 0 ? (
                   <div className="mt-2 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
                     <Sparkles className="mr-1 mb-0.5 inline size-3" />
